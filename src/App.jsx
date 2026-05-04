@@ -9,7 +9,7 @@ import Footer from './components/Footer'
 
 export default function App() {
   return (
-    <div className="relative bg-black w-full">
+    <div className="relative bg-black w-full" style={{ overflowX: 'clip' }}>
       <Header />
       <Hero />
       <PainPoints />
