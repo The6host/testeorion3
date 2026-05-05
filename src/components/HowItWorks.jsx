@@ -1,7 +1,6 @@
 import { motion } from 'framer-motion'
 import { ChevronRight, ChevronDown } from 'lucide-react'
 
-const NEON = '#ccff00'
 
 const STEPS = [
   {
@@ -82,10 +81,10 @@ export default function HowItWorks() {
                 <div
                   className="flex items-center justify-center w-11 h-11 rounded-full font-black text-base shrink-0"
                   style={{
-                    border: `1.5px solid ${NEON}`,
-                    color: NEON,
-                    boxShadow: `0 0 16px rgba(204,255,0,0.2), inset 0 0 12px rgba(204,255,0,0.08)`,
-                    background: 'rgba(204,255,0,0.05)',
+                    border: '1.5px solid rgba(139,92,246,0.55)',
+                    color: '#e0d4ff',
+                    boxShadow: '0 0 22px rgba(109,40,217,0.45), 0 0 6px rgba(139,92,246,0.3), inset 0 0 14px rgba(109,40,217,0.2)',
+                    background: 'linear-gradient(135deg, rgba(109,40,217,0.35) 0%, rgba(79,70,229,0.18) 100%)',
                   }}
                 >
                   {step.n}

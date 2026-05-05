@@ -44,7 +44,7 @@ const cardVariants = {
 export default function PainPoints() {
   return (
     <section
-      className="relative pt-0 pb-24 w-full"
+      className="relative pt-20 pb-24 w-full"
       style={{
         background: 'rgba(0, 0, 0, 0.45)',
         backdropFilter: 'blur(18px)',
@@ -101,27 +101,12 @@ export default function PainPoints() {
               }}
             >
               {/* Ícone com flutuação independente */}
-              <motion.div
-                className="w-20 h-20 flex items-center justify-center rounded-2xl"
-                style={{
-                  background: 'linear-gradient(135deg, rgba(109,40,217,0.25) 0%, rgba(79,70,229,0.15) 100%)',
-                  boxShadow: '0 0 30px rgba(109,40,217,0.2)',
-                }}
-                animate={{ y: [0, -8, 0] }}
-                transition={{
-                  duration: 3.5,
-                  repeat: Infinity,
-                  ease: 'easeInOut',
-                  delay: pain.floatDelay,
-                }}
-              >
-                <img
-                  src={pain.icon}
-                  alt={pain.title}
-                  className="w-12 h-12 object-contain select-none"
-                  draggable={false}
-                />
-              </motion.div>
+              <img
+                src={pain.icon}
+                alt={pain.title}
+                className="w-28 h-28 object-contain select-none"
+                draggable={false}
+              />
 
               {/* Título */}
               <h3 className="text-sm font-black tracking-wider text-white leading-snug whitespace-pre-line">

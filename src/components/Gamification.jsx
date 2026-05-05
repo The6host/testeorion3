@@ -62,15 +62,10 @@ export default function Gamification() {
               viewport={{ once: true, margin: '-80px' }}
               transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
             >
-              <motion.img
-                src="https://i.ibb.co/DHTyWHCX/73-Sem-T-tulo-20260430214912.png"
+              <img
+                src="https://i.ibb.co/tTtW6BdM/interroga-o-foda-Orion.png"
                 alt="Gamificação 3D"
                 className="w-full h-auto select-none"
-                animate={{ y: [0, -18, 0] }}
-                transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}
-                style={{
-                  filter: 'drop-shadow(0 20px 60px rgba(109,40,217,0.35)) drop-shadow(0 0 40px rgba(79,70,229,0.2))',
-                }}
                 draggable={false}
               />
             </motion.div>
