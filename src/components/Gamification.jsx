@@ -52,28 +52,9 @@ export default function Gamification() {
       <div className="relative z-10 max-w-6xl mx-auto px-6 md:px-12">
         <div className="flex flex-col lg:flex-row items-center gap-16 lg:gap-20">
 
-          {/* ── Coluna esquerda — Imagem 3D ── */}
-          <div className="w-full lg:w-1/2 flex justify-center">
-            {/* Wrapper para entrada + flutuação separadas */}
-            <motion.div
-              className="w-full max-w-xs md:max-w-sm"
-              initial={{ opacity: 0, x: -40 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true, margin: '-80px' }}
-              transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
-            >
-              <img
-                src="https://i.ibb.co/tTtW6BdM/interroga-o-foda-Orion.png"
-                alt="Gamificação 3D"
-                className="w-full h-auto select-none"
-                draggable={false}
-              />
-            </motion.div>
-          </div>
-
-          {/* ── Coluna direita — Textos e features ── */}
+          {/* ── Coluna esquerda — Textos e features ── */}
           <motion.div
-            className="w-full lg:w-1/2 flex flex-col gap-8"
+            className="w-full lg:w-1/2 flex flex-col gap-8 order-1"
             variants={containerVariants}
             initial="hidden"
             whileInView="visible"
@@ -124,6 +105,24 @@ export default function Gamification() {
               ))}
             </motion.div>
           </motion.div>
+
+          {/* ── Coluna direita — Imagem 3D ── */}
+          <div className="w-full lg:w-1/2 flex justify-center order-2">
+            <motion.div
+              className="w-full max-w-xs md:max-w-sm"
+              initial={{ opacity: 0, x: 40 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true, margin: '-80px' }}
+              transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+            >
+              <img
+                src="https://i.ibb.co/WWZT57jN/file-00000000f97871fba45db36fe96ff91b.png"
+                alt="Gamificação 3D"
+                className="w-full h-auto select-none"
+                draggable={false}
+              />
+            </motion.div>
+          </div>
 
         </div>
       </div>
