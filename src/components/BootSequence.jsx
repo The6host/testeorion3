@@ -62,7 +62,7 @@ export default function BootSequence({ onComplete }) {
     let cancelled = false
     let compatIv = null
 
-    const FULL_LINES = ['Jogador encontrado.', 'Nível atual: Iniciado.']
+    const FULL_LINES = ['Jogador encontrado.', 'Nível atual: Iniciante.']
     const COMPAT_PREFIX = 'Compatibilidade: '
     const CHAR_DELAY = 38   // ms por letra
     const LINE_PAUSE = 320  // pausa entre linhas

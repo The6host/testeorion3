@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { motion } from 'framer-motion'
 
 const PAINS = [
@@ -39,9 +40,33 @@ const cardVariants = {
     y: 0,
     transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] },
   },
+  hover: {
+    y: -8,
+    scale: 1.02,
+    borderColor: 'rgba(168,85,247,0.6)',
+    boxShadow: '0 0 30px rgba(168,85,247,0.2)',
+    transition: { type: 'spring', stiffness: 300, damping: 20 },
+  },
+  tap: {
+    scale: 1.02,
+    borderColor: 'rgba(168,85,247,0.6)',
+    boxShadow: '0 0 30px rgba(168,85,247,0.2)',
+    transition: { type: 'spring', stiffness: 300, damping: 20 },
+  },
+}
+
+const iconVariants = {
+  hover: { filter: 'drop-shadow(0 0 18px rgba(168,85,247,0.55))' },
+  tap:   { filter: 'drop-shadow(0 0 18px rgba(168,85,247,0.55))' },
 }
 
 export default function PainPoints() {
+  const [selected, setSelected] = useState(null)
+
+  function handleCardClick(title) {
+    setSelected(prev => prev === title ? null : title)
+  }
+
   return (
     <section
       className="relative pt-20 pb-24 w-full"
@@ -94,16 +119,23 @@ export default function PainPoints() {
             <motion.div
               key={pain.title}
               variants={cardVariants}
-              className="flex flex-col items-center text-center gap-5 rounded-2xl p-6"
+              whileHover="hover"
+              whileTap="tap"
+              animate={selected === pain.title ? 'hover' : undefined}
+              onClick={() => handleCardClick(pain.title)}
+              onHoverStart={() => setSelected(null)}
+              className="flex flex-col items-center text-center gap-5 rounded-2xl p-6 cursor-pointer"
               style={{
                 background: 'linear-gradient(145deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 100%)',
                 border: '1px solid rgba(255,255,255,0.07)',
+                borderColor: 'rgba(255,255,255,0.07)',
               }}
             >
-              {/* Ícone com flutuação independente */}
-              <img
+              {/* Ícone — herda "hover" e "tap" do pai via variants */}
+              <motion.img
                 src={pain.icon}
                 alt={pain.title}
+                variants={iconVariants}
                 className="w-28 h-28 object-contain select-none"
                 draggable={false}
               />

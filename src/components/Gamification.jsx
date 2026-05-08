@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { Sword, Flame, BarChart2, Trophy } from 'lucide-react'
 
@@ -36,7 +37,32 @@ const itemVariants = {
   visible: { opacity: 1, y: 0, transition: { duration: 0.55, ease: [0.22, 1, 0.36, 1] } },
 }
 
+const cardVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.55, ease: [0.22, 1, 0.36, 1] } },
+  hover: {
+    y: -6,
+    scale: 1.03,
+    borderColor: 'rgba(168,85,247,0.6)',
+    boxShadow: '0 0 28px rgba(168,85,247,0.2)',
+    transition: { type: 'spring', stiffness: 300, damping: 20 },
+  },
+  tap: {
+    scale: 1.03,
+    borderColor: 'rgba(168,85,247,0.6)',
+    boxShadow: '0 0 28px rgba(168,85,247,0.2)',
+    transition: { type: 'spring', stiffness: 300, damping: 20 },
+  },
+}
+
+const iconWrapVariants = {
+  hover: { filter: 'drop-shadow(0 0 10px rgba(204,255,0,0.65))' },
+  tap:   { filter: 'drop-shadow(0 0 10px rgba(204,255,0,0.65))' },
+}
+
 export default function Gamification() {
+  const [selected, setSelected] = useState(null)
+
   return (
     <section className="relative py-28 w-full" style={{ overflowX: 'clip' }}>
 
@@ -50,11 +76,13 @@ export default function Gamification() {
       />
 
       <div className="relative z-10 max-w-6xl mx-auto px-6 md:px-12">
+        {/* Desktop: coluna esquerda (texto + cards) | coluna direita (imagem) */}
+        {/* Mobile: título → desc → cards → imagem */}
         <div className="flex flex-col lg:flex-row items-center gap-16 lg:gap-20">
 
-          {/* ── Coluna esquerda — Textos e features ── */}
+          {/* ── Coluna esquerda — Título + cards 2×2 ── */}
           <motion.div
-            className="w-full lg:w-1/2 flex flex-col gap-8 order-1"
+            className="w-full lg:w-1/2 flex flex-col gap-8"
             variants={containerVariants}
             initial="hidden"
             whileInView="visible"
@@ -79,35 +107,54 @@ export default function Gamification() {
               passa a ser visual, tangível e viciante.
             </motion.p>
 
-            {/* Grade de features — 4 colunas horizontais */}
+            {/* Grid 2×2 de cards */}
             <motion.div
               variants={itemVariants}
-              className="grid grid-cols-2 md:grid-cols-4 gap-6 pt-2"
+              className="grid grid-cols-2 gap-4"
             >
               {FEATURES.map(({ icon: Icon, title, desc }) => (
-                <div key={title} className="flex flex-col gap-2">
-                  <div
-                    className="flex items-center justify-center w-10 h-10 rounded-full mb-1"
+                <motion.div
+                  key={title}
+                  variants={cardVariants}
+                  whileHover="hover"
+                  whileTap="tap"
+                  animate={selected === title ? 'hover' : undefined}
+                  onClick={() => setSelected(p => p === title ? null : title)}
+                  onHoverStart={() => setSelected(null)}
+                  className="flex flex-col gap-3 rounded-2xl p-5 cursor-pointer"
+                  style={{
+                    background: 'rgba(255,255,255,0.04)',
+                    backdropFilter: 'blur(12px)',
+                    WebkitBackdropFilter: 'blur(12px)',
+                    border: '1px solid rgba(255,255,255,0.1)',
+                    borderColor: 'rgba(255,255,255,0.1)',
+                  }}
+                >
+                  <motion.div
+                    variants={iconWrapVariants}
+                    className="flex items-center justify-center w-10 h-10 rounded-xl"
                     style={{
-                      background: 'rgba(204,255,0,0.1)',
-                      border: '1px solid rgba(204,255,0,0.25)',
+                      background: 'rgba(204,255,0,0.08)',
+                      border: '1px solid rgba(204,255,0,0.22)',
                     }}
                   >
                     <Icon size={18} color={NEON} strokeWidth={1.75} />
+                  </motion.div>
+                  <div className="flex flex-col gap-1">
+                    <h3 className="text-xs font-black tracking-wider text-white uppercase leading-snug">
+                      {title}
+                    </h3>
+                    <p className="text-xs text-white/45 leading-relaxed">
+                      {desc}
+                    </p>
                   </div>
-                  <h3 className="text-xs font-black tracking-wider text-white uppercase leading-snug">
-                    {title}
-                  </h3>
-                  <p className="text-xs text-white/45 leading-relaxed">
-                    {desc}
-                  </p>
-                </div>
+                </motion.div>
               ))}
             </motion.div>
           </motion.div>
 
-          {/* ── Coluna direita — Imagem 3D ── */}
-          <div className="w-full lg:w-1/2 flex justify-center order-2">
+          {/* ── Coluna direita — Imagem (no mobile vai abaixo via order) ── */}
+          <div className="w-full lg:w-1/2 flex justify-center order-last lg:order-none">
             <motion.div
               className="w-full max-w-xs md:max-w-sm"
               initial={{ opacity: 0, x: 40 }}
