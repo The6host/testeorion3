@@ -1,11 +1,11 @@
 import { motion } from 'framer-motion'
 
 const NEON      = '#ccff00'
-const BEZEL     = '#3F4351'
-const SCREEN_BG = '#13151c'
-const CARD_BG   = '#1a1d26'
-const CARD_BDR  = '#252833'
-const TOPBAR    = '#2C2F36'
+const BEZEL     = '#191b23'
+const SCREEN_BG = '#07080e'
+const CARD_BG   = '#0d0f17'
+const CARD_BDR  = '#161824'
+const TOPBAR    = '#0f1016'
 
 const FLOAT_GLASS = {
   background: 'rgba(15,16,24,0.94)',
