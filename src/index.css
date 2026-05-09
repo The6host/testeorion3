@@ -3,6 +3,8 @@
 @layer base {
   html {
     scroll-behavior: smooth;
+    scrollbar-width: thin;
+    scrollbar-color: #ccff00 #010208;
   }
   body {
     margin: 0;
@@ -13,6 +15,23 @@
   }
   #root {
     width: 100%;
+  }
+
+  /* Scrollbar — WebKit (Chrome, Safari, Edge) */
+  ::-webkit-scrollbar {
+    width: 8px;
+  }
+  ::-webkit-scrollbar-track {
+    background: #010208;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #ccff00;
+    border-radius: 10px;
+    border: 2px solid #010208;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #d9ff33;
+    box-shadow: 0 0 8px rgba(204, 255, 0, 0.7);
   }
 }
 

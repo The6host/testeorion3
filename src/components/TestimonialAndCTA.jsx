@@ -93,14 +93,15 @@ function TestimonialCard({ t, index, exitDir, onExitComplete, onDragEnd }) {
   const isExiting = isTop && exitDir !== null
   const pos = STACK_POS[index] ?? STACK_POS[3]
 
-  // Alvo de animação
+  // initial = posição final exata → sem flash ao montar
+  const initialState = { scale: pos.scale, y: pos.y, opacity: pos.opacity, x: 0, rotate: 0 }
+
   const animateTarget = isExiting
     ? { x: exitDir * 650, opacity: 0, rotate: exitDir * 22, scale: 0.95, y: 0 }
     : isTop
       ? { scale: 1, y: 0, opacity: 1, rotate: [-0.5, 0.5, -0.5], x: 0 }
       : { scale: pos.scale, y: pos.y, opacity: pos.opacity, rotate: 0, x: 0 }
 
-  // Transição por propriedade
   const transitionTarget = isExiting
     ? { duration: 0.38, ease: [0.22, 1, 0.36, 1] }
     : isTop
@@ -125,6 +126,7 @@ function TestimonialCard({ t, index, exitDir, onExitComplete, onDragEnd }) {
         pointerEvents: isExiting || index > 2 ? 'none' : 'auto',
         ...CARD_GLASS,
       }}
+      initial={initialState}
       animate={animateTarget}
       transition={transitionTarget}
       onAnimationComplete={isExiting ? onExitComplete : undefined}
@@ -163,7 +165,7 @@ function TestimonialCard({ t, index, exitDir, onExitComplete, onDragEnd }) {
   )
 }
 
-export default function TestimonialAndCTA() {
+export default function TestimonialAndCTA({ onStartQuiz }) {
   const [cards, setCards] = useState(INITIAL_TESTIMONIALS)
   const [exitDir, setExitDir] = useState(null)
 
@@ -202,7 +204,7 @@ export default function TestimonialAndCTA() {
             variants={fadeUp}
             initial="hidden"
             whileInView="visible"
-            viewport={{ once: true, margin: '-60px' }}
+            viewport={{ once: true, margin: '250px' }}
           >
             {/* Título */}
             <div>
@@ -215,7 +217,7 @@ export default function TestimonialAndCTA() {
             </div>
 
             {/* Stack de cards */}
-            <div className="relative w-full h-[280px]">
+            <div className="relative w-full" style={{ height: 280, minHeight: 280 }}>
               {cards.map((t, index) => (
                 <TestimonialCard
                   key={t.id}
@@ -262,7 +264,7 @@ export default function TestimonialAndCTA() {
 
               <div className="flex flex-col gap-3">
                 <div>
-                  <ButtonNeon>Começar Agora</ButtonNeon>
+                  <ButtonNeon onClick={onStartQuiz}>Começar Agora</ButtonNeon>
                 </div>
                 <p className="text-white/35 text-xs">
                   7 dias grátis • Cancele quando quiser

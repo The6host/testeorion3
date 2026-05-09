@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Routes, Route, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import './index.css'
 import Header from './components/Header'
@@ -12,24 +13,25 @@ import Footer from './components/Footer'
 import SectionDivider from './components/SectionDivider'
 import BootSequence from './components/BootSequence'
 import BackgroundEffects from './components/BackgroundEffects'
+import Quiz from './components/Quiz'
 
-export default function App() {
-  const [isBooting, setIsBooting] = useState(true)   // controla se o overlay existe no DOM
-  const [showLanding, setShowLanding] = useState(false) // só true após overlay sumir do DOM
+function Landing() {
+  const navigate = useNavigate()
+  const [isBooting,   setIsBooting]   = useState(true)
+  const [showLanding, setShowLanding] = useState(false)
+
+  function startQuiz() { navigate('/quiz') }
 
   return (
     <div className="relative w-full" style={{ backgroundColor: '#010208', overflowX: 'clip' }}>
       <BackgroundEffects />
 
-      {/* Boot overlay — AnimatePresence executa o exit={{ opacity: 0 }} do motion.div interno */}
-      {/* onExitComplete dispara APÓS o fade-out terminar completamente */}
       <AnimatePresence onExitComplete={() => setShowLanding(true)}>
         {isBooting && (
           <BootSequence key="boot" onComplete={() => setIsBooting(false)} />
         )}
       </AnimatePresence>
 
-      {/* Landing page — só monta depois que o overlay foi removido do DOM */}
       {showLanding && (
         <motion.div
           className="relative z-10"
@@ -37,8 +39,8 @@ export default function App() {
           animate={{ opacity: 1 }}
           transition={{ duration: 0.8, ease: 'easeOut' }}
         >
-          <Header />
-          <Hero />
+          <Header onStartQuiz={startQuiz} />
+          <Hero onStartQuiz={startQuiz} />
           <SectionDivider />
           <PainPoints />
           <SectionDivider />
@@ -48,12 +50,27 @@ export default function App() {
           <SectionDivider />
           <HowItWorks />
           <SectionDivider />
-          <TestimonialAndCTA />
+          <TestimonialAndCTA onStartQuiz={startQuiz} />
           <SectionDivider />
           <Footer />
         </motion.div>
       )}
-
     </div>
+  )
+}
+
+function QuizPage() {
+  const navigate = useNavigate()
+  return (
+    <Quiz onClose={() => navigate('/')} />
+  )
+}
+
+export default function App() {
+  return (
+    <Routes>
+      <Route path="/"     element={<Landing />} />
+      <Route path="/quiz" element={<QuizPage />} />
+    </Routes>
   )
 }
