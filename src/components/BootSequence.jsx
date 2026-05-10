@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 
 const NEON = '#ccff00'
 
-export default function BootSequence({ onComplete }) {
+export default function BootSequence({ onComplete, onFirstClick }) {
   const [phase, setPhase] = useState(0)
   const [progress, setProgress] = useState(0)
   const [termLines, setTermLines] = useState([])
@@ -20,7 +20,12 @@ export default function BootSequence({ onComplete }) {
   }, [])
 
   function handleClick() {
-    if (phase === 0) setPhase(1)
+    if (phase === 0) {
+      onFirstClick?.()
+      setPhase(1)
+    } else if (phase > 0 && phase < 7) {
+      onComplete()
+    }
   }
 
   // Phase 1: terminal lines + progress bar
@@ -35,18 +40,19 @@ export default function BootSequence({ onComplete }) {
     const timers = LINES.map((line, i) =>
       setTimeout(() => setTermLines(p => [...p, line]), 500 + i * 1000)
     )
-    // Progresso mais lento: ~4s para chegar a 98%
+    // Progresso até 98% via interval, depois snap para 100% e aguarda 500ms
     let prog = 0
+    let finishTimer = null
     const iv = setInterval(() => {
       prog = Math.min(prog + Math.random() * 3 + 0.8, 98)
       setProgress(parseFloat(prog.toFixed(1)))
       if (prog >= 98) {
         clearInterval(iv)
-        // Espera o usuário ler a última linha antes de avançar
-        setTimeout(() => setPhase(2), 1200)
+        setProgress(100)
+        finishTimer = setTimeout(() => setPhase(2), 500)
       }
     }, 120)
-    return () => { timers.forEach(clearTimeout); clearInterval(iv) }
+    return () => { timers.forEach(clearTimeout); clearInterval(iv); if (finishTimer) clearTimeout(finishTimer) }
   }, [phase])
 
   // Phase 2: alert — 1.8s
@@ -156,7 +162,7 @@ export default function BootSequence({ onComplete }) {
       style={{
         height: '100svh',   /* svh = viewport sem browser chrome — corrige iOS/Android */
         backgroundColor: '#00000a',
-        cursor: phase === 0 ? 'pointer' : 'default',
+        cursor: phase < 7 ? 'pointer' : 'default',
         userSelect: 'none',
       }}
       exit={{ opacity: 0 }}
@@ -191,6 +197,16 @@ export default function BootSequence({ onComplete }) {
         <div className="absolute left-1/4 top-0 bottom-0 w-px" style={{ background: 'linear-gradient(to bottom, transparent, rgba(124,58,237,0.18) 20%, rgba(124,58,237,0.18) 80%, transparent)' }} />
         <div className="absolute right-1/4 top-0 bottom-0 w-px" style={{ background: 'linear-gradient(to bottom, transparent, rgba(124,58,237,0.18) 20%, rgba(124,58,237,0.18) 80%, transparent)' }} />
       </div>
+
+      {/* Hint de skip — visível apenas após o Estado 0 */}
+      {phase > 0 && phase < 7 && (
+        <p
+          className="absolute bottom-6 right-6 font-mono text-[10px] tracking-widest pointer-events-none select-none"
+          style={{ color: 'rgba(204,255,0,0.22)' }}
+        >
+          [ Clique em qualquer lugar para pular ]
+        </p>
+      )}
 
       {/* Phase content — centralização absoluta, funciona em todos os mobile */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full flex flex-col items-center">
