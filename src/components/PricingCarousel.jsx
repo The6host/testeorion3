@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import BackgroundEffects from './BackgroundEffects'
 
 const NEON   = '#ccff00'
 const BG     = '#010208'
@@ -117,7 +118,7 @@ function PlanCard({ plan, isActive }) {
     <div
       style={{
         width: CARD_W,
-        background: BG,
+        background: '#0a0a0a',
         border: `1.5px solid ${color}`,
         borderRadius: 22,
         padding: '22px 18px 20px',
@@ -234,10 +235,15 @@ export default function PricingCarousel() {
 
   return (
     <div
-      style={{ minHeight: '100dvh', background: BG, overflowX: 'hidden', display: 'flex', flexDirection: 'column' }}
+      style={{ minHeight: '100dvh', background: BG, overflowX: 'hidden', display: 'flex', flexDirection: 'column', position: 'relative' }}
       onTouchStart={onTouchStart}
       onTouchEnd={onTouchEnd}
     >
+      <BackgroundEffects />
+
+      {/* Content above background orbs */}
+      <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', flex: 1 }}>
+
       {/* ── Top urgency bar ── */}
       <div style={{
         display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 28,
@@ -411,6 +417,8 @@ export default function PricingCarousel() {
       <p style={{ textAlign: 'center', fontSize: 12, color: 'rgba(255,255,255,0.28)', padding: '0 20px 36px' }}>
         🔒 Garantia de 7 dias. Se não gostar, devolvemos 100%.
       </p>
+
+      </div>{/* end content wrapper */}
     </div>
   )
 }
