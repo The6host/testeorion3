@@ -14,6 +14,7 @@ import SectionDivider from './components/SectionDivider'
 import BootSequence from './components/BootSequence'
 import BackgroundEffects from './components/BackgroundEffects'
 import Quiz from './components/Quiz'
+import ProfileAnalysis from './components/ProfileAnalysis'
 
 function Landing() {
   const navigate = useNavigate()
@@ -62,15 +63,23 @@ function Landing() {
 function QuizPage() {
   const navigate = useNavigate()
   return (
-    <Quiz onClose={() => navigate('/')} />
+    <Quiz onClose={() => navigate('/')} onComplete={() => navigate('/analyzing')} />
+  )
+}
+
+function AnalyzingPage() {
+  const navigate = useNavigate()
+  return (
+    <ProfileAnalysis onComplete={() => navigate('/')} />
   )
 }
 
 export default function App() {
   return (
     <Routes>
-      <Route path="/"     element={<Landing />} />
-      <Route path="/quiz" element={<QuizPage />} />
+      <Route path="/"          element={<Landing />} />
+      <Route path="/quiz"      element={<QuizPage />} />
+      <Route path="/analyzing" element={<AnalyzingPage />} />
     </Routes>
   )
 }

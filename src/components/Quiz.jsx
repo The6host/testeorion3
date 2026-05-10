@@ -286,7 +286,7 @@ const QUESTIONS = [
 ]
 
 /* ── Main component ────────────────────────────────────────────────── */
-export default function Quiz({ onClose }) {
+export default function Quiz({ onClose, onComplete }) {
   const [step,    setStep]    = useState(1)
   const [answers, setAnswers] = useState({})
   const [altura,  setAltura]  = useState(170)
@@ -306,7 +306,7 @@ export default function Quiz({ onClose }) {
   function next() {
     if (!canProceed()) return
     if (step < TOTAL) setStep(s => s + 1)
-    else onClose()
+    else (onComplete ?? onClose)()
   }
 
   const { q, sub } = QUESTIONS[step - 1]
