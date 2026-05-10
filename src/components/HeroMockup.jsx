@@ -75,18 +75,18 @@ function PhoneScreen() {
       </div>
 
       {/* Dashboard */}
-      <div style={{ flex: 1, overflow: 'hidden', padding: '11px 12px 8px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+      <div style={{ flex: 1, overflow: 'hidden', padding: '18px 14px 18px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
 
         {/* Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
-            <p style={{ fontSize: 9, color: 'rgba(255,255,255,0.35)', marginBottom: 2 }}>Bem-vindo de volta</p>
+            <p style={{ fontSize: 9, color: 'rgba(255,255,255,0.35)', marginBottom: 3 }}>Bem-vindo de volta</p>
             <p style={{ fontSize: 15, fontWeight: 900, color: '#fff', letterSpacing: '-0.02em', lineHeight: 1 }}>Player_One</p>
           </div>
           <div style={{
             display: 'flex', alignItems: 'center', gap: 3,
             background: 'rgba(204,255,0,0.1)', border: '1px solid rgba(204,255,0,0.3)',
-            borderRadius: 16, padding: '3px 9px',
+            borderRadius: 16, padding: '4px 10px',
           }}>
             <span style={{ fontSize: 10 }}>🔥</span>
             <span style={{ fontSize: 12, fontWeight: 800, color: NEON }}>127</span>
@@ -94,25 +94,25 @@ function PhoneScreen() {
         </div>
 
         {/* Progresso Diário */}
-        <div style={{ background: CARD_BG, border: `1px solid ${CARD_BDR}`, borderRadius: 10, padding: '9px 10px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 5 }}>
+        <div style={{ background: CARD_BG, border: `1px solid ${CARD_BDR}`, borderRadius: 10, padding: '13px 12px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
             <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.48)' }}>Progresso Diário</span>
             <span style={{ fontSize: 10, fontWeight: 800, color: NEON }}>78%</span>
           </div>
           <div style={{ width: '100%', height: 5, borderRadius: 6, background: '#252833' }}>
             <div style={{ height: '100%', width: '78%', borderRadius: 6, background: NEON }} />
           </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 4, fontSize: 9 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 7, fontSize: 9 }}>
             <span style={{ color: 'rgba(255,255,255,0.25)' }}>7/9 tasks</span>
             <span style={{ color: NEON }}>+450 pts</span>
           </div>
         </div>
 
         {/* Arena Ativa */}
-        <div style={{ background: CARD_BG, border: `1px solid ${CARD_BDR}`, borderRadius: 10, padding: '9px 10px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 7 }}>
+        <div style={{ background: CARD_BG, border: `1px solid ${CARD_BDR}`, borderRadius: 10, padding: '13px 12px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-              <div style={{ width: 20, height: 20, borderRadius: '50%', background: 'rgba(204,255,0,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <div style={{ width: 22, height: 22, borderRadius: '50%', background: 'rgba(204,255,0,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={NEON} strokeWidth="2.2">
                   <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
                   <circle cx="9" cy="7" r="4" />
@@ -120,35 +120,35 @@ function PhoneScreen() {
               </div>
               <div>
                 <p style={{ fontSize: 10, fontWeight: 700, color: '#fff', lineHeight: 1 }}>Arena Ativa</p>
-                <p style={{ fontSize: 9, color: 'rgba(255,255,255,0.35)', marginTop: 1 }}>vs Lucas M.</p>
+                <p style={{ fontSize: 9, color: 'rgba(255,255,255,0.35)', marginTop: 2 }}>vs Lucas M.</p>
               </div>
             </div>
             <span style={{ fontSize: 9, fontWeight: 700, color: NEON }}>↗ +15%</span>
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div style={{ textAlign: 'center' }}>
-              <p style={{ fontSize: 20, fontWeight: 900, color: '#fff', lineHeight: 1 }}>450</p>
-              <p style={{ fontSize: 9, color: 'rgba(255,255,255,0.35)', marginTop: 2 }}>Você</p>
+              <p style={{ fontSize: 22, fontWeight: 900, color: '#fff', lineHeight: 1 }}>450</p>
+              <p style={{ fontSize: 9, color: 'rgba(255,255,255,0.35)', marginTop: 3 }}>Você</p>
             </div>
             <div style={{
               fontSize: 8, fontWeight: 900, letterSpacing: '0.08em',
               background: 'rgba(204,255,0,0.1)', border: '1px solid rgba(204,255,0,0.22)',
-              color: NEON, padding: '3px 8px', borderRadius: 16,
+              color: NEON, padding: '4px 9px', borderRadius: 16,
             }}>VENCENDO</div>
             <div style={{ textAlign: 'center' }}>
-              <p style={{ fontSize: 20, fontWeight: 900, color: 'rgba(255,255,255,0.3)', lineHeight: 1 }}>380</p>
-              <p style={{ fontSize: 9, color: 'rgba(255,255,255,0.35)', marginTop: 2 }}>Lucas</p>
+              <p style={{ fontSize: 22, fontWeight: 900, color: 'rgba(255,255,255,0.3)', lineHeight: 1 }}>380</p>
+              <p style={{ fontSize: 9, color: 'rgba(255,255,255,0.35)', marginTop: 3 }}>Lucas</p>
             </div>
           </div>
         </div>
 
         {/* Checklist */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           {tasks.map(({ label, done, Icon }) => (
             <div key={label} style={{
               display: 'flex', alignItems: 'center', gap: 8,
               background: CARD_BG, border: `1px solid ${CARD_BDR}`,
-              borderRadius: 8, padding: '7px 10px',
+              borderRadius: 8, padding: '10px 12px',
             }}>
               <CheckIcon done={done} />
               <div style={{ display: 'flex', alignItems: 'center', gap: 5, flex: 1 }}>
@@ -175,13 +175,17 @@ function PhoneScreen() {
 /* ── Card flutuante ── */
 function FloatCard({ children, duration = 4, delay = 0, style = {} }) {
   return (
-    <motion.div
-      style={{ position: 'absolute', ...FLOAT_GLASS, ...style }}
-      animate={{ y: [-7, 7, -7] }}
-      transition={{ duration, repeat: Infinity, ease: 'easeInOut', delay }}
+    <div
+      style={{
+        position: 'absolute',
+        ...FLOAT_GLASS,
+        ...style,
+        animation: `heroFloat ${duration}s cubic-bezier(0.45, 0.05, 0.55, 0.95) ${delay}s infinite`,
+        willChange: 'transform',
+      }}
     >
       {children}
-    </motion.div>
+    </div>
   )
 }
 
@@ -241,7 +245,7 @@ export default function HeroMockup({ simplified = false }) {
         </div>
 
         {/* ── Card 1: Ranking ── */}
-        <FloatCard duration={3.4} delay={0} style={{ top: 30, left: -118, padding: '10px 14px', minWidth: 140 }}>
+        <FloatCard duration={3.4} delay={0} style={{ top: 30, left: -68, padding: '10px 14px', minWidth: 140 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <div style={{ width: 28, height: 28, borderRadius: 8, background: 'rgba(204,255,0,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={NEON} strokeWidth="2">
@@ -259,7 +263,7 @@ export default function HeroMockup({ simplified = false }) {
         </FloatCard>
 
         {/* ── Card 2: Streak ── */}
-        <FloatCard duration={4.8} delay={0.9} style={{ top: 255, left: -112, padding: '10px 16px' }}>
+        <FloatCard duration={4.8} delay={0.9} style={{ top: 255, left: -65, padding: '10px 16px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <span style={{ fontSize: 22, lineHeight: 1 }}>🔥</span>
             <div>
@@ -270,7 +274,7 @@ export default function HeroMockup({ simplified = false }) {
         </FloatCard>
 
         {/* ── Card 3: XP ── */}
-        <FloatCard duration={5.2} delay={0.4} style={{ top: 90, left: 268, padding: '12px 14px', minWidth: 126 }}>
+        <FloatCard duration={5.2} delay={0.4} style={{ top: 90, left: 238, padding: '12px 14px', minWidth: 126 }}>
           <p style={{ fontSize: 10, color: 'rgba(255,255,255,0.38)', marginBottom: 4 }}>XP esta semana</p>
           <p style={{ fontSize: 18, fontWeight: 900, color: NEON, lineHeight: 1, marginBottom: 8 }}>+2.450 XP</p>
           <div style={{ width: '100%', height: 4, borderRadius: 6, background: 'rgba(255,255,255,0.08)' }}>
@@ -279,7 +283,7 @@ export default function HeroMockup({ simplified = false }) {
         </FloatCard>
 
         {/* ── Card 4: Missão ── */}
-        <FloatCard duration={3.9} delay={1.3} style={{ top: 405, left: 242, padding: '10px 14px', minWidth: 148 }}>
+        <FloatCard duration={3.9} delay={1.3} style={{ top: 405, left: 212, padding: '10px 14px', minWidth: 148 }}>
           <p style={{ fontSize: 10, color: 'rgba(255,255,255,0.38)', marginBottom: 3 }}>Missão Épica</p>
           <p style={{ fontSize: 11, fontWeight: 700, color: '#fff', marginBottom: 7 }}>Conquistar o Ápice</p>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>

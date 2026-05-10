@@ -127,9 +127,9 @@ export default function Hero({ onStartQuiz }) {
           </motion.div>
 
           {/* Mockup mobile — versão completa escalada */}
-        <div className="lg:hidden mt-10 flex justify-center" style={{ height: 371 }}>
+        <div className="lg:hidden mt-10 flex justify-center -mx-6 md:-mx-12 overflow-hidden" style={{ height: 456 }}>
           <div style={{
-            transform: 'scale(0.65)',
+            transform: 'scale(0.80)',
             transformOrigin: 'top center',
             width: 560,
             height: 570,

@@ -35,6 +35,11 @@
   }
 }
 
+@keyframes heroFloat {
+  0%, 100% { transform: translateY(0px); }
+  50%       { transform: translateY(-6px); }
+}
+
 @layer utilities {
   .glow-neon {
     box-shadow: 0 0 20px #ccff0066, 0 0 40px #ccff0033, 0 0 80px #ccff0022;
