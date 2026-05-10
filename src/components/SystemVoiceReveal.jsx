@@ -88,7 +88,7 @@ function WaveGroup({ paths, rotate }) {
 }
 
 const BG_ORIGINAL_VOL = 0.35
-const BG_DUCKED_VOL   = 0.10
+const BG_DUCKED_VOL   = 0.05
 
 /* Gradual volume fade — returns the interval id so it can be cancelled */
 function fadeVolume(audio, targetVol, durationMs = 1000, onDone) {
@@ -131,21 +131,27 @@ export default function SystemVoiceReveal({ onComplete, bgAudioRef }) {
   useEffect(() => {
     if (audioRef.current) return           // guard against double-mount (StrictMode)
 
-    /* Duck background music */
+    /* Duck imediatamente — fade de 1s enquanto o suspense acontece */
     fadeIdRef.current = fadeVolume(bgAudioRef?.current, BG_DUCKED_VOL, 1000)
 
-    const audio = new Audio(AUDIO_URL)
-    audio.volume = 0.8
-    audio.addEventListener('ended', finish)
-    audio.play().catch(() => {})
-    audioRef.current = audio
+    /* Voz entra após 1s de silêncio dramático */
+    const delayId = setTimeout(() => {
+      const audio = new Audio(AUDIO_URL)
+      audio.volume = 1.0
+      audio.addEventListener('ended', finish)
+      audio.play().catch(() => {})
+      audioRef.current = audio
+    }, 1000)
 
     return () => {
+      clearTimeout(delayId)
       clearInterval(fadeIdRef.current)
-      audio.pause()
-      audio.src = ''
-      audioRef.current = null
-      /* Ensure music is always restored on unmount */
+      if (audioRef.current) {
+        audioRef.current.pause()
+        audioRef.current.src = ''
+        audioRef.current = null
+      }
+      /* Garante restauração do volume ao desmontar */
       if (bgAudioRef?.current) bgAudioRef.current.volume = BG_ORIGINAL_VOL
     }
   }, [])
