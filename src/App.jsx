@@ -15,6 +15,8 @@ import BootSequence from './components/BootSequence'
 import BackgroundEffects from './components/BackgroundEffects'
 import Quiz from './components/Quiz'
 import ProfileAnalysis from './components/ProfileAnalysis'
+import SystemVoiceReveal from './components/SystemVoiceReveal'
+import PricingCarousel   from './components/PricingCarousel'
 
 const AUDIO_URL = 'https://res.cloudinary.com/dctzllsly/video/upload/v1778378449/music-bg-orion_j3uur9.mp3'
 const NEON = '#ccff00'
@@ -77,7 +79,7 @@ function useAudio() {
     setMuted(m => !m)
   }, [])
 
-  return { start, toggle, muted, started }
+  return { start, toggle, muted, started, audioRef }
 }
 
 /* ── Pages ── */
@@ -136,12 +138,21 @@ function QuizPage() {
 
 function AnalyzingPage() {
   const navigate = useNavigate()
-  return <ProfileAnalysis onComplete={() => navigate('/')} />
+  return <ProfileAnalysis onComplete={() => navigate('/voice')} />
+}
+
+function VoicePage({ bgAudioRef }) {
+  const navigate = useNavigate()
+  return <SystemVoiceReveal onComplete={() => navigate('/pricing')} bgAudioRef={bgAudioRef} />
+}
+
+function PricingPage() {
+  return <PricingCarousel />
 }
 
 /* ── Root ── */
 export default function App() {
-  const { start, toggle, muted, started } = useAudio()
+  const { start, toggle, muted, started, audioRef } = useAudio()
 
   return (
     <>
@@ -149,6 +160,8 @@ export default function App() {
         <Route path="/"          element={<Landing onAudioStart={start} />} />
         <Route path="/quiz"      element={<QuizPage />} />
         <Route path="/analyzing" element={<AnalyzingPage />} />
+        <Route path="/voice"     element={<VoicePage bgAudioRef={audioRef} />} />
+        <Route path="/pricing"   element={<PricingPage />} />
       </Routes>
 
       <MuteButton muted={muted} onToggle={toggle} visible={started} />

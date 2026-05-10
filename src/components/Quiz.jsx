@@ -391,7 +391,7 @@ export default function Quiz({ onClose, onComplete }) {
         }}>
           <div style={{ maxWidth: 680, margin: '0 auto' }}>
             {isLast && (
-              <button onClick={onClose} style={{ display: 'block', width: '100%', textAlign: 'center', background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(255,80,80,0.55)', fontSize: 13, marginBottom: 10, padding: '4px 0' }}>
+              <button onClick={() => (onComplete ?? onClose)()} style={{ display: 'block', width: '100%', textAlign: 'center', background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(255,80,80,0.55)', fontSize: 13, marginBottom: 10, padding: '4px 0' }}>
                 Prefiro não informar
               </button>
             )}
