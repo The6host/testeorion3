@@ -1,10 +1,32 @@
 import { useState, useEffect, useRef } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion } from 'framer-motion'
+import { Zap, Target, Crown } from 'lucide-react'
 import BackgroundEffects from './BackgroundEffects'
 
 const NEON   = '#ccff00'
 const BG     = '#010208'
 const CARD_W = 264
+const CARD_H = 544
+
+/* ── Live viewers hook (flutua entre 33–52) ── */
+function useLiveViewers() {
+  const [count, setCount] = useState(38)
+  useEffect(() => {
+    function schedule() {
+      const delay = 4000 + Math.random() * 6000   // 4–10s entre mudanças
+      return setTimeout(() => {
+        setCount(c => {
+          const delta = Math.random() < 0.5 ? -1 : 1
+          return Math.min(52, Math.max(33, c + delta))
+        })
+        schedule()
+      }, delay)
+    }
+    const id = schedule()
+    return () => clearTimeout(id)
+  }, [])
+  return count
+}
 
 /* ── Countdown hook ── */
 function useCountdown(init = 877) {
@@ -28,11 +50,11 @@ const AVATARS = [
 const PLANS = [
   {
     id:      'primary',
-    icon:    '⚡',
+    icon:    Zap,
     name:    'ORION Primary',
     tagline: 'O primeiro passo',
     desc:    'Pra quem quer sair do zero',
-    color:   '#60A5FA',
+    color:   '#2563EB',
     features: [
       '5 hábitos simultâneos',
       'Lembretes que não te deixam esquecer',
@@ -46,12 +68,12 @@ const PLANS = [
   },
   {
     id:      'focuz',
-    icon:    '🔥',
+    icon:    Target,
     badge:   '✦ 94% ESCOLHEM ESSE',
     name:    'ORION Focuz',
     tagline: 'Escolha de 94% dos usuários',
     desc:    'O plano que transforma de verdade',
-    color:   NEON,
+    color:   '#A855F7',
     features: [
       'Hábitos ILIMITADOS',
       'IA que monta sua rotina por você',
@@ -66,11 +88,11 @@ const PLANS = [
   },
   {
     id:      'intensive',
-    icon:    '💎',
+    icon:    Crown,
     name:    'ORION Intensive',
     tagline: 'Sem limites',
     desc:    'Pra quem quer resultado MÁXIMO',
-    color:   '#F87171',
+    color:   NEON,
     features: [
       'Tudo do Focuz + extras exclusivos',
       'IA 24h que te cobra pelo resultado',
@@ -112,31 +134,49 @@ function BarGroup({ count, color, label }) {
 
 /* ── Individual plan card ── */
 function PlanCard({ plan, isActive }) {
-  const { color, icon, name, tagline, desc, features, bars, original, price, cta } = plan
+  const { color, icon: Icon, badge, name, tagline, desc, features, bars, original, price, cta } = plan
 
   return (
     <div
       style={{
         width: CARD_W,
+        height: CARD_H,
         background: '#0a0a0a',
         border: `1.5px solid ${color}`,
         borderRadius: 22,
         padding: '22px 18px 20px',
         position: 'relative',
-        overflow: 'hidden',
+        overflow: 'visible',
         display: 'flex',
         flexDirection: 'column',
+        boxSizing: 'border-box',
       }}
     >
+
+      {/* Badge — grampado na borda superior, sempre visível */}
+      {badge && (
+        <div style={{
+          position: 'absolute', top: 0, left: '50%',
+          transform: 'translateX(-50%) translateY(-50%)',
+          background: '#A855F7', color: '#fff',
+          fontSize: 10, fontWeight: 900,
+          padding: '5px 14px', borderRadius: 20,
+          letterSpacing: '0.07em', whiteSpace: 'nowrap',
+          boxShadow: '0 0 22px rgba(168,85,247,0.6)',
+          zIndex: 2,
+        }}>
+          {badge}
+        </div>
+      )}
 
       {/* Icon + name row */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
         <div style={{
-          width: 42, height: 42, borderRadius: 13, flexShrink: 0,
-          background: `${color}22`, border: `1px solid ${color}44`,
-          display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20,
+          width: 44, height: 44, borderRadius: 12, flexShrink: 0,
+          background: color,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
         }}>
-          {icon}
+          <Icon size={20} color={color === NEON ? '#000' : '#fff'} strokeWidth={2} />
         </div>
         <div>
           <p style={{ fontSize: 15, fontWeight: 900, color: '#fff', lineHeight: 1 }}>{name}</p>
@@ -154,7 +194,7 @@ function PlanCard({ plan, isActive }) {
       </div>
 
       {/* Features */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 9, marginBottom: 20 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 9, marginBottom: 20 }}>
         {features.map(f => (
           <div key={f} style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
             <div style={{
@@ -172,47 +212,44 @@ function PlanCard({ plan, isActive }) {
       </div>
 
       {/* Price */}
-      <div style={{ marginBottom: 14 }}>
+      <div style={{ marginTop: 'auto', marginBottom: 14, textAlign: 'center' }}>
         <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.32)', textDecoration: 'line-through', marginBottom: 2 }}>
           {original}
         </p>
-        <p style={{ fontSize: 38, fontWeight: 900, color, lineHeight: 1, letterSpacing: '-0.02em' }}>{price}</p>
+        <p style={{ fontSize: 38, fontWeight: 700, color, lineHeight: 1, letterSpacing: '-0.02em' }}>{price}</p>
         <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', marginTop: 4 }}>pague uma vez, use pra sempre</p>
       </div>
 
-      {/* CTA — only visible on active card */}
-      <AnimatePresence>
-        {isActive && (
-          <motion.button
-            initial={{ opacity: 0, y: 6 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 6 }}
-            transition={{ duration: 0.22 }}
-            whileTap={{ scale: 0.97 }}
-            style={{
-              width: '100%', padding: '15px 0',
-              background: color,
-              color: color === NEON ? '#000' : '#fff',
-              border: 'none', borderRadius: 12,
-              fontWeight: 900, fontSize: 15,
-              cursor: 'pointer', letterSpacing: '0.01em',
-            }}
-          >
-            {cta}
-          </motion.button>
-        )}
-      </AnimatePresence>
+      {/* CTA — espaço sempre reservado, visibilidade instantânea */}
+      <button
+        style={{
+          width: '100%', padding: '15px 0',
+          background: color,
+          color: color === NEON ? '#000' : '#fff',
+          border: 'none', borderRadius: 12,
+          fontWeight: 900, fontSize: 15,
+          cursor: isActive ? 'pointer' : 'default',
+          letterSpacing: '0.01em',
+          opacity: isActive ? 1 : 0,
+          pointerEvents: isActive ? 'auto' : 'none',
+          transition: 'none',
+        }}
+      >
+        {cta}
+      </button>
     </div>
   )
 }
 
 /* ── Carousel position calculator ── */
+const INACTIVE_OFFSET = Math.round(CARD_W * 0.82)  // px deslocamento x dos cards inativos
+
 function getVariants(index, active) {
   const rel = (index - active + 3) % 3
-  // rel 0 → center | rel 1 → right | rel 2 → left
-  if (rel === 0) return { x: 0,              scale: 1.06, opacity: 1,    zIndex: 10 }
-  if (rel === 1) return { x: CARD_W * 0.82,  scale: 0.85, opacity: 0.60, zIndex: 5  }
-  return              { x: -(CARD_W * 0.82), scale: 0.85, opacity: 0.60, zIndex: 5  }
+  // rel 0 → centro | rel 1 → direita | rel 2 → esquerda
+  if (rel === 0) return { x: 0,                y: 0, scale: 1.05, filter: 'brightness(1)',    zIndex: 10 }
+  if (rel === 1) return { x:  INACTIVE_OFFSET,  y: 0, scale: 0.85, filter: 'brightness(0.55)', zIndex: 5  }
+  return              { x: -INACTIVE_OFFSET,   y: 0, scale: 0.85, filter: 'brightness(0.55)', zIndex: 5  }
 }
 
 const SPRING = { type: 'spring', stiffness: 310, damping: 30, mass: 0.85 }
@@ -220,7 +257,8 @@ const SPRING = { type: 'spring', stiffness: 310, damping: 30, mass: 0.85 }
 /* ── Main component ── */
 export default function PricingCarousel() {
   const [active, setActive] = useState(1)   // Focuz default
-  const timer  = useCountdown(877)          // 14:37
+  const timer   = useCountdown(877)         // 14:37
+  const viewers = useLiveViewers()
   const dragStartX = useRef(0)
 
   const prev = () => setActive(a => (a - 1 + 3) % 3)
@@ -260,7 +298,7 @@ export default function PricingCarousel() {
         <div style={{ width: 1, height: 14, background: 'rgba(255,255,255,0.1)' }} />
         <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#4ade80', fontSize: 13, fontWeight: 600 }}>
           <div style={{ width: 7, height: 7, borderRadius: '50%', background: '#4ade80', boxShadow: '0 0 7px #4ade80', animation: 'pulse 2s ease-in-out infinite' }} />
-          38 vendo agora
+          {viewers} vendo agora
         </div>
       </div>
 
@@ -273,8 +311,8 @@ export default function PricingCarousel() {
 
         <p style={{ textAlign: 'center', fontSize: 14, color: 'rgba(255,255,255,0.48)', marginBottom: 18 }}>
           Pague{' '}
-          <span style={{ color: '#f97316', fontWeight: 700 }}>uma vez</span>. Use{' '}
-          <span style={{ color: NEON, fontWeight: 700 }}>pra sempre</span>.
+          <span style={{ color: '#A855F7', fontWeight: 700 }}>uma vez</span>. Use{' '}
+          <span style={{ color: '#A855F7', fontWeight: 700 }}>pra sempre</span>.
         </p>
 
         {/* Urgency chip */}
@@ -328,34 +366,9 @@ export default function PricingCarousel() {
       </div>
 
       {/* ── 3D Carousel ── */}
-      <div style={{ position: 'relative', flex: 1, minHeight: 600 }}>
+      <div style={{ position: 'relative', height: CARD_H + 80 }}>
 
-        {/* Badge above active card */}
-        <AnimatePresence mode="wait">
-          {PLANS[active].badge && (
-            <motion.div
-              key={`badge-${active}`}
-              initial={{ opacity: 0, y: -6, scale: 0.9 }}
-              animate={{ opacity: 1, y: 0,  scale: 1   }}
-              exit={   { opacity: 0, y: -6, scale: 0.9 }}
-              transition={{ duration: 0.22 }}
-              style={{
-                position: 'absolute', top: 12, left: '50%',
-                transform: 'translateX(-50%)',
-                zIndex: 20,
-                background: NEON, color: '#000',
-                fontSize: 10, fontWeight: 900,
-                padding: '5px 14px', borderRadius: 20,
-                letterSpacing: '0.07em', whiteSpace: 'nowrap',
-                boxShadow: `0 0 22px ${NEON}99`,
-              }}
-            >
-              {PLANS[active].badge}
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* Cards */}
+        {/* Cards — todos partem do mesmo ponto central exato */}
         {PLANS.map((plan, i) => (
           <motion.div
             key={plan.id}
@@ -364,8 +377,9 @@ export default function PricingCarousel() {
             onClick={() => i !== active && setActive(i)}
             style={{
               position: 'absolute',
-              top: 44,                          // room for badge
+              top: '50%',
               left: '50%',
+              marginTop: -(CARD_H / 2),
               marginLeft: -(CARD_W / 2),
               cursor: i !== active ? 'pointer' : 'default',
               userSelect: 'none',
