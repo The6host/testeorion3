@@ -1,8 +1,10 @@
 import { motion } from 'framer-motion'
+import { useNavigate } from 'react-router-dom'
 
 const navLinks = ['Funcionalidades', 'Como Funciona', 'Preços', 'Comunidade']
 
 export default function Header() {
+  const navigate = useNavigate()
   return (
     <motion.header
       initial={{ y: -80, opacity: 0 }}
@@ -37,15 +39,15 @@ export default function Header() {
       </nav>
 
       {/* CTA */}
-      <motion.a
-        href="#"
+      <motion.button
+        onClick={() => navigate('/login')}
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.97 }}
         className="hidden md:block rounded-md px-5 py-2.5 text-sm font-black tracking-wider text-black uppercase"
         style={{ backgroundColor: '#ccff00', boxShadow: '0 0 20px #ccff0055' }}
       >
         Entrar
-      </motion.a>
+      </motion.button>
 
       {/* Mobile hamburger */}
       <button className="md:hidden flex flex-col gap-1.5 p-2">

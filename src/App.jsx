@@ -18,6 +18,12 @@ import Quiz from './components/Quiz'
 import ProfileAnalysis from './components/ProfileAnalysis'
 import SystemVoiceReveal from './components/SystemVoiceReveal'
 import PricingCarousel   from './components/PricingCarousel'
+import Login            from './components/Login'
+import Dashboard        from './components/Dashboard'
+import Tasks            from './components/Tasks'
+import Arena            from './components/Arena'
+import Ranking          from './components/Ranking'
+import Perfil           from './components/Perfil'
 
 const AUDIO_URL = 'https://res.cloudinary.com/dctzllsly/video/upload/v1778378449/music-bg-orion_j3uur9.mp3'
 const NEON = '#ccff00'
@@ -172,6 +178,12 @@ export default function App() {
         <Route path="/analyzing" element={<AnalyzingPage />} />
         <Route path="/voice"     element={<VoicePage bgAudioRef={audioRef} />} />
         <Route path="/pricing"   element={<PricingPage />} />
+        <Route path="/login"     element={<Login />} />
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/tasks"     element={<Tasks />} />
+        <Route path="/arena"     element={<Arena />} />
+        <Route path="/ranking"   element={<Ranking />} />
+        <Route path="/perfil"    element={<Perfil />} />
       </Routes>
 
       <MuteButton muted={muted} onToggle={toggle} visible={started} />
