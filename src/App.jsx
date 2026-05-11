@@ -1,6 +1,7 @@
-import { useState, useRef, useCallback } from 'react'
+import { useState, useRef, useCallback, useEffect } from 'react'
 import { Routes, Route, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
+import { playClick } from './utils/clickSFX'
 import './index.css'
 import Header from './components/Header'
 import Hero from './components/Hero'
@@ -67,7 +68,7 @@ function useAudio() {
     if (audioRef.current) return
     const a = new Audio(AUDIO_URL)
     a.loop   = true
-    a.volume = 0.35
+    a.volume = 0.18
     a.play().catch(() => {})
     audioRef.current = a
     setStarted(true)
@@ -118,7 +119,7 @@ function Landing({ onAudioStart }) {
           <SectionDivider />
           <Gamification />
           <SectionDivider />
-          <PlayerEvolution />
+          <PlayerEvolution onStartQuiz={startQuiz} />
           <SectionDivider />
           <HowItWorks />
           <SectionDivider />
@@ -153,6 +154,15 @@ function PricingPage() {
 /* ── Root ── */
 export default function App() {
   const { start, toggle, muted, started, audioRef } = useAudio()
+
+  /* Listener global de clique — dispara em fase de captura (mais cedo possível) */
+  useEffect(() => {
+    function onGlobalClick(e) {
+      if (e.target.closest('button')) playClick()
+    }
+    document.addEventListener('click', onGlobalClick, true)
+    return () => document.removeEventListener('click', onGlobalClick, true)
+  }, [])
 
   return (
     <>

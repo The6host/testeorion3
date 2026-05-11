@@ -1,34 +1,76 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 
 const NEON = '#ccff00'
+
+/* ── SFX URLs ── */
+const SFX = {
+  click:     'https://res.cloudinary.com/dctzllsly/video/upload/v1778455021/click_mjhzu9.mp3',
+  check:     'https://res.cloudinary.com/dctzllsly/video/upload/v1778456791/check_qtq69b.mp3',
+  alerta:    'https://res.cloudinary.com/dctzllsly/video/upload/v1778455238/alerta_tfuydp.mp3',
+  digita:    'https://res.cloudinary.com/dctzllsly/video/upload/v1778456106/digita_qfxzek.mp3',
+  bemvindo:  'https://res.cloudinary.com/dctzllsly/video/upload/v1778456432/bemvindo_ryrr2t.mp3',
+  segunda:   'https://res.cloudinary.com/dctzllsly/video/upload/v1778456521/segunda_fjzgzz.wav',
+  despertar: 'https://res.cloudinary.com/dctzllsly/video/upload/v1778456599/despertar_cjgy8b.mp3',
+}
+
+/* One-shot SFX — nova instância a cada chamada, podem sobrepor */
+function playSFX(url, volume = 0.75) {
+  const a = new Audio(url)
+  a.volume = volume
+  a.play().catch(() => {})
+}
 
 export default function BootSequence({ onComplete, onFirstClick }) {
   const [phase, setPhase] = useState(0)
   const [progress, setProgress] = useState(0)
   const [termLines, setTermLines] = useState([])
-  // Phase 3 typewriter state
-  const [twLines, setTwLines] = useState([])       // linhas já completas
-  const [twCurrent, setTwCurrent] = useState('')   // linha sendo digitada agora
+  const [twLines, setTwLines] = useState([])
+  const [twCurrent, setTwCurrent] = useState('')
   const [showCompat, setShowCompat] = useState(false)
   const [compatPct, setCompatPct] = useState(0)
 
-  // Travar scroll do body enquanto boot está ativo
+  /* Ref para o som de máquina de escrever (loop play/pause) */
+  const digitaRef = useRef(null)
+
+  function getDigita() {
+    if (!digitaRef.current) {
+      const a = new Audio(SFX.digita)
+      a.loop   = true
+      a.volume = 0.5
+      digitaRef.current = a
+    }
+    return digitaRef.current
+  }
+  const playDigita  = () => getDigita().play().catch(() => {})
+  const pauseDigita = () => { if (digitaRef.current) digitaRef.current.pause() }
+
+  /* Lock scroll + cleanup do digita no unmount */
   useEffect(() => {
     document.body.style.overflow = 'hidden'
-    return () => { document.body.style.overflow = '' }
+    return () => {
+      document.body.style.overflow = ''
+      if (digitaRef.current) {
+        digitaRef.current.pause()
+        digitaRef.current.src = ''
+        digitaRef.current = null
+      }
+    }
   }, [])
 
   function handleClick() {
     if (phase === 0) {
       onFirstClick?.()
-      setPhase(1)
+      setTimeout(() => {
+        playSFX(SFX.click)
+        setPhase(1)
+      }, 500)
     } else if (phase > 0 && phase < 7) {
       onComplete()
     }
   }
 
-  // Phase 1: terminal lines + progress bar
+  /* Phase 1: terminal lines + progress bar */
   useEffect(() => {
     if (phase !== 1) return
     const LINES = [
@@ -36,11 +78,13 @@ export default function BootSequence({ onComplete, onFirstClick }) {
       '> SYNCING_WITH_DATABASE...',
       '> ESTABLISHING_SECURE_CONNECTION...',
     ]
-    // Linhas aparecem com 1s de intervalo entre elas
+    /* Check SFX sincronizado com cada linha */
     const timers = LINES.map((line, i) =>
-      setTimeout(() => setTermLines(p => [...p, line]), 500 + i * 1000)
+      setTimeout(() => {
+        playSFX(SFX.check)
+        setTermLines(p => [...p, line])
+      }, 500 + i * 1000)
     )
-    // Progresso até 98% via interval, depois snap para 100% e aguarda 500ms
     let prog = 0
     let finishTimer = null
     const iv = setInterval(() => {
@@ -55,23 +99,24 @@ export default function BootSequence({ onComplete, onFirstClick }) {
     return () => { timers.forEach(clearTimeout); clearInterval(iv); if (finishTimer) clearTimeout(finishTimer) }
   }, [phase])
 
-  // Phase 2: alert — 1.8s
+  /* Phase 2: alert */
   useEffect(() => {
     if (phase !== 2) return
+    const tSfx2 = setTimeout(() => playSFX(SFX.alerta), 500)
     const t = setTimeout(() => setPhase(3), 1800)
-    return () => clearTimeout(t)
+    return () => { clearTimeout(tSfx2); clearTimeout(t) }
   }, [phase])
 
-  // Phase 3: typewriter sequencial + contador
+  /* Phase 3: typewriter sequencial + contador */
   useEffect(() => {
     if (phase !== 3) return
     let cancelled = false
     let compatIv = null
 
-    const FULL_LINES = ['Jogador encontrado.', 'Nível atual: Iniciante.']
+    const FULL_LINES   = ['Jogador encontrado.', 'Nível atual: Iniciante.']
     const COMPAT_PREFIX = 'Compatibilidade: '
-    const CHAR_DELAY = 38   // ms por letra
-    const LINE_PAUSE = 320  // pausa entre linhas
+    const CHAR_DELAY   = 38
+    const LINE_PAUSE   = 320
 
     function startCompatCounter() {
       let pct = 0
@@ -83,18 +128,20 @@ export default function BootSequence({ onComplete, onFirstClick }) {
           clearInterval(compatIv)
           setTimeout(() => { if (!cancelled) setPhase(4) }, 1400)
         }
-      }, 30) // 30ms * ~40 ticks ≈ 1.2s para chegar a 99
+      }, 30)
     }
 
     function typeString(str, onDone) {
       let i = 0
+      playDigita()   // inicia som de digitação
       function next() {
-        if (cancelled) return
+        if (cancelled) { pauseDigita(); return }
         if (i <= str.length) {
           setTwCurrent(str.slice(0, i))
           i++
           setTimeout(next, CHAR_DELAY)
         } else {
+          pauseDigita()   // pausa ao terminar a linha
           onDone()
         }
       }
@@ -104,7 +151,6 @@ export default function BootSequence({ onComplete, onFirstClick }) {
     function typeLine(lineIdx) {
       if (cancelled) return
       if (lineIdx >= FULL_LINES.length) {
-        // Digita o prefixo "Compatibilidade: " e depois inicia contador
         setTwCurrent('')
         setTimeout(() => {
           typeString(COMPAT_PREFIX, () => {
@@ -118,49 +164,54 @@ export default function BootSequence({ onComplete, onFirstClick }) {
       }
       typeString(FULL_LINES[lineIdx], () => {
         if (cancelled) return
-        // Linha completa → move para twLines e começa próxima
         setTwLines(p => [...p, FULL_LINES[lineIdx]])
         setTwCurrent('')
         setTimeout(() => typeLine(lineIdx + 1), LINE_PAUSE)
       })
     }
 
-    // Pequeno delay inicial antes de começar a digitar
     const start = setTimeout(() => typeLine(0), 400)
 
     return () => {
       cancelled = true
       clearTimeout(start)
       if (compatIv) clearInterval(compatIv)
+      pauseDigita()
     }
   }, [phase])
 
+  /* Phase 4: Bem-vindo */
   useEffect(() => {
     if (phase !== 4) return
+    const tSfx4 = setTimeout(() => playSFX(SFX.bemvindo, 0.35), 500)
     const t = setTimeout(() => setPhase(5), 2200)
-    return () => clearTimeout(t)
+    return () => { clearTimeout(tSfx4); clearTimeout(t) }
   }, [phase])
 
+  /* Phase 5: Segunda Chance */
   useEffect(() => {
     if (phase !== 5) return
+    const tSfx5 = setTimeout(() => playSFX(SFX.segunda, 0.35), 500)
     const t = setTimeout(() => setPhase(6), 2200)
-    return () => clearTimeout(t)
+    return () => { clearTimeout(tSfx5); clearTimeout(t) }
   }, [phase])
 
+  /* Phase 6: Despertar */
   useEffect(() => {
     if (phase !== 6) return
+    const tSfx6 = setTimeout(() => playSFX(SFX.despertar, 0.35), 500)
     const t = setTimeout(() => {
-      setPhase(7) // esvazia o conteúdo interno (AnimatePresence mode="wait")
-      setTimeout(onComplete, 750) // após o fade do conteúdo, avisa o pai para desmontar
+      setPhase(7)
+      setTimeout(onComplete, 750)
     }, 2800)
-    return () => clearTimeout(t)
+    return () => { clearTimeout(tSfx6); clearTimeout(t) }
   }, [phase])
 
   return (
     <motion.div
       className="fixed top-0 left-0 w-full z-[9999] overflow-hidden"
       style={{
-        height: '100svh',   /* svh = viewport sem browser chrome — corrige iOS/Android */
+        height: '100svh',
         backgroundColor: '#00000a',
         cursor: phase < 7 ? 'pointer' : 'default',
         userSelect: 'none',
@@ -198,17 +249,17 @@ export default function BootSequence({ onComplete, onFirstClick }) {
         <div className="absolute right-1/4 top-0 bottom-0 w-px" style={{ background: 'linear-gradient(to bottom, transparent, rgba(124,58,237,0.18) 20%, rgba(124,58,237,0.18) 80%, transparent)' }} />
       </div>
 
-      {/* Hint de skip — visível apenas após o Estado 0 */}
+      {/* Hint de skip */}
       {phase > 0 && phase < 7 && (
         <p
-          className="absolute bottom-6 right-6 font-mono text-[10px] tracking-widest pointer-events-none select-none"
+          className="absolute bottom-6 left-6 font-mono text-[10px] tracking-widest pointer-events-none select-none"
           style={{ color: 'rgba(204,255,0,0.22)' }}
         >
           [ Clique em qualquer lugar para pular ]
         </p>
       )}
 
-      {/* Phase content — centralização absoluta, funciona em todos os mobile */}
+      {/* Phase content */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full flex flex-col items-center">
           <AnimatePresence mode="wait">
 
@@ -223,14 +274,12 @@ export default function BootSequence({ onComplete, onFirstClick }) {
                 transition={{ duration: 0.6 }}
               >
                 <div className="relative flex items-center justify-center">
-                  {/* Pulse ring */}
                   <motion.div
                     className="absolute rounded-full"
                     style={{ width: 200, height: 200, border: '1px solid rgba(204,255,0,0.1)' }}
                     animate={{ scale: [1, 1.6, 1], opacity: [0.5, 0, 0.5] }}
                     transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
                   />
-                  {/* Main ring */}
                   <motion.div
                     className="w-32 h-32 rounded-full"
                     style={{ border: `1.5px solid ${NEON}` }}
@@ -277,7 +326,6 @@ export default function BootSequence({ onComplete, onFirstClick }) {
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.4 }}
               >
-                {/* Terminal lines — cada uma faz fade-in individualmente */}
                 <div className="flex flex-col gap-3 min-h-[84px]">
                   <AnimatePresence>
                     {termLines.map((line, i) => (
@@ -295,7 +343,6 @@ export default function BootSequence({ onComplete, onFirstClick }) {
                   </AnimatePresence>
                 </div>
 
-                {/* Progress bar */}
                 <div className="flex flex-col gap-3">
                   <div className="flex justify-between font-mono text-xs tracking-[0.25em]" style={{ color: NEON }}>
                     <span>CARREGANDO SISTEMA</span>
@@ -303,11 +350,7 @@ export default function BootSequence({ onComplete, onFirstClick }) {
                   </div>
                   <div
                     className="w-full rounded-full overflow-hidden"
-                    style={{
-                      height: '10px',
-                      background: 'rgba(255,255,255,0.06)',
-                      border: '1px solid rgba(204,255,0,0.2)',
-                    }}
+                    style={{ height: '10px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(204,255,0,0.2)' }}
                   >
                     <div
                       className="h-full rounded-full transition-all duration-150"
@@ -328,10 +371,7 @@ export default function BootSequence({ onComplete, onFirstClick }) {
                 key="p2"
                 className="flex flex-col items-center gap-6"
                 initial={{ opacity: 0 }}
-                animate={{
-                  opacity: 1,
-                  x: [0, -10, 10, -6, 6, -3, 3, 0],
-                }}
+                animate={{ opacity: 1, x: [0, -10, 10, -6, 6, -3, 3, 0] }}
                 exit={{ opacity: 0 }}
                 transition={{
                   opacity: { duration: 0.3 },
@@ -369,14 +409,12 @@ export default function BootSequence({ onComplete, onFirstClick }) {
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.4 }}
               >
-                {/* Linhas já completas */}
                 {twLines.map((line, i) => (
                   <p key={i} className="text-lg md:text-xl tracking-normal" style={{ color: NEON }}>
                     {line}
                   </p>
                 ))}
 
-                {/* Linha sendo digitada agora */}
                 {(twCurrent || showCompat) && (
                   <p className="text-lg md:text-xl tracking-normal" style={{ color: NEON }}>
                     {twCurrent}

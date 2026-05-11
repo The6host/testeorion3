@@ -60,22 +60,21 @@ export default function Footer() {
 
       <div className="max-w-6xl mx-auto px-6 md:px-12">
 
-        {/* Grid principal */}
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-10 mb-12">
+        {/* Logo + tagline — centralizado no mobile */}
+        <div className="flex flex-col items-center text-center mb-10 md:items-start md:text-left">
+          <img
+            src="https://i.imgur.com/FwQdsn4.png"
+            alt="Orion"
+            className="h-8 w-auto object-contain mb-3"
+          />
+          <p className="text-sm text-white/40 leading-relaxed">
+            Transforme sua rotina.<br />Evolua todos os dias.
+          </p>
+        </div>
 
-          {/* Coluna 1 — Logo + descrição */}
-          <div className="md:col-span-1 flex flex-col gap-4">
-            <img
-              src="https://i.imgur.com/FwQdsn4.png"
-              alt="Orion"
-              className="h-8 w-auto object-contain"
-            />
-            <p className="text-sm text-white/40 leading-relaxed">
-              Transforme sua rotina.<br />Evolua todos os dias.
-            </p>
-          </div>
+        {/* Grid de links — 2×2 no mobile, 4 colunas no desktop */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-12">
 
-          {/* Colunas 2–4 — Links */}
           {COLUMNS.map((col) => (
             <div key={col.title} className="flex flex-col gap-4">
               <h4 className="text-xs font-bold tracking-widest text-white uppercase">
@@ -96,12 +95,12 @@ export default function Footer() {
             </div>
           ))}
 
-          {/* Coluna 5 — Redes sociais */}
+          {/* CONECTE-SE */}
           <div className="flex flex-col gap-4">
             <h4 className="text-xs font-bold tracking-widest text-white uppercase">
               CONECTE-SE
             </h4>
-            <div className="flex gap-3 flex-wrap">
+            <div className="grid grid-cols-2 gap-3 w-fit">
               {SOCIALS.map(({ label, icon: Icon }) => (
                 <a
                   key={label}

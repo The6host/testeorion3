@@ -2,22 +2,28 @@ import { motion } from 'framer-motion'
 
 const ORBS = [
   {
-    style: { width: 600, height: 600, background: 'radial-gradient(circle, rgba(109,40,217,0.18) 0%, transparent 70%)' },
-    initial: { x: '-20%', y: '10%' },
-    animate: { x: ['−20%', '15%', '-10%', '-20%'], y: ['10%', '-15%', '30%', '10%'] },
-    duration: 22,
+    style: { width: 340, height: 340, background: 'radial-gradient(circle, rgba(109,40,217,0.22) 0%, transparent 70%)' },
+    pos:   { top: '5%',  left: '-8%'  },
+    fadeDuration: 6,
+    fadeDelay:    0,
   },
   {
-    style: { width: 500, height: 500, background: 'radial-gradient(circle, rgba(79,70,229,0.14) 0%, transparent 70%)' },
-    initial: { x: '60%', y: '50%' },
-    animate: { x: ['60%', '40%', '70%', '60%'], y: ['50%', '20%', '60%', '50%'] },
-    duration: 18,
+    style: { width: 280, height: 280, background: 'radial-gradient(circle, rgba(139,92,246,0.18) 0%, transparent 70%)' },
+    pos:   { top: '15%', left: '65%'  },
+    fadeDuration: 8,
+    fadeDelay:    2.5,
   },
   {
-    style: { width: 400, height: 400, background: 'radial-gradient(circle, rgba(139,92,246,0.12) 0%, transparent 70%)' },
-    initial: { x: '30%', y: '70%' },
-    animate: { x: ['30%', '50%', '20%', '30%'], y: ['70%', '55%', '80%', '70%'] },
-    duration: 26,
+    style: { width: 320, height: 320, background: 'radial-gradient(circle, rgba(79,70,229,0.20) 0%, transparent 70%)' },
+    pos:   { top: '55%', left: '10%'  },
+    fadeDuration: 7,
+    fadeDelay:    1.2,
+  },
+  {
+    style: { width: 260, height: 260, background: 'radial-gradient(circle, rgba(124,58,237,0.16) 0%, transparent 70%)' },
+    pos:   { top: '60%', left: '72%'  },
+    fadeDuration: 9,
+    fadeDelay:    4,
   },
 ]
 
@@ -30,14 +36,13 @@ export default function BackgroundEffects() {
           className="absolute rounded-full"
           style={{
             ...orb.style,
-            filter: 'blur(90px)',
-            top: 0,
-            left: 0,
+            ...orb.pos,
+            filter: 'blur(80px)',
           }}
-          initial={orb.initial}
-          animate={orb.animate}
+          animate={{ opacity: [0.3, 1, 0.3] }}
           transition={{
-            duration: orb.duration,
+            duration: orb.fadeDuration,
+            delay: orb.fadeDelay,
             repeat: Infinity,
             repeatType: 'mirror',
             ease: 'easeInOut',

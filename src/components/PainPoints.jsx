@@ -56,8 +56,9 @@ const cardVariants = {
 }
 
 const iconVariants = {
-  hover: { filter: 'drop-shadow(0 0 18px rgba(168,85,247,0.55))' },
-  tap:   { filter: 'drop-shadow(0 0 18px rgba(168,85,247,0.55))' },
+  visible: { filter: 'drop-shadow(0 0 0px rgba(168,85,247,0))' },
+  hover:   { filter: 'drop-shadow(0 0 18px rgba(168,85,247,0.55))' },
+  tap:     { filter: 'drop-shadow(0 0 18px rgba(168,85,247,0.55))' },
 }
 
 export default function PainPoints() {
@@ -121,7 +122,7 @@ export default function PainPoints() {
               variants={cardVariants}
               whileHover="hover"
               whileTap="tap"
-              animate={selected === pain.title ? 'hover' : undefined}
+              animate={selected === pain.title ? 'hover' : 'visible'}
               onClick={() => handleCardClick(pain.title)}
               onHoverStart={() => setSelected(null)}
               className="flex flex-col items-center text-center gap-5 rounded-2xl p-6 cursor-pointer"
@@ -141,12 +142,12 @@ export default function PainPoints() {
               />
 
               {/* Título */}
-              <h3 className="text-sm font-black tracking-wider text-white leading-snug whitespace-pre-line">
+              <h3 className="text-base font-black tracking-wider text-white leading-snug whitespace-pre-line">
                 {pain.title}
               </h3>
 
               {/* Descrição */}
-              <p className="text-sm text-white/50 leading-relaxed">
+              <p className="text-[15px] text-white/50 leading-relaxed">
                 {pain.text}
               </p>
             </motion.div>

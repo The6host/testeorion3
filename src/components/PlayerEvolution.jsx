@@ -157,7 +157,7 @@ function PlayerCard({ side, imageSrc, imageAlt, radarValues, radarColor, badgeBg
   )
 }
 
-export default function PlayerEvolution() {
+export default function PlayerEvolution({ onStartQuiz }) {
   return (
     <section className="relative py-24 w-full" style={{ overflowX: 'clip' }}>
 
@@ -294,7 +294,7 @@ export default function PlayerEvolution() {
           viewport={{ once: true, margin: '-40px' }}
           transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
         >
-          <ButtonNeon>Começar Agora</ButtonNeon>
+          <ButtonNeon onClick={onStartQuiz}>Começar Agora</ButtonNeon>
         </motion.div>
 
       </div>

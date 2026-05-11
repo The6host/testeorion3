@@ -94,7 +94,7 @@ export default function ProfileAnalysis({ onComplete }) {
 
         {/* Logo */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 36 }}>
-          <svg width="18" height="18" viewBox="0 0 24 24" fill={NEON}><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+          <img src="https://i.imgur.com/FwQdsn4.png" alt="Orion" style={{ width: 22, height: 22, objectFit: 'contain' }} />
           <span style={{ fontSize: 18, fontWeight: 900, color: '#fff', letterSpacing: '-0.01em' }}>ORION</span>
         </div>
 
@@ -146,11 +146,11 @@ export default function ProfileAnalysis({ onComplete }) {
         <div style={{ marginBottom: 36 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
             <span style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.3)', letterSpacing: '0.12em' }}>PROCESSANDO</span>
-            <span style={{ fontSize: 14, fontWeight: 900, color: NEON, fontFamily: 'monospace' }}>{pct}%</span>
+            <span style={{ fontSize: 14, fontWeight: 900, color: PUR, fontFamily: 'monospace' }}>{pct}%</span>
           </div>
           <div style={{ height: 6, borderRadius: 6, background: 'rgba(255,255,255,0.06)', overflow: 'hidden' }}>
             <motion.div
-              style={{ height: '100%', borderRadius: 6, background: NEON, boxShadow: `0 0 10px rgba(204,255,0,0.5)` }}
+              style={{ height: '100%', borderRadius: 6, background: PUR, boxShadow: `0 0 10px rgba(168,85,247,0.5)` }}
               animate={{ width: `${pct}%` }}
               transition={{ duration: 0.12, ease: 'linear' }}
             />

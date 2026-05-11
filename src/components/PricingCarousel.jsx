@@ -61,7 +61,7 @@ const PLANS = [
       'Dashboard com seu progresso real',
       'Histórico de 30 dias',
     ],
-    bars:     [2, 2, 1],
+    bars:     [1, 1, 1],
     original: 'R$39,80',
     price:    'R$19,90',
     cta:      'Começar agora',
@@ -81,7 +81,7 @@ const PLANS = [
       'Histórico completo pra sempre',
       'Desafios que te forçam a evoluir',
     ],
-    bars:     [3, 3, 3],
+    bars:     [2, 2, 2],
     original: 'R$59,80',
     price:    'R$29,90',
     cta:      'Desbloquear meu acesso',
@@ -272,7 +272,10 @@ export default function PricingCarousel() {
   }
 
   return (
-    <div
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.9, ease: 'easeOut' }}
       style={{ minHeight: '100dvh', background: BG, overflowX: 'hidden', display: 'flex', flexDirection: 'column', position: 'relative' }}
       onTouchStart={onTouchStart}
       onTouchEnd={onTouchEnd}
@@ -427,12 +430,7 @@ export default function PricingCarousel() {
         >›</button>
       </div>
 
-      {/* ── Guarantee ── */}
-      <p style={{ textAlign: 'center', fontSize: 12, color: 'rgba(255,255,255,0.28)', padding: '0 20px 36px' }}>
-        🔒 Garantia de 7 dias. Se não gostar, devolvemos 100%.
-      </p>
-
-      </div>{/* end content wrapper */}
-    </div>
+</div>{/* end content wrapper */}
+    </motion.div>
   )
 }

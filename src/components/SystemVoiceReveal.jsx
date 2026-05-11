@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { motion } from 'framer-motion'
 
 const AUDIO_URL =
@@ -87,7 +87,7 @@ function WaveGroup({ paths, rotate }) {
   )
 }
 
-const BG_ORIGINAL_VOL = 0.35
+const BG_ORIGINAL_VOL = 0.18
 const BG_DUCKED_VOL   = 0.05
 
 /* Gradual volume fade — returns the interval id so it can be cancelled */
@@ -113,19 +113,19 @@ function fadeVolume(audio, targetVol, durationMs = 1000, onDone) {
 
 /* ── Main component ── */
 export default function SystemVoiceReveal({ onComplete, bgAudioRef }) {
-  const audioRef  = useRef(null)
-  const fadeIdRef = useRef(null)
+  const audioRef   = useRef(null)
+  const fadeIdRef  = useRef(null)
+  const [exiting, setExiting] = useState(false)
 
-  /* Restore bg music then fire onComplete */
+  /* Fade visual out, restaura música, navega */
   function finish() {
+    if (exiting) return
+    setExiting(true)
     audioRef.current?.pause()
     clearInterval(fadeIdRef.current)
-    fadeIdRef.current = fadeVolume(
-      bgAudioRef?.current,
-      BG_ORIGINAL_VOL,
-      1000,
-      () => onComplete?.(),
-    )
+    // restaura música junto com o fade visual (800ms)
+    fadeIdRef.current = fadeVolume(bgAudioRef?.current, BG_ORIGINAL_VOL, 800)
+    setTimeout(() => onComplete?.(), 850)
   }
 
   useEffect(() => {
@@ -164,9 +164,8 @@ export default function SystemVoiceReveal({ onComplete, bgAudioRef }) {
 
       <motion.div
         initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        transition={{ duration: 0.7 }}
+        animate={{ opacity: exiting ? 0 : 1 }}
+        transition={{ duration: exiting ? 0.85 : 0.7, ease: 'easeInOut' }}
         style={{
           position: 'fixed', inset: 0, zIndex: 60,
           background: '#010208',
