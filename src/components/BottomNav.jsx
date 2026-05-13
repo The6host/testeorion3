@@ -2,7 +2,7 @@ import { motion } from 'framer-motion'
 import { Home, CheckSquare, Shield, Trophy, User } from 'lucide-react'
 import { useNavigate, useLocation } from 'react-router-dom'
 
-const PUR = '#A855F7'
+const PUR = '#7C3AED'
 
 const NAV_ITEMS = [
   { label: 'Home',    Icon: Home,        path: '/dashboard' },
@@ -28,10 +28,12 @@ export default function BottomNav() {
 
   return (
     <div style={{
-      position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 50,
-      background: 'rgba(1,2,8,0.97)',
+      position: 'fixed', bottom: 0, zIndex: 50,
+      left: 'max(0px, calc(50% - 195px))',
+      right: 'max(0px, calc(50% - 195px))',
+      background: 'rgba(8,8,8,0.97)',
       backdropFilter: 'blur(20px)',
-      borderTop: '1px solid rgba(255,255,255,0.07)',
+      borderTop: '1px solid #1a1a1a',
       display: 'flex', height: 64,
       paddingBottom: 'env(safe-area-inset-bottom)',
     }}>
@@ -47,7 +49,7 @@ export default function BottomNav() {
               gap: 3, background: 'none', border: 'none',
               cursor: path ? 'pointer' : 'default',
               padding: '8px 0',
-              color: isActive ? PUR : 'rgba(255,255,255,0.28)',
+              color: isActive ? PUR : '#444444',
               transition: 'color 0.2s',
             }}
           >
@@ -56,8 +58,8 @@ export default function BottomNav() {
                 <motion.div
                   layoutId="nav-pill"
                   style={{
-                    position: 'absolute', inset: -8, borderRadius: 12,
-                    background: 'rgba(168,85,247,0.13)',
+                    position: 'absolute', inset: -8, borderRadius: 10,
+                    background: `${PUR}18`,
                   }}
                   transition={{ type: 'spring', stiffness: 380, damping: 30 }}
                 />

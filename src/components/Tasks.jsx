@@ -1,14 +1,15 @@
 import { useState, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ChevronRight, Trash2, Calendar, Zap, Plus, X, Check } from 'lucide-react'
+import { ChevronRight, Trash2, Calendar, Zap, Plus, X, Check, Target } from 'lucide-react'
 import BottomNav from './BottomNav'
 
 /* ── Design tokens ── */
-const PUR          = '#A855F7'
-const NEON         = '#ccff00'
-const DAILY_XP     = 500
-const XP_OPTIONS   = [50, 75, 100, 150]
-const CATEGORIES   = ['Saúde', 'Foco', 'Fitness', 'Mindfulness', 'Nutrição', 'Produtividade']
+const PUR      = '#7C3AED'
+const MUTED    = '#888888'
+const DIM      = '#444444'
+const DAILY_XP = 500
+const XP_OPTIONS = [50, 75, 100, 150]
+const CATEGORIES = ['Saúde', 'Foco', 'Fitness', 'Mindfulness', 'Nutrição', 'Produtividade']
 
 const CAT_COLOR = {
   Saúde:         '#10B981',
@@ -16,23 +17,22 @@ const CAT_COLOR = {
   Fitness:       '#F59E0B',
   Mindfulness:   PUR,
   Nutrição:      '#EC4899',
-  Produtividade: NEON,
+  Produtividade: '#6366F1',
 }
 
 const CARD = {
-  background: 'rgba(255,255,255,0.04)',
-  border: '1px solid rgba(255,255,255,0.08)',
-  borderRadius: 16,
+  background: '#111111',
+  border: '1px solid #222222',
+  borderRadius: 12,
   padding: 16,
 }
 
 const LABEL = {
-  display: 'block', fontSize: 11, fontWeight: 700,
-  color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase',
+  display: 'block', fontSize: 10, fontWeight: 700,
+  color: MUTED, textTransform: 'uppercase',
   letterSpacing: '0.08em', marginBottom: 8,
 }
 
-/* ── Initial mock tasks ── */
 const INIT_TASKS = [
   { id: 1, name: 'Treino de Força',   category: 'Fitness',       xp: 100, done: false },
   { id: 2, name: 'Leitura 30min',     category: 'Foco',          xp: 50,  done: true  },
@@ -41,9 +41,6 @@ const INIT_TASKS = [
   { id: 5, name: 'Corrida 5km',       category: 'Fitness',       xp: 150, done: true  },
 ]
 
-/* ══════════════════════════════════════
-   TASK ITEM
-══════════════════════════════════════ */
 function TaskItem({ task, onToggle, onDelete }) {
   const color = CAT_COLOR[task.category] || PUR
 
@@ -51,23 +48,22 @@ function TaskItem({ task, onToggle, onDelete }) {
     <motion.div
       layout
       initial={{ opacity: 0, y: -8 }}
-      animate={{ opacity: task.done ? 0.58 : 1, y: 0 }}
+      animate={{ opacity: task.done ? 0.5 : 1, y: 0 }}
       exit={{ opacity: 0, x: -24, transition: { duration: 0.22 } }}
       transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
       style={{
         display: 'flex', alignItems: 'center', gap: 12,
         padding: '12px 14px', marginBottom: 8,
-        background: task.done ? 'rgba(16,185,129,0.05)' : 'rgba(255,255,255,0.04)',
-        border: `1px solid ${task.done ? 'rgba(16,185,129,0.12)' : 'rgba(255,255,255,0.08)'}`,
-        borderRadius: 14,
+        background: task.done ? '#0d1a14' : '#0f0f0f',
+        border: `1px solid ${task.done ? '#1a3325' : '#1e1e1e'}`,
+        borderRadius: 10,
       }}
     >
-      {/* Checkbox */}
       <button
         onClick={() => onToggle(task.id)}
         style={{
-          width: 24, height: 24, borderRadius: 8, flexShrink: 0,
-          border: `2px solid ${task.done ? '#10B981' : 'rgba(255,255,255,0.22)'}`,
+          width: 24, height: 24, borderRadius: 7, flexShrink: 0,
+          border: `2px solid ${task.done ? '#10B981' : DIM}`,
           background: task.done ? '#10B981' : 'transparent',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           cursor: 'pointer', transition: 'all 0.2s', padding: 0,
@@ -87,12 +83,11 @@ function TaskItem({ task, onToggle, onDelete }) {
         </AnimatePresence>
       </button>
 
-      {/* Name + category */}
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{
           fontSize: 14, fontWeight: 700, color: '#fff', lineHeight: 1.2,
           textDecoration: task.done ? 'line-through' : 'none',
-          textDecorationColor: 'rgba(255,255,255,0.35)',
+          textDecorationColor: DIM,
           overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
         }}>
           {task.name}
@@ -110,27 +105,25 @@ function TaskItem({ task, onToggle, onDelete }) {
         </div>
       </div>
 
-      {/* XP badge */}
       <div style={{
         fontSize: 12, fontWeight: 800, flexShrink: 0,
-        color:      task.done ? 'rgba(255,255,255,0.22)' : NEON,
-        background: task.done ? 'rgba(255,255,255,0.04)' : 'rgba(204,255,0,0.07)',
-        border:     `1px solid ${task.done ? 'rgba(255,255,255,0.07)' : 'rgba(204,255,0,0.2)'}`,
-        borderRadius: 8, padding: '4px 9px',
+        color:      task.done ? DIM : PUR,
+        background: task.done ? '#1a1a1a' : '#1a1a2e',
+        border:     `1px solid ${task.done ? '#2a2a2a' : PUR + '33'}`,
+        borderRadius: 6, padding: '3px 9px',
         textDecoration: task.done ? 'line-through' : 'none',
       }}>
         +{task.xp} XP
       </div>
 
-      {/* Delete */}
       <button
         onClick={() => onDelete(task.id)}
         style={{
           background: 'none', border: 'none', cursor: 'pointer', padding: 4, flexShrink: 0,
-          color: 'rgba(255,255,255,0.18)', display: 'flex', transition: 'color 0.2s',
+          color: '#2a2a2a', display: 'flex', transition: 'color 0.2s',
         }}
         onMouseEnter={e => e.currentTarget.style.color = 'rgba(239,68,68,0.65)'}
-        onMouseLeave={e => e.currentTarget.style.color = 'rgba(255,255,255,0.18)'}
+        onMouseLeave={e => e.currentTarget.style.color = '#2a2a2a'}
       >
         <Trash2 size={15} />
       </button>
@@ -138,9 +131,6 @@ function TaskItem({ task, onToggle, onDelete }) {
   )
 }
 
-/* ══════════════════════════════════════
-   NEW TASK MODAL (bottom sheet)
-══════════════════════════════════════ */
 function NewTaskModal({ onConfirm, onCancel }) {
   const [name,    setName]    = useState('')
   const [xp,      setXp]      = useState(50)
@@ -154,7 +144,6 @@ function NewTaskModal({ onConfirm, onCancel }) {
 
   return (
     <>
-      {/* Backdrop */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -162,48 +151,46 @@ function NewTaskModal({ onConfirm, onCancel }) {
         onClick={onCancel}
         style={{
           position: 'fixed', inset: 0, zIndex: 100,
-          background: 'rgba(0,0,0,0.7)',
+          background: 'rgba(0,0,0,0.8)',
           backdropFilter: 'blur(6px)',
         }}
       />
 
-      {/* Sheet */}
       <motion.div
         initial={{ y: '100%' }}
         animate={{ y: 0 }}
         exit={{ y: '100%' }}
         transition={{ type: 'spring', stiffness: 340, damping: 32 }}
         style={{
-          position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 101,
-          background: '#0C0C14',
-          border: '1px solid rgba(255,255,255,0.1)',
+          position: 'fixed', bottom: 0, zIndex: 101,
+          left: 'max(0px, calc(50% - 195px))',
+          right: 'max(0px, calc(50% - 195px))',
+          background: '#111111',
+          border: '1px solid #222222',
           borderBottom: 'none',
-          borderRadius: '24px 24px 0 0',
+          borderRadius: '20px 20px 0 0',
           padding: '0 20px 40px',
         }}
       >
-        {/* Handle */}
         <div style={{ display: 'flex', justifyContent: 'center', padding: '14px 0 22px' }}>
-          <div style={{ width: 36, height: 4, borderRadius: 99, background: 'rgba(255,255,255,0.14)' }} />
+          <div style={{ width: 36, height: 4, borderRadius: 99, background: '#2a2a2a' }} />
         </div>
 
-        {/* Header */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
           <div style={{ fontSize: 18, fontWeight: 900, color: '#fff' }}>Nova Task</div>
           <button
             onClick={onCancel}
             style={{
-              background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.08)',
+              background: '#1a1a1a', border: '1px solid #222222',
               borderRadius: 10, width: 32, height: 32,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              cursor: 'pointer', color: 'rgba(255,255,255,0.5)',
+              cursor: 'pointer', color: MUTED,
             }}
           >
             <X size={16} />
           </button>
         </div>
 
-        {/* Name input */}
         <div style={{ marginBottom: 20 }}>
           <label style={LABEL}>Nome da task</label>
           <input
@@ -217,16 +204,15 @@ function NewTaskModal({ onConfirm, onCancel }) {
             autoFocus
             style={{
               width: '100%', padding: '13px 16px', boxSizing: 'border-box',
-              background: 'rgba(255,255,255,0.05)',
-              border: `1px solid ${focused || name ? 'rgba(168,85,247,0.4)' : 'rgba(255,255,255,0.1)'}`,
-              boxShadow: focused ? '0 0 0 3px rgba(168,85,247,0.1)' : 'none',
-              borderRadius: 12, color: '#fff', fontSize: 15, outline: 'none',
+              background: '#0f0f0f',
+              border: `1px solid ${focused || name ? PUR + '66' : '#222222'}`,
+              boxShadow: focused ? `0 0 0 3px ${PUR}18` : 'none',
+              borderRadius: 10, color: '#fff', fontSize: 15, outline: 'none',
               transition: 'border-color 0.2s, box-shadow 0.2s',
             }}
           />
         </div>
 
-        {/* XP selector */}
         <div style={{ marginBottom: 20 }}>
           <label style={LABEL}>XP da task</label>
           <div style={{ display: 'flex', gap: 8 }}>
@@ -235,11 +221,11 @@ function NewTaskModal({ onConfirm, onCancel }) {
                 key={val}
                 onClick={() => setXp(val)}
                 style={{
-                  flex: 1, padding: '10px 0', borderRadius: 10,
+                  flex: 1, padding: '10px 0', borderRadius: 8,
                   fontWeight: 700, fontSize: 13, cursor: 'pointer', transition: 'all 0.15s',
-                  background: xp === val ? 'rgba(204,255,0,0.1)' : 'rgba(255,255,255,0.04)',
-                  border: `1px solid ${xp === val ? 'rgba(204,255,0,0.38)' : 'rgba(255,255,255,0.08)'}`,
-                  color: xp === val ? NEON : 'rgba(255,255,255,0.45)',
+                  background: xp === val ? '#1a1a2e' : '#1a1a1a',
+                  border: `1px solid ${xp === val ? PUR + '55' : '#222222'}`,
+                  color: xp === val ? PUR : MUTED,
                 }}
               >
                 {val} XP
@@ -248,7 +234,6 @@ function NewTaskModal({ onConfirm, onCancel }) {
           </div>
         </div>
 
-        {/* Category selector */}
         <div style={{ marginBottom: 28 }}>
           <label style={LABEL}>Categoria</label>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
@@ -260,11 +245,11 @@ function NewTaskModal({ onConfirm, onCancel }) {
                   key={c}
                   onClick={() => setCat(c)}
                   style={{
-                    padding: '9px 6px', borderRadius: 10,
+                    padding: '9px 6px', borderRadius: 8,
                     fontWeight: 600, fontSize: 12, cursor: 'pointer', transition: 'all 0.15s',
-                    background: active ? `${color}18` : 'rgba(255,255,255,0.04)',
-                    border: `1px solid ${active ? `${color}42` : 'rgba(255,255,255,0.08)'}`,
-                    color: active ? color : 'rgba(255,255,255,0.45)',
+                    background: active ? `${color}18` : '#1a1a1a',
+                    border: `1px solid ${active ? `${color}42` : '#222222'}`,
+                    color: active ? color : MUTED,
                   }}
                 >
                   {c}
@@ -274,14 +259,13 @@ function NewTaskModal({ onConfirm, onCancel }) {
           </div>
         </div>
 
-        {/* Action buttons */}
         <div style={{ display: 'flex', gap: 10 }}>
           <button
             onClick={onCancel}
             style={{
-              flex: 1, padding: '14px 0', borderRadius: 12, fontWeight: 700, fontSize: 14,
-              background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
-              color: 'rgba(255,255,255,0.5)', cursor: 'pointer',
+              flex: 1, padding: '14px 0', borderRadius: 10, fontWeight: 700, fontSize: 14,
+              background: '#1a1a1a', border: '1px solid #222222',
+              color: MUTED, cursor: 'pointer',
             }}
           >
             Cancelar
@@ -290,12 +274,11 @@ function NewTaskModal({ onConfirm, onCancel }) {
             onClick={handleConfirm}
             disabled={!name.trim()}
             style={{
-              flex: 2, padding: '14px 0', borderRadius: 12, fontWeight: 900, fontSize: 14,
-              background: name.trim() ? PUR : 'rgba(168,85,247,0.18)',
+              flex: 2, padding: '14px 0', borderRadius: 10, fontWeight: 900, fontSize: 14,
+              background: name.trim() ? PUR : '#1a1a2e',
               border: 'none',
-              color: name.trim() ? '#fff' : 'rgba(168,85,247,0.4)',
+              color: name.trim() ? '#fff' : PUR + '66',
               cursor: name.trim() ? 'pointer' : 'not-allowed',
-              boxShadow: name.trim() ? '0 0 22px rgba(168,85,247,0.35)' : 'none',
               transition: 'all 0.2s',
             }}
           >
@@ -307,9 +290,6 @@ function NewTaskModal({ onConfirm, onCancel }) {
   )
 }
 
-/* ══════════════════════════════════════
-   ROOT
-══════════════════════════════════════ */
 export default function Tasks() {
   const [tasks,     setTasks]     = useState(INIT_TASKS)
   const [showModal, setShowModal] = useState(false)
@@ -339,10 +319,9 @@ export default function Tasks() {
   }
 
   return (
-    <div style={{ minHeight: '100dvh', background: '#010208', color: '#fff' }}>
+    <div style={{ minHeight: '100dvh', background: '#080808', color: '#fff' }}>
       <div style={{ maxWidth: 520, margin: '0 auto', padding: '28px 16px 88px' }}>
 
-        {/* ── Top row ── */}
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
@@ -350,10 +329,10 @@ export default function Tasks() {
           style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 22 }}
         >
           <div>
-            <h1 style={{ fontSize: 30, fontWeight: 900, color: '#fff', margin: 0, lineHeight: 1 }}>
+            <h1 style={{ fontSize: 28, fontWeight: 900, color: '#fff', margin: 0, lineHeight: 1 }}>
               Tasks
             </h1>
-            <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.38)', marginTop: 5, marginBottom: 0 }}>
+            <p style={{ fontSize: 13, color: MUTED, marginTop: 5, marginBottom: 0 }}>
               {subtitle}
             </p>
           </div>
@@ -361,10 +340,9 @@ export default function Tasks() {
             onClick={() => setShowModal(true)}
             style={{
               display: 'flex', alignItems: 'center', gap: 6,
-              background: PUR, border: 'none', borderRadius: 12,
+              background: PUR, border: 'none', borderRadius: 10,
               padding: '10px 16px', cursor: 'pointer',
               color: '#fff', fontWeight: 700, fontSize: 13,
-              boxShadow: '0 0 22px rgba(168,85,247,0.38)',
               flexShrink: 0,
             }}
           >
@@ -372,45 +350,44 @@ export default function Tasks() {
           </button>
         </motion.div>
 
-        {/* ── XP Diário ── */}
+        {/* XP Diário */}
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1], delay: 0.07 }}
-          style={{ ...CARD, marginBottom: 12 }}
+          style={{ ...CARD, marginBottom: 10 }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
             <div style={{
-              width: 38, height: 38, borderRadius: 11, flexShrink: 0,
-              background: 'rgba(204,255,0,0.09)', border: '1px solid rgba(204,255,0,0.2)',
+              width: 38, height: 38, borderRadius: 10, flexShrink: 0,
+              background: '#1a1a2e', border: `1px solid ${PUR}33`,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
             }}>
-              <Zap size={18} color={NEON} />
+              <Zap size={18} color={PUR} />
             </div>
             <div style={{ flex: 1 }}>
               <div style={{ fontSize: 14, fontWeight: 700, color: '#fff', lineHeight: 1.2 }}>XP Diário</div>
-              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.38)', marginTop: 2 }}>Meta: {DAILY_XP} XP/dia</div>
+              <div style={{ fontSize: 11, color: MUTED, marginTop: 2 }}>Meta: {DAILY_XP} XP/dia</div>
             </div>
             <div style={{ textAlign: 'right' }}>
-              <span style={{ fontSize: 20, fontWeight: 900, color: NEON }}>{earnedXP}</span>
-              <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.35)', fontWeight: 500 }}>/{DAILY_XP}</span>
+              <span style={{ fontSize: 20, fontWeight: 900, color: '#fff' }}>{earnedXP}</span>
+              <span style={{ fontSize: 13, color: MUTED, fontWeight: 500 }}>/{DAILY_XP}</span>
             </div>
           </div>
-          <div style={{ height: 6, background: 'rgba(255,255,255,0.07)', borderRadius: 99, overflow: 'hidden' }}>
+          <div style={{ height: 4, background: '#222222', borderRadius: 99, overflow: 'hidden' }}>
             <motion.div
               animate={{ width: `${xpPct}%` }}
               transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
               style={{
                 height: '100%', borderRadius: 99,
-                background: `linear-gradient(90deg, ${NEON}bb, ${NEON})`,
-                boxShadow: `0 0 10px rgba(204,255,0,0.45)`,
+                background: PUR,
                 minWidth: xpPct > 0 ? 8 : 0,
               }}
             />
           </div>
         </motion.div>
 
-        {/* ── Planner de Hábitos ── */}
+        {/* Planner de Hábitos */}
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
@@ -419,25 +396,24 @@ export default function Tasks() {
             ...CARD, marginBottom: 28,
             display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer',
           }}
-          whileHover={{ borderColor: 'rgba(168,85,247,0.22)' }}
         >
           <div style={{
-            width: 42, height: 42, borderRadius: 13, flexShrink: 0,
-            background: 'rgba(168,85,247,0.1)', border: '1px solid rgba(168,85,247,0.2)',
+            width: 40, height: 40, borderRadius: 10, flexShrink: 0,
+            background: '#1a1a2e', border: `1px solid ${PUR}33`,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
           }}>
             <Calendar size={18} color={PUR} />
           </div>
           <div style={{ flex: 1 }}>
             <div style={{ fontSize: 14, fontWeight: 700, color: '#fff' }}>Planner de Hábitos</div>
-            <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.38)', marginTop: 3 }}>
+            <div style={{ fontSize: 12, color: MUTED, marginTop: 3 }}>
               Rotinas diárias com +500 XP separado
             </div>
           </div>
-          <ChevronRight size={18} color="rgba(255,255,255,0.25)" />
+          <ChevronRight size={18} color={MUTED} />
         </motion.div>
 
-        {/* ── Empty state ── */}
+        {/* Empty state */}
         {tasks.length === 0 && (
           <motion.div
             initial={{ opacity: 0, scale: 0.96 }}
@@ -445,20 +421,25 @@ export default function Tasks() {
             transition={{ duration: 0.4 }}
             style={{ textAlign: 'center', padding: '48px 20px' }}
           >
-            <div style={{ fontSize: 52, marginBottom: 16 }}>🎯</div>
+            <div style={{
+              width: 56, height: 56, borderRadius: 14, background: '#1a1a2e',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              margin: '0 auto 16px',
+            }}>
+              <Target size={24} color={PUR} />
+            </div>
             <div style={{ fontSize: 17, fontWeight: 800, color: '#fff', marginBottom: 8 }}>
               Nenhuma missão ainda
             </div>
-            <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.38)', marginBottom: 28, lineHeight: 1.6 }}>
+            <div style={{ fontSize: 13, color: MUTED, marginBottom: 28, lineHeight: 1.6 }}>
               Crie sua primeira task e comece a acumular XP
             </div>
             <button
               onClick={() => setShowModal(true)}
               style={{
                 padding: '13px 32px',
-                background: PUR, border: 'none', borderRadius: 12,
+                background: PUR, border: 'none', borderRadius: 10,
                 color: '#fff', fontWeight: 800, fontSize: 14, cursor: 'pointer',
-                boxShadow: '0 0 22px rgba(168,85,247,0.35)',
               }}
             >
               Criar minha primeira task
@@ -466,11 +447,9 @@ export default function Tasks() {
           </motion.div>
         )}
 
-        {/* ── Pending tasks or all-done state ── */}
         <AnimatePresence mode="popLayout">
           {tasks.length > 0 && (
             allDone ? (
-              /* All done celebration */
               <motion.div
                 key="all-done"
                 initial={{ opacity: 0, scale: 0.92 }}
@@ -479,30 +458,33 @@ export default function Tasks() {
                 transition={{ type: 'spring', stiffness: 280, damping: 22 }}
                 style={{
                   textAlign: 'center', padding: '32px 20px',
-                  background: 'rgba(16,185,129,0.06)',
-                  border: '1px solid rgba(16,185,129,0.15)',
-                  borderRadius: 20, marginBottom: 20,
+                  background: '#0d1a14',
+                  border: '1px solid #1a3325',
+                  borderRadius: 12, marginBottom: 20,
                 }}
               >
                 <motion.div
                   animate={{ rotate: [0, -8, 8, -4, 4, 0] }}
                   transition={{ duration: 0.6, delay: 0.1 }}
-                  style={{ fontSize: 48, marginBottom: 12 }}
+                  style={{
+                    width: 52, height: 52, borderRadius: 14, background: 'rgba(16,185,129,0.15)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    margin: '0 auto 12px',
+                  }}
                 >
-                  ✅
+                  <Check size={24} color="#10B981" strokeWidth={2.5} />
                 </motion.div>
                 <div style={{ fontSize: 18, fontWeight: 900, color: '#fff', marginBottom: 6 }}>
                   Tudo completo!
                 </div>
-                <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.45)', lineHeight: 1.65 }}>
-                  Missão cumprida, guerreiro.<br />Você completou todas as tasks de hoje!
+                <div style={{ fontSize: 13, color: MUTED, lineHeight: 1.65 }}>
+                  Missão cumprida.<br />Você completou todas as tasks de hoje!
                 </div>
               </motion.div>
             ) : (
-              /* Pending list */
               <motion.div key="pending">
                 <div style={{
-                  fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.32)',
+                  fontSize: 10, fontWeight: 700, color: MUTED,
                   textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 10,
                 }}>
                   Pendentes ({pending.length})
@@ -517,7 +499,6 @@ export default function Tasks() {
           )}
         </AnimatePresence>
 
-        {/* ── Completed tasks ── */}
         <AnimatePresence>
           {completed.length > 0 && (
             <motion.div
@@ -526,7 +507,7 @@ export default function Tasks() {
               style={{ marginTop: allDone ? 0 : 20 }}
             >
               <div style={{
-                fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.32)',
+                fontSize: 10, fontWeight: 700, color: MUTED,
                 textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 10,
               }}>
                 Concluídas ({completed.length})
@@ -544,7 +525,6 @@ export default function Tasks() {
 
       <BottomNav />
 
-      {/* ── Modal ── */}
       <AnimatePresence>
         {showModal && (
           <NewTaskModal

@@ -157,6 +157,17 @@ function PricingPage() {
   return <PricingCarousel />
 }
 
+/* ── Mobile shell (390px centered, black outside) ── */
+function AppShell({ children }) {
+  return (
+    <div style={{ minHeight: '100dvh', background: '#000000', display: 'flex', justifyContent: 'center' }}>
+      <div style={{ width: '100%', maxWidth: 390, background: '#080808', position: 'relative' }}>
+        {children}
+      </div>
+    </div>
+  )
+}
+
 /* ── Root ── */
 export default function App() {
   const { start, toggle, muted, started, audioRef } = useAudio()
@@ -178,12 +189,12 @@ export default function App() {
         <Route path="/analyzing" element={<AnalyzingPage />} />
         <Route path="/voice"     element={<VoicePage bgAudioRef={audioRef} />} />
         <Route path="/pricing"   element={<PricingPage />} />
-        <Route path="/login"     element={<Login />} />
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/tasks"     element={<Tasks />} />
-        <Route path="/arena"     element={<Arena />} />
-        <Route path="/ranking"   element={<Ranking />} />
-        <Route path="/perfil"    element={<Perfil />} />
+        <Route path="/login"     element={<AppShell><Login /></AppShell>} />
+        <Route path="/dashboard" element={<AppShell><Dashboard /></AppShell>} />
+        <Route path="/tasks"     element={<AppShell><Tasks /></AppShell>} />
+        <Route path="/arena"     element={<AppShell><Arena /></AppShell>} />
+        <Route path="/ranking"   element={<AppShell><Ranking /></AppShell>} />
+        <Route path="/perfil"    element={<AppShell><Perfil /></AppShell>} />
       </Routes>
 
       <MuteButton muted={muted} onToggle={toggle} visible={started} />
