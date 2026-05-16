@@ -240,14 +240,15 @@ export default function Modulos() {
                   onClick={() => {
                     if (mod.id === 1) navigate('/modulos/corrida')
                     else if (mod.id === 2) navigate('/modulos/treino')
+                    else if (mod.id === 6) navigate('/modulos/aparencia')
                   }}
                   style={{
                     flex: 1, padding: '8px 0', borderRadius: 8, border: 'none',
-                    cursor: (mod.id === 1 || mod.id === 2) ? 'pointer' : 'default',
+                    cursor: (mod.id === 1 || mod.id === 2 || mod.id === 6) ? 'pointer' : 'default',
                     display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4,
                     fontSize: 12, fontWeight: 700,
                     background: '#1a1a2e',
-                    color: (mod.id === 1 || mod.id === 2) ? '#fff' : MUTED,
+                    color: (mod.id === 1 || mod.id === 2 || mod.id === 6) ? '#fff' : MUTED,
                   }}
                 >
                   Abrir <ChevronRight size={14} />

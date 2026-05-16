@@ -29,6 +29,7 @@ import Modulos          from './components/Modulos'
 import Corrida          from './components/modulos/Corrida'
 import Treino           from './components/modulos/Treino'
 import Academia         from './components/modulos/Academia'
+import Aparencia        from './components/modulos/Aparencia'
 
 const AUDIO_URL = 'https://res.cloudinary.com/dctzllsly/video/upload/v1778378449/music-bg-orion_j3uur9.mp3'
 const NEON = '#ccff00'
@@ -204,7 +205,8 @@ export default function App() {
         <Route path="/modulos"           element={<AppShell><Modulos /></AppShell>} />
         <Route path="/modulos/corrida"   element={<AppShell><Corrida /></AppShell>} />
         <Route path="/modulos/treino"    element={<AppShell><Treino /></AppShell>} />
-        <Route path="/modulos/academia"  element={<AppShell><Academia /></AppShell>} />
+        <Route path="/modulos/academia"   element={<AppShell><Academia /></AppShell>} />
+        <Route path="/modulos/aparencia"  element={<AppShell><Aparencia /></AppShell>} />
       </Routes>
 
       <MuteButton muted={muted} onToggle={toggle} visible={started} />
