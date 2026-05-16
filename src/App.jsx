@@ -34,6 +34,10 @@ import MassagensFaciais from './components/modulos/MassagensFaciais'
 import GuaSha           from './components/modulos/rotinas/GuaSha'
 import Kobido           from './components/modulos/rotinas/Kobido'
 import DrenagemlFacial  from './components/modulos/rotinas/DrenagemlFacial'
+import SkincareList      from './components/modulos/SkincareList'
+import RotinaMatinal     from './components/modulos/rotinas/RotinaMatinal'
+import RotinaNoturna     from './components/modulos/rotinas/RotinaNoturna'
+import TratamentoSemanal from './components/modulos/rotinas/TratamentoSemanal'
 
 const AUDIO_URL = 'https://res.cloudinary.com/dctzllsly/video/upload/v1778378449/music-bg-orion_j3uur9.mp3'
 const NEON = '#ccff00'
@@ -214,7 +218,11 @@ export default function App() {
         <Route path="/modulos/aparencia/massagens"          element={<AppShell><MassagensFaciais /></AppShell>} />
         <Route path="/modulos/aparencia/massagens/guasha"   element={<AppShell><GuaSha /></AppShell>} />
         <Route path="/modulos/aparencia/massagens/kobido"   element={<AppShell><Kobido /></AppShell>} />
-        <Route path="/modulos/aparencia/massagens/drenagem" element={<AppShell><DrenagemlFacial /></AppShell>} />
+        <Route path="/modulos/aparencia/massagens/drenagem"  element={<AppShell><DrenagemlFacial /></AppShell>} />
+        <Route path="/modulos/aparencia/skincare"           element={<AppShell><SkincareList /></AppShell>} />
+        <Route path="/modulos/aparencia/skincare/matinal"   element={<AppShell><RotinaMatinal /></AppShell>} />
+        <Route path="/modulos/aparencia/skincare/noturna"   element={<AppShell><RotinaNoturna /></AppShell>} />
+        <Route path="/modulos/aparencia/skincare/semanal"   element={<AppShell><TratamentoSemanal /></AppShell>} />
       </Routes>
 
       <MuteButton muted={muted} onToggle={toggle} visible={started} />
