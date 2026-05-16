@@ -241,7 +241,7 @@ export default function Aparencia() {
                   initial={{ opacity: 0, y: 14 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1], delay: 0.16 + i * 0.07 }}
-                  onClick={() => setOpenCat(cat.id)}
+                  onClick={() => cat.id === 'massagens' ? navigate('/modulos/aparencia/massagens') : setOpenCat(cat.id)}
                   whileHover={{ scale: 1.015 }}
                   whileTap={{ scale: 0.97 }}
                   style={{
