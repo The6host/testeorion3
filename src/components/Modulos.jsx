@@ -237,14 +237,17 @@ export default function Modulos() {
                 </button>
 
                 <button
-                  onClick={() => mod.id === 1 ? navigate('/modulos/corrida') : undefined}
+                  onClick={() => {
+                    if (mod.id === 1) navigate('/modulos/corrida')
+                    else if (mod.id === 2) navigate('/modulos/treino')
+                  }}
                   style={{
                     flex: 1, padding: '8px 0', borderRadius: 8, border: 'none',
-                    cursor: mod.id === 1 ? 'pointer' : 'default',
+                    cursor: (mod.id === 1 || mod.id === 2) ? 'pointer' : 'default',
                     display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4,
                     fontSize: 12, fontWeight: 700,
                     background: '#1a1a2e',
-                    color: mod.id === 1 ? '#fff' : MUTED,
+                    color: (mod.id === 1 || mod.id === 2) ? '#fff' : MUTED,
                   }}
                 >
                   Abrir <ChevronRight size={14} />
