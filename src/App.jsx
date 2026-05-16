@@ -25,6 +25,7 @@ import Arena            from './components/Arena'
 import Ranking          from './components/Ranking'
 import Perfil           from './components/Perfil'
 import Character        from './components/Character'
+import Modulos          from './components/Modulos'
 
 const AUDIO_URL = 'https://res.cloudinary.com/dctzllsly/video/upload/v1778378449/music-bg-orion_j3uur9.mp3'
 const NEON = '#ccff00'
@@ -197,6 +198,7 @@ export default function App() {
         <Route path="/ranking"   element={<AppShell><Ranking /></AppShell>} />
         <Route path="/perfil"    element={<AppShell><Perfil /></AppShell>} />
         <Route path="/character" element={<AppShell><Character /></AppShell>} />
+        <Route path="/modulos"   element={<AppShell><Modulos /></AppShell>} />
       </Routes>
 
       <MuteButton muted={muted} onToggle={toggle} visible={started} />

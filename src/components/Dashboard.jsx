@@ -208,6 +208,7 @@ function StatsGrid() {
 
 /* ══ MODULES ══ */
 function FavoriteModules() {
+  const navigate = useNavigate()
   return (
     <motion.div {...fadeUp(0.26)} style={CARD}>
       <div style={{ fontSize: 13, fontWeight: 800, color: '#fff', marginBottom: 14 }}>Módulos Favoritos</div>
@@ -216,11 +217,14 @@ function FavoriteModules() {
           <Star size={18} color={PUR} />
         </div>
         <p style={{ fontSize: 13, color: MUTED, margin: 0 }}>Nenhum módulo favorito ainda</p>
-        <button style={{
-          marginTop: 2, padding: '9px 24px', background: '#1a1a2e',
-          border: `1px solid ${PUR}33`, borderRadius: 8,
-          color: PUR, fontWeight: 700, fontSize: 13, cursor: 'pointer',
-        }}>Explorar Módulos</button>
+        <button
+          onClick={() => navigate('/modulos')}
+          style={{
+            marginTop: 2, padding: '9px 24px', background: '#1a1a2e',
+            border: `1px solid ${PUR}33`, borderRadius: 8,
+            color: PUR, fontWeight: 700, fontSize: 13, cursor: 'pointer',
+          }}
+        >Explorar Módulos</button>
       </div>
     </motion.div>
   )
