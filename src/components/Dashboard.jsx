@@ -145,6 +145,7 @@ function StreakCard() {
 
 /* ══ CHARACTER CARD ══ */
 function CharacterCard() {
+  const navigate = useNavigate()
   return (
     <motion.div {...fadeUp(0.14)} style={{ ...CARD, position: 'relative', overflow: 'hidden' }}>
       <div style={{
@@ -164,11 +165,14 @@ function CharacterCard() {
         Veja a evolução visual do seu avatar, seus atributos RPG e conquistas desbloqueadas.
       </p>
       <div style={{ display: 'flex', gap: 8 }}>
-        <button style={{
-          flex: 1, padding: '9px 0', background: '#1a1a2e', border: `1px solid ${PUR}33`,
-          borderRadius: 8, color: PUR, fontWeight: 700, fontSize: 13,
-          cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5,
-        }}>
+        <button
+          onClick={() => navigate('/character')}
+          style={{
+            flex: 1, padding: '9px 0', background: '#1a1a2e', border: `1px solid ${PUR}33`,
+            borderRadius: 8, color: PUR, fontWeight: 700, fontSize: 13,
+            cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5,
+          }}
+        >
           Ver Detalhes <ChevronRight size={14} />
         </button>
         {['20 Evoluções', 'Sistema RPG'].map(t => (
