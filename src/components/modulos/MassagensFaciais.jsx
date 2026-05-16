@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion } from 'framer-motion'
 import { ArrowLeft, Sparkles, Star, Clock, ChevronRight } from 'lucide-react'
 import BottomNav from '../BottomNav'
 
@@ -30,6 +30,7 @@ const LEVEL_COLORS = {
 const ROUTINES = [
   {
     id: 'guasha',
+    path: '/modulos/aparencia/massagens/guasha',
     name: 'Gua Sha',
     pts: 100,
     time: '10 min',
@@ -40,6 +41,7 @@ const ROUTINES = [
   },
   {
     id: 'kobido',
+    path: '/modulos/aparencia/massagens/kobido',
     name: 'Kobido Simplificado',
     pts: 150,
     time: '15 min',
@@ -50,6 +52,7 @@ const ROUTINES = [
   },
   {
     id: 'drenagem',
+    path: '/modulos/aparencia/massagens/drenagem',
     name: 'Drenagem Linfática Facial',
     pts: 120,
     time: '12 min',
@@ -59,73 +62,6 @@ const ROUTINES = [
     steps: 7,
   },
 ]
-
-/* ── Coming soon overlay ── */
-function ComingSoonSheet({ routine, onClose }) {
-  const lvl = LEVEL_COLORS[routine.level]
-  return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      transition={{ duration: 0.22 }}
-      onClick={onClose}
-      style={{
-        position: 'fixed', inset: 0, zIndex: 200,
-        background: 'rgba(0,0,0,0.72)', backdropFilter: 'blur(6px)',
-        display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
-      }}
-    >
-      <motion.div
-        initial={{ y: 60, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        exit={{ y: 60, opacity: 0 }}
-        transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-        onClick={e => e.stopPropagation()}
-        style={{
-          width: '100%', maxWidth: 390,
-          background: '#111111', borderRadius: '20px 20px 0 0',
-          border: '1px solid #222', borderBottom: 'none',
-          padding: '28px 24px 48px',
-          textAlign: 'center',
-        }}
-      >
-        <div style={{
-          width: 72, height: 72, borderRadius: 20,
-          background: '#1a0814', border: `1px solid ${PINK}33`,
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          margin: '0 auto 18px',
-        }}>
-          <Sparkles size={32} color={PINK} />
-        </div>
-        <div style={{ fontSize: 18, fontWeight: 900, color: '#fff', marginBottom: 8 }}>
-          {routine.name}
-        </div>
-        <div style={{
-          display: 'inline-block', marginBottom: 16,
-          background: '#1a0814', border: `1px solid ${PINK}33`,
-          borderRadius: 20, padding: '4px 14px',
-          fontSize: 11, fontWeight: 700, color: PINK,
-        }}>
-          Em Breve
-        </div>
-        <div style={{ fontSize: 13, color: MUTED, lineHeight: 1.65, marginBottom: 28, maxWidth: 260, margin: '0 auto 28px' }}>
-          Esta rotina está sendo finalizada pelos nossos especialistas. Em breve estará disponível com guia passo a passo!
-        </div>
-        <button
-          onClick={onClose}
-          style={{
-            width: '100%', padding: '13px 0', borderRadius: 10, border: 'none',
-            background: '#1a0814', color: PINK,
-            fontWeight: 700, fontSize: 14, cursor: 'pointer',
-          }}
-        >
-          Fechar
-        </button>
-      </motion.div>
-    </motion.div>
-  )
-}
 
 /* ── Routine card ── */
 function RoutineCard({ routine, index, onStart }) {
@@ -225,8 +161,7 @@ function RoutineCard({ routine, index, onStart }) {
 /* ── Root ── */
 export default function MassagensFaciais() {
   const navigate = useNavigate()
-  const [isFav,       setIsFav]       = useState(false)
-  const [activeSheet, setActiveSheet] = useState(null)
+  const [isFav, setIsFav] = useState(false)
 
   return (
     <div style={{ minHeight: '100dvh', background: '#080808', color: '#fff' }}>
@@ -279,20 +214,10 @@ export default function MassagensFaciais() {
             key={r.id}
             routine={r}
             index={i}
-            onStart={setActiveSheet}
+            onStart={r => navigate(r.path)}
           />
         ))}
       </div>
-
-      {/* Bottom sheet */}
-      <AnimatePresence>
-        {activeSheet && (
-          <ComingSoonSheet
-            routine={activeSheet}
-            onClose={() => setActiveSheet(null)}
-          />
-        )}
-      </AnimatePresence>
 
       <BottomNav />
     </div>

@@ -31,6 +31,9 @@ import Treino           from './components/modulos/Treino'
 import Academia         from './components/modulos/Academia'
 import Aparencia        from './components/modulos/Aparencia'
 import MassagensFaciais from './components/modulos/MassagensFaciais'
+import GuaSha           from './components/modulos/rotinas/GuaSha'
+import Kobido           from './components/modulos/rotinas/Kobido'
+import DrenagemlFacial  from './components/modulos/rotinas/DrenagemlFacial'
 
 const AUDIO_URL = 'https://res.cloudinary.com/dctzllsly/video/upload/v1778378449/music-bg-orion_j3uur9.mp3'
 const NEON = '#ccff00'
@@ -208,7 +211,10 @@ export default function App() {
         <Route path="/modulos/treino"    element={<AppShell><Treino /></AppShell>} />
         <Route path="/modulos/academia"   element={<AppShell><Academia /></AppShell>} />
         <Route path="/modulos/aparencia"           element={<AppShell><Aparencia /></AppShell>} />
-        <Route path="/modulos/aparencia/massagens" element={<AppShell><MassagensFaciais /></AppShell>} />
+        <Route path="/modulos/aparencia/massagens"          element={<AppShell><MassagensFaciais /></AppShell>} />
+        <Route path="/modulos/aparencia/massagens/guasha"   element={<AppShell><GuaSha /></AppShell>} />
+        <Route path="/modulos/aparencia/massagens/kobido"   element={<AppShell><Kobido /></AppShell>} />
+        <Route path="/modulos/aparencia/massagens/drenagem" element={<AppShell><DrenagemlFacial /></AppShell>} />
       </Routes>
 
       <MuteButton muted={muted} onToggle={toggle} visible={started} />
