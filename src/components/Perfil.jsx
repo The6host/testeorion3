@@ -30,11 +30,11 @@ const SECTION_LABEL = {
 }
 
 const RADAR_DATA = [
-  { subject: 'Foco',       value: 3.2, fullMark: 10 },
-  { subject: 'Energia',    value: 3.8, fullMark: 10 },
-  { subject: 'Motivação',  value: 3.4, fullMark: 10 },
-  { subject: 'Produção',   value: 3.0, fullMark: 10 },
-  { subject: 'Disciplina', value: 3.6, fullMark: 10 },
+  { subject: 'Foco',       value: 0, fullMark: 10 },
+  { subject: 'Energia',    value: 0, fullMark: 10 },
+  { subject: 'Motivação',  value: 0, fullMark: 10 },
+  { subject: 'Produção',   value: 0, fullMark: 10 },
+  { subject: 'Disciplina', value: 0, fullMark: 10 },
 ]
 
 const THEMES = [
@@ -47,15 +47,15 @@ const THEMES = [
 ]
 
 const STATS = [
-  { Icon: Flame,  label: 'Dias de Streak', value: '2'   },
-  { Icon: Trophy, label: 'Pontos Totais',  value: '875' },
+  { Icon: Flame,  label: 'Dias de Streak', value: '0'   },
+  { Icon: Trophy, label: 'Pontos Totais',  value: '0'   },
   { Icon: MapPin, label: 'Km Corridos',    value: '0.0' },
   { Icon: Shield, label: 'Vitórias Arena', value: '0'   },
 ]
 
 const ACHIEVEMENTS = [
-  { name: 'Primeiro Passo',  emoji: '✅', unlocked: true,  desc: 'Primeira task concluída'    },
-  { name: 'Organizador',     emoji: '📋', unlocked: true,  desc: 'Criou 5 tasks em um dia'    },
+  { name: 'Primeiro Passo',  emoji: '✅', unlocked: false, desc: 'Primeira task concluída'    },
+  { name: 'Organizador',     emoji: '📋', unlocked: false, desc: 'Criou 5 tasks em um dia'    },
   { name: 'Guerreiro',       emoji: '⚔️', unlocked: false, desc: 'Vença 10 batalhas na Arena' },
   { name: 'Maratonista',     emoji: '🏃', unlocked: false, desc: 'Corra 50km no total'        },
   { name: 'Mestre da Mente', emoji: '🧠', unlocked: false, desc: 'Complete 30 tasks de foco'  },
@@ -63,14 +63,14 @@ const ACHIEVEMENTS = [
 ]
 
 const ATTRS = [
-  { Icon: Heart,    name: 'Vitalidade',   value: 12, color: '#EF4444' },
-  { Icon: Droplets, name: 'Hidratação',   value: 4,  color: '#3B82F6' },
-  { Icon: Dumbbell, name: 'Força',        value: 2,  color: '#F97316' },
-  { Icon: Brain,    name: 'Inteligência', value: 6,  color: '#8B5CF6' },
-  { Icon: Target,   name: 'Disciplina',   value: 9,  color: '#10B981' },
-  { Icon: Zap,      name: 'Agilidade',    value: 1,  color: PUR       },
-  { Icon: Eye,      name: 'Foco',         value: 5,  color: '#06B6D4' },
-  { Icon: Users,    name: 'Carisma',      value: 7,  color: '#EC4899' },
+  { Icon: Heart,    name: 'Vitalidade',   value: 0, color: '#EF4444' },
+  { Icon: Droplets, name: 'Hidratação',   value: 0, color: '#3B82F6' },
+  { Icon: Dumbbell, name: 'Força',        value: 0, color: '#F97316' },
+  { Icon: Brain,    name: 'Inteligência', value: 0, color: '#8B5CF6' },
+  { Icon: Target,   name: 'Disciplina',   value: 0, color: '#10B981' },
+  { Icon: Zap,      name: 'Agilidade',    value: 0, color: PUR       },
+  { Icon: Eye,      name: 'Foco',         value: 0, color: '#06B6D4' },
+  { Icon: Users,    name: 'Carisma',      value: 0, color: '#EC4899' },
 ]
 
 function getInitials(email) {
@@ -169,31 +169,24 @@ export default function Perfil() {
 
             <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
               <div style={{
-                background: '#1a1a2e', border: `1px solid ${PUR}33`,
-                borderRadius: 20, padding: '4px 12px',
-                fontSize: 12, fontWeight: 700, color: PUR,
-              }}>
-                Iniciante II
-              </div>
-              <div style={{
                 background: '#1a1a1a', border: '1px solid #222222',
                 borderRadius: 20, padding: '4px 12px',
                 fontSize: 12, fontWeight: 700, color: '#fff',
               }}>
-                Level 2
+                Level 1
               </div>
             </div>
           </div>
 
           <div style={{ borderTop: '1px solid #1e1e1e', paddingTop: 14 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, marginBottom: 6 }}>
-              <span style={{ color: MUTED, fontWeight: 600 }}>Progresso para Level 3</span>
-              <span style={{ color: PUR, fontWeight: 700 }}>435/500 XP</span>
+              <span style={{ color: MUTED, fontWeight: 600 }}>Progresso para Level 2</span>
+              <span style={{ color: PUR, fontWeight: 700 }}>0/500 XP</span>
             </div>
             <div style={{ height: 4, background: '#222222', borderRadius: 99, overflow: 'hidden' }}>
               <motion.div
                 initial={{ width: 0 }}
-                animate={{ width: '87%' }}
+                animate={{ width: '0%' }}
                 transition={{ duration: 1.1, ease: [0.22, 1, 0.36, 1], delay: 0.3 }}
                 style={{ height: '100%', borderRadius: 99, background: PUR }}
               />
@@ -211,7 +204,7 @@ export default function Perfil() {
                 borderRadius: 7, padding: '3px 10px',
                 fontSize: 11, fontWeight: 700, color: PUR,
               }}>
-                Total: 17.0/50
+                Total: 0.0/50
               </div>
               <button style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 2, display: 'flex' }}>
                 <RefreshCw size={15} color={MUTED} />
@@ -239,28 +232,22 @@ export default function Perfil() {
               transform: 'translate(-50%, -46%)',
               textAlign: 'center', pointerEvents: 'none',
             }}>
-              <div style={{ fontSize: 20, fontWeight: 900, color: '#fff', lineHeight: 1 }}>3.4</div>
+              <div style={{ fontSize: 20, fontWeight: 900, color: '#fff', lineHeight: 1 }}>0.0</div>
               <div style={{ fontSize: 9, color: MUTED, fontWeight: 600 }}>média</div>
             </div>
           </div>
 
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
+          <div style={{ marginBottom: 10 }}>
             <span style={{ fontSize: 12, color: MUTED }}>
               Tasks Completas: <strong style={{ color: '#fff' }}>0</strong>
             </span>
-            <span style={{ fontSize: 12, color: MUTED }}>
-              Atualização: <strong style={{ color: '#fff' }}>Toda Sexta</strong>
-            </span>
           </div>
-          <p style={{ fontSize: 12, color: MUTED, lineHeight: 1.6, margin: '0 0 10px' }}>
-            Suas habilidades são atualizadas toda sexta com base nas tasks completadas durante a semana.
-          </p>
           <div style={{
             background: '#1a1a2e', border: `1px solid ${PUR}33`,
             borderRadius: 9, padding: '8px 12px', textAlign: 'center',
             fontSize: 13, fontWeight: 700, color: PUR,
           }}>
-            Pontuação Total: 17.0/50
+            Pontuação Total: 0.0/50
           </div>
         </motion.div>
 
@@ -331,7 +318,7 @@ export default function Perfil() {
               background: 'none', border: 'none', cursor: 'pointer',
               fontSize: 12, color: PUR, fontWeight: 600, padding: 0,
             }}>
-              Ver todas (2/54) <ChevronRight size={13} />
+              Ver todas (0/54) <ChevronRight size={13} />
             </button>
           </div>
 

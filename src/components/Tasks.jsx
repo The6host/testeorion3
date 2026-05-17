@@ -33,13 +33,7 @@ const LABEL = {
   letterSpacing: '0.08em', marginBottom: 8,
 }
 
-const INIT_TASKS = [
-  { id: 1, name: 'Treino de Força',   category: 'Fitness',       xp: 100, done: false },
-  { id: 2, name: 'Leitura 30min',     category: 'Foco',          xp: 50,  done: true  },
-  { id: 3, name: 'Meditação',         category: 'Mindfulness',   xp: 75,  done: false },
-  { id: 4, name: 'Revisão de Metas',  category: 'Produtividade', xp: 75,  done: false },
-  { id: 5, name: 'Corrida 5km',       category: 'Fitness',       xp: 150, done: true  },
-]
+const INIT_TASKS = []
 
 function TaskItem({ task, onToggle, onDelete }) {
   const color = CAT_COLOR[task.category] || PUR
@@ -293,7 +287,7 @@ function NewTaskModal({ onConfirm, onCancel }) {
 export default function Tasks() {
   const [tasks,     setTasks]     = useState(INIT_TASKS)
   const [showModal, setShowModal] = useState(false)
-  const nextId = useRef(INIT_TASKS.length + 1)
+  const nextId = useRef(1)
 
   const pending   = tasks.filter(t => !t.done)
   const completed = tasks.filter(t => t.done)

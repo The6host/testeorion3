@@ -29,24 +29,18 @@ const LABEL = { fontSize: 10, fontWeight: 700, color: MUTED, textTransform: 'upp
 
 /* ── Mock ── */
 const MOCK = {
-  username: 'Kauê Vinícius', tier: 'Iniciante II', tierCode: 'T2',
-  level: 2, xp: 435, xpNext: 500, streak: 7, dailyPts: 120,
+  username: 'Kauê Vinícius',
+  level: 1, xp: 0, xpNext: 500, streak: 0, dailyPts: 0,
 }
 
 const STATS = [
-  { label: 'TASKS HOJE',    value: '7/9',    delta: '+2 ontem',    Icon: Target   },
-  { label: 'PONTOS TOTAIS', value: '2.840',  delta: '+120 hoje',   Icon: Trophy   },
-  { label: 'KM CORRIDOS',   value: '12,4',   delta: '+3,2 hoje',   Icon: Activity },
-  { label: 'TEMPO ATIVO',   value: '3h 20m', delta: '+45min hoje', Icon: Clock    },
+  { label: 'TASKS HOJE',    value: '0/0',   delta: '', Icon: Target   },
+  { label: 'PONTOS TOTAIS', value: '0',     delta: '', Icon: Trophy   },
+  { label: 'KM CORRIDOS',   value: '0,0',   delta: '', Icon: Activity },
+  { label: 'TEMPO ATIVO',   value: '0h 0m', delta: '', Icon: Clock    },
 ]
 
-const TASKS = [
-  { id: 1, name: 'Treino de Força',  category: 'Físico',        xp: 80,  Icon: Zap,      done: false },
-  { id: 2, name: 'Leitura 30min',    category: 'Mental',        xp: 50,  Icon: BookOpen, done: true  },
-  { id: 3, name: 'Meditação',        category: 'Saúde',         xp: 40,  Icon: Heart,    done: false },
-  { id: 4, name: 'Revisão de Metas', category: 'Produtividade', xp: 60,  Icon: Target,   done: false },
-  { id: 5, name: 'Corrida 5km',      category: 'Físico',        xp: 100, Icon: Activity, done: true  },
-]
+const TASKS = []
 
 function getInitials(email) {
   if (!email) return 'U'
@@ -86,7 +80,7 @@ function AppHeader({ email, onLogout }) {
             {MOCK.username}
           </div>
           <div style={{ fontSize: 11, color: MUTED, marginTop: 1 }}>
-            {MOCK.tier} · {MOCK.tierCode}
+            Rank E
           </div>
         </div>
         <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
@@ -130,13 +124,7 @@ function StreakCard() {
         </div>
         <div style={{ textAlign: 'right' }}>
           <div style={LABEL}>PONTOS HOJE</div>
-          <div style={{ fontSize: 22, fontWeight: 900, color: '#fff', lineHeight: 1.1, marginBottom: 5 }}>+{MOCK.dailyPts}</div>
-          <div style={{
-            display: 'inline-block', background: '#1a1a2e', border: `1px solid ${PUR}44`,
-            borderRadius: 20, padding: '2px 10px', fontSize: 11, fontWeight: 700, color: PUR,
-          }}>
-            {MOCK.tier}
-          </div>
+          <div style={{ fontSize: 22, fontWeight: 900, color: '#fff', lineHeight: 1.1 }}>+{MOCK.dailyPts}</div>
         </div>
       </div>
     </motion.div>
@@ -158,7 +146,7 @@ function CharacterCard() {
         </div>
         <div>
           <div style={{ fontSize: 15, fontWeight: 800, color: '#fff' }}>Seu Personagem</div>
-          <div style={{ fontSize: 11, color: PUR, fontWeight: 600 }}>Level {MOCK.level} · {MOCK.tierCode}</div>
+          <div style={{ fontSize: 11, color: PUR, fontWeight: 600 }}>Level {MOCK.level}</div>
         </div>
       </div>
       <p style={{ fontSize: 13, color: MUTED, lineHeight: 1.65, marginBottom: 12 }}>
@@ -241,6 +229,11 @@ function TasksToday() {
         </button>
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        {TASKS.length === 0 && (
+          <div style={{ textAlign: 'center', padding: '16px 0', fontSize: 13, color: MUTED }}>
+            Nenhuma task ainda
+          </div>
+        )}
         {TASKS.map((t, i) => (
           <motion.div
             key={t.id}

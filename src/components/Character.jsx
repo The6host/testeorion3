@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { ArrowLeft, Swords, Heart, Brain, Shield, Zap, Eye, User } from 'lucide-react'
+import { ArrowLeft, Swords, Heart, Brain, Shield, Zap, Eye, User, MessageCircle, Droplets } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import BottomNav from './BottomNav'
 
@@ -22,12 +22,14 @@ const LABEL = {
 }
 
 const ATTRS = [
-  { name: 'Força',        Icon: Swords, color: '#EF4444', bg: '#1a0808', value: 6  },
-  { name: 'Vitalidade',   Icon: Heart,  color: '#EC4899', bg: '#1a0814', value: 16 },
-  { name: 'Inteligência', Icon: Brain,  color: '#3B82F6', bg: '#080d1a', value: 6  },
-  { name: 'Disciplina',   Icon: Shield, color: '#7C3AED', bg: '#0d0814', value: 12 },
-  { name: 'Agilidade',    Icon: Zap,    color: '#10B981', bg: '#081a11', value: 3  },
-  { name: 'Foco',         Icon: Eye,    color: '#06B6D4', bg: '#081418', value: 5  },
+  { name: 'Força',        Icon: Swords,        color: '#EF4444', bg: '#1a0808', value: 0 },
+  { name: 'Vitalidade',   Icon: Heart,         color: '#EC4899', bg: '#1a0814', value: 0 },
+  { name: 'Inteligência', Icon: Brain,         color: '#3B82F6', bg: '#080d1a', value: 0 },
+  { name: 'Disciplina',   Icon: Shield,        color: '#7C3AED', bg: '#0d0814', value: 0 },
+  { name: 'Agilidade',    Icon: Zap,           color: '#10B981', bg: '#081a11', value: 0 },
+  { name: 'Foco',         Icon: Eye,           color: '#06B6D4', bg: '#081418', value: 0 },
+  { name: 'Carisma',      Icon: MessageCircle, color: '#EC4899', bg: '#1a0814', value: 0 },
+  { name: 'Hidratação',   Icon: Droplets,      color: '#3B82F6', bg: '#080d1a', value: 0 },
 ]
 
 const CHAR_IMG = 'https://i.imgur.com/8LFQX5M.png'
@@ -99,7 +101,7 @@ export default function Character() {
             fontSize: 13, fontWeight: 800, color: ORANGE,
             backdropFilter: 'blur(10px)',
           }}>
-            E • Level 3
+            E • Level 1
           </div>
         </div>
 
@@ -152,13 +154,13 @@ export default function Character() {
             <div style={{ height: 5, background: '#1e1e1e', borderRadius: 99, overflow: 'hidden', marginBottom: 6 }}>
               <motion.div
                 initial={{ width: 0 }}
-                animate={{ width: '92%' }}
+                animate={{ width: '0%' }}
                 transition={{ duration: 1.1, ease: [0.22, 1, 0.36, 1], delay: 0.45 }}
                 style={{ height: '100%', borderRadius: 99, background: ORANGE }}
               />
             </div>
             <div style={{ fontSize: 11, fontWeight: 700, color: ORANGE }}>
-              460/500 XP para Level 4
+              0/500 XP para Level 2
             </div>
           </div>
         </motion.div>
@@ -224,8 +226,8 @@ export default function Character() {
           style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginTop: 20, marginBottom: 10 }}
         >
           {[
-            { label: 'NÍVEL ATUAL', value: '3'     },
-            { label: 'XP TOTAL',    value: '1.460' },
+            { label: 'NÍVEL ATUAL', value: '1' },
+            { label: 'XP TOTAL',    value: '0' },
           ].map((s, i) => (
             <div key={i} style={{ ...CARD }}>
               <div style={LABEL}>{s.label}</div>

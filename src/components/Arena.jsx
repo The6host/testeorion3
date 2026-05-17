@@ -22,14 +22,14 @@ const CARD = {
 }
 
 const MY_STATS = [
-  { Icon: Dumbbell,     name: 'Força',        value: 2  },
-  { Icon: Heart,        name: 'Vitalidade',   value: 12 },
-  { Icon: Brain,        name: 'Inteligência', value: 6  },
-  { Icon: Target,       name: 'Disciplina',   value: 9  },
-  { Icon: Zap,          name: 'Agilidade',    value: 1  },
-  { Icon: Eye,          name: 'Foco',         value: 5  },
-  { Icon: MessageCircle,name: 'Carisma',      value: 7  },
-  { Icon: Droplets,     name: 'Hidratação',   value: 4  },
+  { Icon: Dumbbell,      name: 'Força',        value: 0 },
+  { Icon: Heart,         name: 'Vitalidade',   value: 0 },
+  { Icon: Brain,         name: 'Inteligência', value: 0 },
+  { Icon: Target,        name: 'Disciplina',   value: 0 },
+  { Icon: Zap,           name: 'Agilidade',    value: 0 },
+  { Icon: Eye,           name: 'Foco',         value: 0 },
+  { Icon: MessageCircle, name: 'Carisma',      value: 0 },
+  { Icon: Droplets,      name: 'Hidratação',   value: 0 },
 ]
 
 const OPPONENT = { name: 'DarkWolf', level: 3, tier: 'T3' }
@@ -447,7 +447,7 @@ export default function Arena() {
                 ...CARD,
                 display: 'flex', alignItems: 'flex-start', gap: 12, marginBottom: 14,
               }}>
-                <Fighter name="Você" level={2} hp={myHP} isMe />
+                <Fighter name="Você" level={1} hp={myHP} isMe />
                 <div style={{
                   flexShrink: 0, width: 34, height: 34,
                   borderRadius: '50%', marginTop: 20,

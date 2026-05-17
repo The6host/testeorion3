@@ -378,20 +378,20 @@ export default function Ranking() {
                     </div>
                   </div>
                   <div style={{ textAlign: 'right' }}>
-                    <div style={{ fontSize: 22, fontWeight: 900, color: '#fff' }}>75%</div>
+                    <div style={{ fontSize: 22, fontWeight: 900, color: '#fff' }}>0%</div>
                   </div>
                 </div>
 
                 <div style={{ height: 4, background: '#222222', borderRadius: 99, overflow: 'hidden', marginBottom: 8 }}>
                   <motion.div
                     initial={{ width: 0 }}
-                    animate={{ width: '75%' }}
+                    animate={{ width: '0%' }}
                     transition={{ duration: 1.1, ease: [0.22, 1, 0.36, 1], delay: 0.3 }}
                     style={{ height: '100%', borderRadius: 99, background: PUR }}
                   />
                 </div>
                 <div style={{ fontSize: 12, color: MUTED, textAlign: 'right' }}>
-                  375,5 / 499,5 pts
+                  0 / 499,5 pts
                 </div>
               </motion.div>
 
@@ -414,7 +414,7 @@ export default function Ranking() {
                   borderRadius: 9, padding: '6px 12px',
                   fontSize: 14, fontWeight: 900, color: GREEN, flexShrink: 0,
                 }}>
-                  #?
+                  —
                 </div>
                 <div style={{ flex: 1 }}>
                   <div style={{ fontSize: 14, fontWeight: 800, color: '#fff' }}>Sua Posição</div>
@@ -423,7 +423,7 @@ export default function Ranking() {
                   </div>
                 </div>
                 <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                  <div style={{ fontSize: 16, fontWeight: 900, color: GREEN }}>875</div>
+                  <div style={{ fontSize: 16, fontWeight: 900, color: GREEN }}>0</div>
                   <div style={{ fontSize: 10, color: MUTED }}>pontos</div>
                 </div>
               </motion.div>
