@@ -13,6 +13,10 @@ import {
 import { supabase } from '../lib/supabase'
 import BottomNav from './BottomNav'
 import RankBadge from './RankBadge'
+import {
+  getUserAttributes, ATTRIBUTE_KEYS, ATTRIBUTE_META,
+  MAX_ATTRIBUTE_VALUE, getAttributesSum, getAttributesAverage,
+} from '../lib/userStats'
 
 /* ── Design tokens ── */
 const PUR   = '#7C3AED'
@@ -30,13 +34,16 @@ const SECTION_LABEL = {
   textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 10,
 }
 
-const RADAR_DATA = [
-  { subject: 'Foco',       value: 0, fullMark: 10 },
-  { subject: 'Energia',    value: 0, fullMark: 10 },
-  { subject: 'Motivação',  value: 0, fullMark: 10 },
-  { subject: 'Produção',   value: 0, fullMark: 10 },
-  { subject: 'Disciplina', value: 0, fullMark: 10 },
-]
+const PERFIL_ATTR_ICONS = {
+  forca:        Dumbbell,
+  vitalidade:   Heart,
+  inteligencia: Brain,
+  disciplina:   Target,
+  agilidade:    Zap,
+  foco:         Eye,
+  carisma:      Users,
+  hidratacao:   Droplets,
+}
 
 const THEMES = [
   { name: 'Padrão',     color: '#7C3AED' },
@@ -61,17 +68,6 @@ const ACHIEVEMENTS = [
   { name: 'Maratonista',     emoji: '🏃', unlocked: false, desc: 'Corra 50km no total'        },
   { name: 'Mestre da Mente', emoji: '🧠', unlocked: false, desc: 'Complete 30 tasks de foco'  },
   { name: 'Lendário',        emoji: '🏆', unlocked: false, desc: 'Alcance o rank S'            },
-]
-
-const ATTRS = [
-  { Icon: Heart,    name: 'Vitalidade',   value: 0, color: '#EF4444' },
-  { Icon: Droplets, name: 'Hidratação',   value: 0, color: '#3B82F6' },
-  { Icon: Dumbbell, name: 'Força',        value: 0, color: '#F97316' },
-  { Icon: Brain,    name: 'Inteligência', value: 0, color: '#8B5CF6' },
-  { Icon: Target,   name: 'Disciplina',   value: 0, color: '#10B981' },
-  { Icon: Zap,      name: 'Agilidade',    value: 0, color: PUR       },
-  { Icon: Eye,      name: 'Foco',         value: 0, color: '#06B6D4' },
-  { Icon: Users,    name: 'Carisma',      value: 0, color: '#EC4899' },
 ]
 
 function getInitials(email) {
@@ -106,6 +102,16 @@ function RadarTick({ x, y, payload }) {
 export default function Perfil() {
   const [email,       setEmail]       = useState('')
   const [activeTheme, setActiveTheme] = useState('Padrão')
+
+  const userAttrs = getUserAttributes()
+  const attrSum   = getAttributesSum()
+  const attrAvg   = getAttributesAverage()
+  const maxSum    = ATTRIBUTE_KEYS.length * MAX_ATTRIBUTE_VALUE
+  const radarData = ATTRIBUTE_KEYS.map(key => ({
+    subject:  ATTRIBUTE_META[key].label,
+    value:    userAttrs[key],
+    fullMark: MAX_ATTRIBUTE_VALUE,
+  }))
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
@@ -206,7 +212,7 @@ export default function Perfil() {
                 borderRadius: 7, padding: '3px 10px',
                 fontSize: 11, fontWeight: 700, color: PUR,
               }}>
-                Total: 0.0/50
+                Total: {attrSum}/{maxSum}
               </div>
               <button style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 2, display: 'flex' }}>
                 <RefreshCw size={15} color={MUTED} />
@@ -216,7 +222,7 @@ export default function Perfil() {
 
           <div style={{ position: 'relative' }}>
             <ResponsiveContainer width="100%" height={220}>
-              <RadarChart data={RADAR_DATA} margin={{ top: 10, right: 20, bottom: 10, left: 20 }}>
+              <RadarChart data={radarData} margin={{ top: 10, right: 20, bottom: 10, left: 20 }}>
                 <PolarGrid stroke="#222222" />
                 <PolarAngleAxis dataKey="subject" tick={<RadarTick />} />
                 <Radar
@@ -234,7 +240,7 @@ export default function Perfil() {
               transform: 'translate(-50%, -46%)',
               textAlign: 'center', pointerEvents: 'none',
             }}>
-              <div style={{ fontSize: 20, fontWeight: 900, color: '#fff', lineHeight: 1 }}>0.0</div>
+              <div style={{ fontSize: 20, fontWeight: 900, color: '#fff', lineHeight: 1 }}>{attrAvg}</div>
               <div style={{ fontSize: 9, color: MUTED, fontWeight: 600 }}>média</div>
             </div>
           </div>
@@ -249,7 +255,7 @@ export default function Perfil() {
             borderRadius: 9, padding: '8px 12px', textAlign: 'center',
             fontSize: 13, fontWeight: 700, color: PUR,
           }}>
-            Pontuação Total: 0.0/50
+            Pontuação Total: {attrSum}/{maxSum}
           </div>
         </motion.div>
 
@@ -362,36 +368,38 @@ export default function Perfil() {
           </div>
 
           <div style={{ borderTop: '1px solid #1e1e1e', paddingTop: 14, marginTop: 10 }}>
-            {ATTRS.map((attr, i) => (
-              <div key={i} style={{ marginBottom: 12 }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 5 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <div style={{
-                      width: 26, height: 26, borderRadius: 7,
-                      background: `${attr.color}18`,
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    }}>
-                      <attr.Icon size={13} color={attr.color} />
+            {ATTRIBUTE_KEYS.map((key, i) => {
+              const { label, color } = ATTRIBUTE_META[key]
+              const Icon  = PERFIL_ATTR_ICONS[key]
+              const value = userAttrs[key]
+              return (
+                <div key={key} style={{ marginBottom: 12 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 5 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <div style={{
+                        width: 26, height: 26, borderRadius: 7,
+                        background: `${color}18`,
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      }}>
+                        <Icon size={13} color={color} />
+                      </div>
+                      <span style={{ fontSize: 13, fontWeight: 600, color: '#fff' }}>{label}</span>
                     </div>
-                    <span style={{ fontSize: 13, fontWeight: 600, color: '#fff' }}>{attr.name}</span>
+                    <span style={{ fontSize: 12, fontWeight: 800, color }}>
+                      {value}/100
+                    </span>
                   </div>
-                  <span style={{ fontSize: 12, fontWeight: 800, color: attr.color }}>
-                    {attr.value}/100
-                  </span>
+                  <div style={{ height: 4, background: '#222222', borderRadius: 99, overflow: 'hidden' }}>
+                    <motion.div
+                      initial={{ width: 0 }}
+                      animate={{ width: `${value}%` }}
+                      transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1], delay: 0.34 + i * 0.07 }}
+                      style={{ height: '100%', borderRadius: 99, background: color }}
+                    />
+                  </div>
                 </div>
-                <div style={{ height: 4, background: '#222222', borderRadius: 99, overflow: 'hidden' }}>
-                  <motion.div
-                    initial={{ width: 0 }}
-                    animate={{ width: `${attr.value}%` }}
-                    transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1], delay: 0.34 + i * 0.07 }}
-                    style={{
-                      height: '100%', borderRadius: 99,
-                      background: attr.color,
-                    }}
-                  />
-                </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
 
           <div style={{

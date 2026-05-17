@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { ArrowLeft, Swords, Heart, Brain, Shield, Zap, Eye, User, MessageCircle, Droplets } from 'lucide-react'
 import { getRankByXP } from '../lib/rank'
+import { getUserAttributes, ATTRIBUTE_KEYS, ATTRIBUTE_META } from '../lib/userStats'
 import { supabase } from '../lib/supabase'
 import BottomNav from './BottomNav'
 
@@ -22,16 +23,16 @@ const LABEL = {
   textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 6,
 }
 
-const ATTRS = [
-  { name: 'Força',        Icon: Swords,        color: '#EF4444', bg: '#1a0808', value: 0 },
-  { name: 'Vitalidade',   Icon: Heart,         color: '#EC4899', bg: '#1a0814', value: 0 },
-  { name: 'Inteligência', Icon: Brain,         color: '#3B82F6', bg: '#080d1a', value: 0 },
-  { name: 'Disciplina',   Icon: Shield,        color: '#7C3AED', bg: '#0d0814', value: 0 },
-  { name: 'Agilidade',    Icon: Zap,           color: '#10B981', bg: '#081a11', value: 0 },
-  { name: 'Foco',         Icon: Eye,           color: '#06B6D4', bg: '#081418', value: 0 },
-  { name: 'Carisma',      Icon: MessageCircle, color: '#EC4899', bg: '#1a0814', value: 0 },
-  { name: 'Hidratação',   Icon: Droplets,      color: '#3B82F6', bg: '#080d1a', value: 0 },
-]
+const CHAR_ATTR_CONFIG = {
+  forca:        { Icon: Swords,        bg: '#1a0900' },
+  vitalidade:   { Icon: Heart,         bg: '#1a0808' },
+  inteligencia: { Icon: Brain,         bg: '#0d0820' },
+  disciplina:   { Icon: Shield,        bg: '#081a11' },
+  agilidade:    { Icon: Zap,           bg: '#0d0814' },
+  foco:         { Icon: Eye,           bg: '#081418' },
+  carisma:      { Icon: MessageCircle, bg: '#1a0814' },
+  hidratacao:   { Icon: Droplets,      bg: '#080d1a' },
+}
 
 const CHAR_IMG = 'https://i.imgur.com/8LFQX5M.png'
 
@@ -60,8 +61,9 @@ export default function Character() {
     })
   }, [])
 
-  const username = email ? email.split('@')[0] : 'usuario'
-  const rank     = getRankByXP(0)
+  const username  = email ? email.split('@')[0] : 'usuario'
+  const rank      = getRankByXP(0)
+  const userAttrs = getUserAttributes()
 
   return (
     <div style={{ minHeight: '100dvh', background: '#000000', color: '#fff' }}>
@@ -181,43 +183,48 @@ export default function Character() {
             Atributos
           </div>
 
-          {ATTRS.map((attr, i) => (
-            <motion.div
-              key={attr.name}
-              initial={{ opacity: 0, x: -12 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.38, ease: [0.22, 1, 0.36, 1], delay: 0.18 + i * 0.06 }}
-              style={{
-                background: '#0f0f0f',
-                border: '1px solid #1e1e1e',
-                borderRadius: 10, padding: '12px 14px', marginBottom: 8,
-              }}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
-                <div style={{
-                  width: 34, height: 34, borderRadius: 9, flexShrink: 0,
-                  background: attr.bg, border: `1px solid ${attr.color}22`,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                }}>
-                  <attr.Icon size={16} color={attr.color} />
+          {ATTRIBUTE_KEYS.map((key, i) => {
+            const { label, color } = ATTRIBUTE_META[key]
+            const { Icon, bg }    = CHAR_ATTR_CONFIG[key]
+            const value           = userAttrs[key]
+            return (
+              <motion.div
+                key={key}
+                initial={{ opacity: 0, x: -12 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.38, ease: [0.22, 1, 0.36, 1], delay: 0.18 + i * 0.06 }}
+                style={{
+                  background: '#0f0f0f',
+                  border: '1px solid #1e1e1e',
+                  borderRadius: 10, padding: '12px 14px', marginBottom: 8,
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
+                  <div style={{
+                    width: 34, height: 34, borderRadius: 9, flexShrink: 0,
+                    background: bg, border: `1px solid ${color}22`,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  }}>
+                    <Icon size={16} color={color} />
+                  </div>
+                  <span style={{ flex: 1, fontSize: 14, fontWeight: 600, color: '#fff' }}>
+                    {label}
+                  </span>
+                  <span style={{ fontSize: 20, fontWeight: 900, color }}>
+                    {value}
+                  </span>
                 </div>
-                <span style={{ flex: 1, fontSize: 14, fontWeight: 600, color: '#fff' }}>
-                  {attr.name}
-                </span>
-                <span style={{ fontSize: 20, fontWeight: 900, color: attr.color }}>
-                  {attr.value}
-                </span>
-              </div>
-              <div style={{ height: 4, background: '#222222', borderRadius: 99, overflow: 'hidden' }}>
-                <motion.div
-                  initial={{ width: 0 }}
-                  animate={{ width: `${attr.value}%` }}
-                  transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1], delay: 0.3 + i * 0.07 }}
-                  style={{ height: '100%', borderRadius: 99, background: attr.color }}
-                />
-              </div>
-            </motion.div>
-          ))}
+                <div style={{ height: 4, background: '#222222', borderRadius: 99, overflow: 'hidden' }}>
+                  <motion.div
+                    initial={{ width: 0 }}
+                    animate={{ width: `${value}%` }}
+                    transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1], delay: 0.3 + i * 0.07 }}
+                    style={{ height: '100%', borderRadius: 99, background: color }}
+                  />
+                </div>
+              </motion.div>
+            )
+          })}
         </motion.div>
 
         {/* Stats grid */}

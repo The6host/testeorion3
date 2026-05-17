@@ -6,6 +6,7 @@ import {
   Swords, Skull, Heart, Brain, Eye, Dumbbell, Droplets, MessageCircle,
 } from 'lucide-react'
 import BottomNav from './BottomNav'
+import { getUserAttributes, ATTRIBUTE_KEYS, ATTRIBUTE_META } from '../lib/userStats'
 
 /* ── Design tokens ── */
 const PUR   = '#7C3AED'
@@ -21,16 +22,16 @@ const CARD = {
   padding: 16,
 }
 
-const MY_STATS = [
-  { Icon: Dumbbell,      name: 'Força',        value: 0 },
-  { Icon: Heart,         name: 'Vitalidade',   value: 0 },
-  { Icon: Brain,         name: 'Inteligência', value: 0 },
-  { Icon: Target,        name: 'Disciplina',   value: 0 },
-  { Icon: Zap,           name: 'Agilidade',    value: 0 },
-  { Icon: Eye,           name: 'Foco',         value: 0 },
-  { Icon: MessageCircle, name: 'Carisma',      value: 0 },
-  { Icon: Droplets,      name: 'Hidratação',   value: 0 },
-]
+const STAT_ICONS = {
+  forca:        Dumbbell,
+  vitalidade:   Heart,
+  inteligencia: Brain,
+  disciplina:   Target,
+  agilidade:    Zap,
+  foco:         Eye,
+  carisma:      MessageCircle,
+  hidratacao:   Droplets,
+}
 
 const OPPONENT = { name: 'DarkWolf', level: 3 }
 const MAX_HP   = 100
@@ -192,7 +193,8 @@ function PhaseWrap({ children, k }) {
 }
 
 export default function Arena() {
-  const navigate = useNavigate()
+  const navigate   = useNavigate()
+  const userAttrs  = getUserAttributes()
 
   const [phase,     setPhase]     = useState('initial')
   const [myHP,      setMyHP]      = useState(MAX_HP)
@@ -373,28 +375,33 @@ export default function Arena() {
                   <Zap size={15} color={PUR} /> Seus Stats de Combate
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-                  {MY_STATS.map((s, i) => (
-                    <div key={i} style={{
-                      display: 'flex', alignItems: 'center', gap: 8,
-                      background: '#0f0f0f', border: '1px solid #1e1e1e',
-                      borderRadius: 8, padding: '8px 10px',
-                    }}>
-                      <div style={{
-                        width: 28, height: 28, borderRadius: 7, background: '#1a1a2e',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+                  {ATTRIBUTE_KEYS.map(key => {
+                    const { label, color } = ATTRIBUTE_META[key]
+                    const Icon  = STAT_ICONS[key]
+                    const value = userAttrs[key]
+                    return (
+                      <div key={key} style={{
+                        display: 'flex', alignItems: 'center', gap: 8,
+                        background: '#0f0f0f', border: '1px solid #1e1e1e',
+                        borderRadius: 8, padding: '8px 10px',
                       }}>
-                        <s.Icon size={14} color={PUR} />
-                      </div>
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontSize: 10, color: MUTED, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                          {s.name}
+                        <div style={{
+                          width: 28, height: 28, borderRadius: 7, background: `${color}18`,
+                          display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+                        }}>
+                          <Icon size={14} color={color} />
                         </div>
-                        <div style={{ fontSize: 15, fontWeight: 900, color: '#fff', lineHeight: 1.2 }}>
-                          {s.value}
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontSize: 10, color: MUTED, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                            {label}
+                          </div>
+                          <div style={{ fontSize: 15, fontWeight: 900, color: '#fff', lineHeight: 1.2 }}>
+                            {value}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    )
+                  })}
                 </div>
               </div>
             </PhaseWrap>
