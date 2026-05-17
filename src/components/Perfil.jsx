@@ -12,6 +12,7 @@ import {
 } from 'recharts'
 import { supabase } from '../lib/supabase'
 import BottomNav from './BottomNav'
+import RankBadge from './RankBadge'
 
 /* ── Design tokens ── */
 const PUR   = '#7C3AED'
@@ -59,7 +60,7 @@ const ACHIEVEMENTS = [
   { name: 'Guerreiro',       emoji: '⚔️', unlocked: false, desc: 'Vença 10 batalhas na Arena' },
   { name: 'Maratonista',     emoji: '🏃', unlocked: false, desc: 'Corra 50km no total'        },
   { name: 'Mestre da Mente', emoji: '🧠', unlocked: false, desc: 'Complete 30 tasks de foco'  },
-  { name: 'Lendário',        emoji: '🏆', unlocked: false, desc: 'Alcance o tier Lenda'       },
+  { name: 'Lendário',        emoji: '🏆', unlocked: false, desc: 'Alcance o rank S'            },
 ]
 
 const ATTRS = [
@@ -167,7 +168,8 @@ export default function Perfil() {
               @{email.split('@')[0] || 'usuario'}
             </div>
 
-            <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16, flexWrap: 'wrap', justifyContent: 'center' }}>
+              <RankBadge totalXP={0} size="sm" />
               <div style={{
                 background: '#1a1a1a', border: '1px solid #222222',
                 borderRadius: 20, padding: '4px 12px',

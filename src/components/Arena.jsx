@@ -32,7 +32,7 @@ const MY_STATS = [
   { Icon: Droplets,      name: 'Hidratação',   value: 0 },
 ]
 
-const OPPONENT = { name: 'DarkWolf', level: 3, tier: 'T3' }
+const OPPONENT = { name: 'DarkWolf', level: 3 }
 const MAX_HP   = 100
 
 const rnd = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min

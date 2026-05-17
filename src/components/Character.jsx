@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { ArrowLeft, Swords, Heart, Brain, Shield, Zap, Eye, User, MessageCircle, Droplets } from 'lucide-react'
+import { getRankByXP } from '../lib/rank'
 import { supabase } from '../lib/supabase'
 import BottomNav from './BottomNav'
 
@@ -60,6 +61,7 @@ export default function Character() {
   }, [])
 
   const username = email ? email.split('@')[0] : 'usuario'
+  const rank     = getRankByXP(0)
 
   return (
     <div style={{ minHeight: '100dvh', background: '#000000', color: '#fff' }}>
@@ -101,7 +103,7 @@ export default function Character() {
             fontSize: 13, fontWeight: 800, color: ORANGE,
             backdropFilter: 'blur(10px)',
           }}>
-            E • Level 1
+            {rank.code} • Level 1
           </div>
         </div>
 
@@ -256,9 +258,9 @@ export default function Character() {
             <User size={22} color={ORANGE} />
           </div>
           <div>
-            <div style={{ fontSize: 16, fontWeight: 900, color: ORANGE }}>E — Caçador Fraco</div>
+            <div style={{ fontSize: 16, fontWeight: 900, color: ORANGE }}>{rank.code} — {rank.title}</div>
             <div style={{ fontSize: 12, color: MUTED, marginTop: 4, lineHeight: 1.5 }}>
-              Iniciante — Apenas começando sua jornada
+              {rank.description}
             </div>
           </div>
         </motion.div>

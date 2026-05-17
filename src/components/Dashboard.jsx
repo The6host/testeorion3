@@ -8,6 +8,7 @@ import {
 } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import BottomNav from './BottomNav'
+import RankBadge from './RankBadge'
 
 /* ── Design tokens ── */
 const PUR   = '#7C3AED'
@@ -79,8 +80,8 @@ function AppHeader({ email, onLogout }) {
           <div style={{ fontSize: 14, fontWeight: 800, color: '#fff', lineHeight: 1.2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
             {MOCK.username}
           </div>
-          <div style={{ fontSize: 11, color: MUTED, marginTop: 1 }}>
-            Rank E
+          <div style={{ marginTop: 3 }}>
+            <RankBadge totalXP={0} size="sm" />
           </div>
         </div>
         <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>

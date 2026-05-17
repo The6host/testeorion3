@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Trophy, Users, Info, TrendingUp, TrendingDown, Crown, Star, Sprout } from 'lucide-react'
 import BottomNav from './BottomNav'
+import { getRankByXP, getNextRank, getRankProgress } from '../lib/rank'
 
 /* ── Design tokens ── */
 const PUR   = '#7C3AED'
@@ -20,16 +21,16 @@ const CARD = {
 }
 
 const PLAYERS = [
-  { name: 'TanjiroKamado',   pts: 85987, up: false, tier: 'Lenda II'       },
-  { name: 'OrochimaSannin',  pts: 79958, up: true,  tier: 'Lenda II'       },
-  { name: 'JetBlack',        pts: 68277, up: true,  tier: 'Lenda I'        },
-  { name: 'NarutoUzumaki',   pts: 64053, up: false, tier: 'Lenda I'        },
-  { name: 'FayeValentine',   pts: 49115, up: true,  tier: 'Grão-Mestre II' },
-  { name: 'SpikeSpiegel',    pts: 41230, up: true,  tier: 'Grão-Mestre I'  },
-  { name: 'EdwardElric',     pts: 38540, up: false, tier: 'Mestre III'     },
-  { name: 'MikasaAckerman',  pts: 32100, up: true,  tier: 'Mestre II'      },
-  { name: 'LeviAckerman',    pts: 28750, up: false, tier: 'Mestre I'       },
-  { name: 'GokuSuperSaiyan', pts: 21300, up: true,  tier: 'Veterano II'    },
+  { name: 'TanjiroKamado',   pts: 85987, up: false },
+  { name: 'OrochimaSannin',  pts: 79958, up: true  },
+  { name: 'JetBlack',        pts: 68277, up: true  },
+  { name: 'NarutoUzumaki',   pts: 64053, up: false },
+  { name: 'FayeValentine',   pts: 49115, up: true  },
+  { name: 'SpikeSpiegel',    pts: 41230, up: true  },
+  { name: 'EdwardElric',     pts: 38540, up: false },
+  { name: 'MikasaAckerman',  pts: 32100, up: true  },
+  { name: 'LeviAckerman',    pts: 28750, up: false },
+  { name: 'GokuSuperSaiyan', pts: 21300, up: true  },
 ]
 
 const AVATAR_GRADIENTS = [
@@ -60,13 +61,6 @@ function fmtPts(n) {
   return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.')
 }
 
-function getTierColor(tier) {
-  if (tier.includes('Lenda'))       return GOLD
-  if (tier.includes('Grão-Mestre')) return PUR
-  if (tier.includes('Mestre'))      return '#3B82F6'
-  if (tier.includes('Veterano'))    return GREEN
-  return MUTED
-}
 
 const TIME_TABS = ['Hoje', 'Semana', 'Mês', 'Total']
 
@@ -193,7 +187,7 @@ function PosBadge({ pos }) {
 }
 
 function PlayerRow({ player, pos, avatarIndex, delay }) {
-  const tierColor = getTierColor(player.tier)
+  const rank = getRankByXP(player.pts)
 
   return (
     <motion.div
@@ -228,12 +222,12 @@ function PlayerRow({ player, pos, avatarIndex, delay }) {
         </div>
         <div style={{ marginTop: 3 }}>
           <div style={{
-            display: 'inline-flex', alignItems: 'center',
-            background: `${tierColor}14`, border: `1px solid ${tierColor}30`,
+            display: 'inline-flex', alignItems: 'center', gap: 3,
+            background: `${rank.color}14`, border: `1px solid ${rank.color}30`,
             borderRadius: 6, padding: '1px 7px',
-            fontSize: 10, fontWeight: 700, color: tierColor,
+            fontSize: 10, fontWeight: 700, color: rank.color,
           }}>
-            {player.tier}
+            {rank.code} · {rank.title}
           </div>
         </div>
       </div>
@@ -257,6 +251,11 @@ function PlayerRow({ player, pos, avatarIndex, delay }) {
 export default function Ranking() {
   const [mainTab, setMainTab] = useState('Global')
   const [timeTab, setTimeTab] = useState('Total')
+
+  const USER_XP  = 0
+  const userRank = getRankByXP(USER_XP)
+  const nextRank = getNextRank(USER_XP)
+  const rankPct  = Math.round(getRankProgress(USER_XP))
 
   return (
     <div style={{ minHeight: '100dvh', background: '#080808', color: '#fff' }}>
@@ -371,27 +370,29 @@ export default function Ranking() {
                       <Sprout size={17} color={GREEN} />
                     </div>
                     <div>
-                      <div style={{ fontSize: 15, fontWeight: 900, color: '#fff' }}>Iniciante II</div>
+                      <div style={{ fontSize: 15, fontWeight: 900, color: '#fff' }}>
+                        {userRank.code} · {userRank.title}
+                      </div>
                       <div style={{ fontSize: 11, color: MUTED, marginTop: 2 }}>
-                        Progresso para próximo tier
+                        Progresso para Rank {nextRank?.code ?? 'MAX'}
                       </div>
                     </div>
                   </div>
                   <div style={{ textAlign: 'right' }}>
-                    <div style={{ fontSize: 22, fontWeight: 900, color: '#fff' }}>0%</div>
+                    <div style={{ fontSize: 22, fontWeight: 900, color: '#fff' }}>{rankPct}%</div>
                   </div>
                 </div>
 
                 <div style={{ height: 4, background: '#222222', borderRadius: 99, overflow: 'hidden', marginBottom: 8 }}>
                   <motion.div
                     initial={{ width: 0 }}
-                    animate={{ width: '0%' }}
+                    animate={{ width: `${rankPct}%` }}
                     transition={{ duration: 1.1, ease: [0.22, 1, 0.36, 1], delay: 0.3 }}
                     style={{ height: '100%', borderRadius: 99, background: PUR }}
                   />
                 </div>
                 <div style={{ fontSize: 12, color: MUTED, textAlign: 'right' }}>
-                  0 / 499,5 pts
+                  {USER_XP.toLocaleString('pt-BR')} / {nextRank ? nextRank.minXP.toLocaleString('pt-BR') : '∞'} XP
                 </div>
               </motion.div>
 
