@@ -1,14 +1,16 @@
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import {
   Bell, LogOut, ChevronRight,
   Target, Trophy, Activity, Clock,
-  Flame, Zap, BookOpen, Heart, Star,
+  Flame, Star,
 } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import BottomNav from './BottomNav'
 import RankBadge from './RankBadge'
+import { useUserData } from '../hooks/useUserData'
+import { getInitials } from '../lib/utils'
 
 /* ── Design tokens ── */
 const PUR   = '#7C3AED'
@@ -28,28 +30,6 @@ const ICON_BTN = {
 }
 const LABEL = { fontSize: 10, fontWeight: 700, color: MUTED, textTransform: 'uppercase', letterSpacing: '0.08em' }
 
-/* ── Mock ── */
-const MOCK = {
-  username: 'Kauê Vinícius',
-  level: 1, xp: 0, xpNext: 500, streak: 0, dailyPts: 0,
-}
-
-const STATS = [
-  { label: 'TASKS HOJE',    value: '0/0',   delta: '', Icon: Target   },
-  { label: 'PONTOS TOTAIS', value: '0',     delta: '', Icon: Trophy   },
-  { label: 'KM CORRIDOS',   value: '0,0',   delta: '', Icon: Activity },
-  { label: 'TEMPO ATIVO',   value: '0h 0m', delta: '', Icon: Clock    },
-]
-
-const TASKS = []
-
-function getInitials(email) {
-  if (!email) return 'U'
-  const local = email.split('@')[0]
-  const parts = local.split(/[._-]/)
-  return parts.length >= 2 ? (parts[0][0] + parts[1][0]).toUpperCase() : local.slice(0, 2).toUpperCase()
-}
-
 const fadeUp = (delay = 0) => ({
   initial: { opacity: 0, y: 16 },
   animate: { opacity: 1, y: 0 },
@@ -57,8 +37,8 @@ const fadeUp = (delay = 0) => ({
 })
 
 /* ══ HEADER ══ */
-function AppHeader({ email, onLogout }) {
-  const xpPct = (MOCK.xp / MOCK.xpNext) * 100
+function AppHeader({ displayName, totalXP, level, xpAtual, onLogout }) {
+  const xpPct = (xpAtual / 500) * 100
   return (
     <div style={{
       position: 'fixed', top: 0, zIndex: 50,
@@ -74,14 +54,14 @@ function AppHeader({ email, onLogout }) {
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           fontSize: 13, fontWeight: 900, color: '#fff',
         }}>
-          {getInitials(email)}
+          {getInitials(displayName)}
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ fontSize: 14, fontWeight: 800, color: '#fff', lineHeight: 1.2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-            {MOCK.username}
+            {displayName}
           </div>
           <div style={{ marginTop: 3 }}>
-            <RankBadge totalXP={0} size="sm" />
+            <RankBadge totalXP={totalXP} size="sm" />
           </div>
         </div>
         <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
@@ -91,8 +71,8 @@ function AppHeader({ email, onLogout }) {
       </div>
       <div>
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 5 }}>
-          <span style={LABEL}>NÍVEL {MOCK.level}</span>
-          <span style={{ ...LABEL, color: PUR }}>{MOCK.xp}/{MOCK.xpNext} XP</span>
+          <span style={LABEL}>NÍVEL {level}</span>
+          <span style={{ ...LABEL, color: PUR }}>{xpAtual}/500 XP</span>
         </div>
         <div style={{ height: 4, background: '#222', borderRadius: 99, overflow: 'hidden' }}>
           <motion.div
@@ -108,7 +88,7 @@ function AppHeader({ email, onLogout }) {
 }
 
 /* ══ STREAK CARD ══ */
-function StreakCard() {
+function StreakCard({ streak, pointsToday }) {
   return (
     <motion.div {...fadeUp(0.08)} style={CARD}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -119,13 +99,13 @@ function StreakCard() {
           <div>
             <div style={LABEL}>STREAK ATUAL</div>
             <div style={{ fontSize: 22, fontWeight: 900, color: '#fff', lineHeight: 1.1 }}>
-              {MOCK.streak} <span style={{ fontSize: 13, fontWeight: 500, color: MUTED }}>dias</span>
+              {streak} <span style={{ fontSize: 13, fontWeight: 500, color: MUTED }}>dias</span>
             </div>
           </div>
         </div>
         <div style={{ textAlign: 'right' }}>
           <div style={LABEL}>PONTOS HOJE</div>
-          <div style={{ fontSize: 22, fontWeight: 900, color: '#fff', lineHeight: 1.1 }}>+{MOCK.dailyPts}</div>
+          <div style={{ fontSize: 22, fontWeight: 900, color: '#fff', lineHeight: 1.1 }}>+{pointsToday}</div>
         </div>
       </div>
     </motion.div>
@@ -133,7 +113,7 @@ function StreakCard() {
 }
 
 /* ══ CHARACTER CARD ══ */
-function CharacterCard() {
+function CharacterCard({ level }) {
   const navigate = useNavigate()
   return (
     <motion.div {...fadeUp(0.14)} style={{ ...CARD, position: 'relative', overflow: 'hidden' }}>
@@ -147,7 +127,7 @@ function CharacterCard() {
         </div>
         <div>
           <div style={{ fontSize: 15, fontWeight: 800, color: '#fff' }}>Seu Personagem</div>
-          <div style={{ fontSize: 11, color: PUR, fontWeight: 600 }}>Level {MOCK.level}</div>
+          <div style={{ fontSize: 11, color: PUR, fontWeight: 600 }}>Level {level}</div>
         </div>
       </div>
       <p style={{ fontSize: 13, color: MUTED, lineHeight: 1.65, marginBottom: 12 }}>
@@ -176,10 +156,16 @@ function CharacterCard() {
 }
 
 /* ══ STATS 2×2 ══ */
-function StatsGrid() {
+function StatsGrid({ tasksTodayCompleted, tasksTodayTotal, totalXP }) {
+  const stats = [
+    { label: 'TASKS HOJE',    value: `${tasksTodayCompleted}/${tasksTodayTotal}`, Icon: Target   },
+    { label: 'PONTOS TOTAIS', value: `${totalXP}`,                                Icon: Trophy   },
+    { label: 'KM CORRIDOS',   value: '0,0',                                       Icon: Activity },
+    { label: 'TEMPO ATIVO',   value: '0h 0m',                                     Icon: Clock    },
+  ]
   return (
     <motion.div {...fadeUp(0.20)} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-      {STATS.map((s, i) => (
+      {stats.map((s, i) => (
         <div key={i} style={{ ...CARD, padding: '14px 14px' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
             <div style={LABEL}>{s.label}</div>
@@ -187,8 +173,7 @@ function StatsGrid() {
               <s.Icon size={14} color={PUR} />
             </div>
           </div>
-          <div style={{ fontSize: 22, fontWeight: 900, color: '#fff', lineHeight: 1, marginBottom: 4 }}>{s.value}</div>
-          <div style={{ fontSize: 11, color: DIM }}>{s.delta}</div>
+          <div style={{ fontSize: 22, fontWeight: 900, color: '#fff', lineHeight: 1 }}>{s.value}</div>
         </div>
       ))}
     </motion.div>
@@ -220,7 +205,7 @@ function FavoriteModules() {
 }
 
 /* ══ TASKS TODAY ══ */
-function TasksToday() {
+function TasksToday({ tasksPreview }) {
   return (
     <motion.div {...fadeUp(0.32)} style={CARD}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
@@ -230,12 +215,12 @@ function TasksToday() {
         </button>
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-        {TASKS.length === 0 && (
+        {tasksPreview.length === 0 && (
           <div style={{ textAlign: 'center', padding: '16px 0', fontSize: 13, color: MUTED }}>
-            Nenhuma task ainda
+            Nenhuma task pra hoje. Crie uma na aba Tasks!
           </div>
         )}
-        {TASKS.map((t, i) => (
+        {tasksPreview.map((t, i) => (
           <motion.div
             key={t.id}
             initial={{ opacity: 0, x: -12 }}
@@ -245,27 +230,27 @@ function TasksToday() {
               display: 'flex', alignItems: 'center', gap: 10,
               padding: '10px 12px',
               background: '#0f0f0f', border: '1px solid #1e1e1e', borderRadius: 10,
-              opacity: t.done ? 0.5 : 1,
+              opacity: t.completed ? 0.5 : 1,
             }}
           >
             <div style={{ width: 30, height: 30, borderRadius: 8, background: '#1a1a2e', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-              <t.Icon size={14} color={PUR} />
+              <Target size={14} color={PUR} />
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: '#fff', lineHeight: 1.2, textDecoration: t.done ? 'line-through' : 'none', textDecorationColor: '#444', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              <div style={{ fontSize: 13, fontWeight: 700, color: '#fff', lineHeight: 1.2, textDecoration: t.completed ? 'line-through' : 'none', textDecorationColor: '#444', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 {t.name}
               </div>
               <div style={{ fontSize: 11, color: DIM, marginTop: 2 }}>{t.category}</div>
             </div>
             <div style={{
               fontSize: 11, fontWeight: 700, flexShrink: 0,
-              color: t.done ? DIM : PUR,
-              background: t.done ? '#1a1a1a' : '#1a1a2e',
-              border: `1px solid ${t.done ? '#2a2a2a' : PUR + '33'}`,
+              color: t.completed ? DIM : PUR,
+              background: t.completed ? '#1a1a1a' : '#1a1a2e',
+              border: `1px solid ${t.completed ? '#2a2a2a' : PUR + '33'}`,
               borderRadius: 6, padding: '3px 8px',
-              textDecoration: t.done ? 'line-through' : 'none',
+              textDecoration: t.completed ? 'line-through' : 'none',
             }}>
-              +{t.xp} XP
+              +{t.xp_value} XP
             </div>
           </motion.div>
         ))}
@@ -277,25 +262,33 @@ function TasksToday() {
 /* ══ ROOT ══ */
 export default function Dashboard() {
   const navigate = useNavigate()
-  const [user,  setUser]  = useState(null)
-  const [ready, setReady] = useState(false)
+  const { profile, tasks, loading, error, reload } = useUserData()
+
+  const today               = new Date().toISOString().split('T')[0]
+  const tasksToday          = tasks.filter(t => t.created_at?.startsWith(today))
+  const tasksTodayCompleted = tasksToday.filter(t => t.completed).length
+  const tasksTodayTotal     = tasksToday.length
+  const pointsToday         = tasksToday.filter(t => t.completed).reduce((s, t) => s + (t.xp_value || 0), 0)
+  const tasksPreview        = tasksToday.slice(0, 5)
+
+  const displayName = profile?.display_name || 'Usuário'
+  const totalXP     = profile?.total_xp     || 0
+  const level       = profile?.level        || 1
+  const streak      = profile?.streak_count || 0
+  const xpAtual     = totalXP % 500
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
-      if (!data?.user) { navigate('/login'); return }
-      setUser(data.user)
-      setReady(true)
-    })
-  }, [])
+    if (!loading && !profile) navigate('/login')
+  }, [loading, profile])
 
   async function handleLogout() {
     await supabase.auth.signOut()
     navigate('/login')
   }
 
-  if (!ready) {
+  if (loading) {
     return (
-      <div style={{ minHeight: '100dvh', background: '#080808', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div style={{ minHeight: '100dvh', background: '#080808', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16 }}>
         <motion.img
           src="https://i.imgur.com/FwQdsn4.png"
           alt="Orion"
@@ -303,6 +296,24 @@ export default function Dashboard() {
           transition={{ duration: 1.5, repeat: Infinity }}
           style={{ height: 36, opacity: 0.5 }}
         />
+        <div style={{ fontSize: 13, color: PUR, fontWeight: 600 }}>Carregando...</div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div style={{ minHeight: '100dvh', background: '#080808', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16, padding: '0 24px', textAlign: 'center' }}>
+        <div style={{ fontSize: 14, color: MUTED, lineHeight: 1.65 }}>
+          Não foi possível carregar seus dados. Tente novamente.
+        </div>
+        <button
+          onClick={reload}
+          style={{
+            padding: '10px 24px', background: PUR, border: 'none',
+            borderRadius: 10, color: '#fff', fontWeight: 700, fontSize: 14, cursor: 'pointer',
+          }}
+        >Recarregar</button>
       </div>
     )
   }
@@ -311,14 +322,24 @@ export default function Dashboard() {
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4 }}
       style={{ minHeight: '100dvh', background: '#080808', color: '#fff' }}
     >
-      <AppHeader email={user?.email} onLogout={handleLogout} />
+      <AppHeader
+        displayName={displayName}
+        totalXP={totalXP}
+        level={level}
+        xpAtual={xpAtual}
+        onLogout={handleLogout}
+      />
       <div style={{ paddingTop: 96, paddingBottom: 80 }}>
         <div style={{ maxWidth: 520, margin: '0 auto', padding: '0 16px', display: 'flex', flexDirection: 'column', gap: 10 }}>
-          <StreakCard />
-          <CharacterCard />
-          <StatsGrid />
+          <StreakCard streak={streak} pointsToday={pointsToday} />
+          <CharacterCard level={level} />
+          <StatsGrid
+            tasksTodayCompleted={tasksTodayCompleted}
+            tasksTodayTotal={tasksTodayTotal}
+            totalXP={totalXP}
+          />
           <FavoriteModules />
-          <TasksToday />
+          <TasksToday tasksPreview={tasksPreview} />
         </div>
       </div>
       <BottomNav />
