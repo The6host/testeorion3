@@ -1,4 +1,5 @@
 import { supabase } from './supabase'
+import { getTodayKey, getLocalDateKey } from './dailySuggestions'
 
 // ───────── LEITURA ─────────
 
@@ -80,14 +81,16 @@ export async function acceptSuggestion(suggestion) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return null
 
-  const today = new Date().toISOString().split('T')[0]
+  const today        = getTodayKey()
+  const startOfDay   = new Date(`${today}T00:00:00`).toISOString()
+  const endOfDay     = new Date(`${today}T23:59:59`).toISOString()
   const { data: existing } = await supabase
     .from('tasks')
     .select('id')
     .eq('user_id', user.id)
     .eq('name', suggestion.name)
-    .gte('created_at', today + 'T00:00:00')
-    .lte('created_at', today + 'T23:59:59')
+    .gte('created_at', startOfDay)
+    .lte('created_at', endOfDay)
 
   if (existing && existing.length > 0) return existing[0]
 
@@ -176,8 +179,8 @@ export async function uncompleteTask(taskId) {
   if (taskError || !task) { console.error('Erro ao buscar task:', taskError); return null }
   if (!task.completed || !task.completed_at) return null
 
-  const completedDate = new Date(task.completed_at).toISOString().split('T')[0]
-  const today         = new Date().toISOString().split('T')[0]
+  const completedDate = getLocalDateKey(task.completed_at)
+  const today         = getTodayKey()
   if (completedDate !== today) {
     console.warn('Task completada em dia anterior — não pode ser desmarcada')
     return { locked: true }

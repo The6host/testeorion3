@@ -13,6 +13,7 @@ import { useUserData } from '../hooks/useUserData'
 import { useDailySuggestions } from '../hooks/useDailySuggestions'
 import { acceptSuggestion } from '../lib/userData'
 import { getInitials } from '../lib/utils'
+import { getTodayKey, getLocalDateKey } from '../lib/dailySuggestions'
 
 /* ── Design tokens ── */
 const PUR   = '#7C3AED'
@@ -39,7 +40,7 @@ const fadeUp = (delay = 0) => ({
 })
 
 /* ══ HEADER ══ */
-function AppHeader({ displayName, totalXP, level, xpAtual, onLogout }) {
+function AppHeader({ displayName, totalXP, level, xpAtual, onLogout, refreshing }) {
   const xpPct = (xpAtual / 500) * 100
   return (
     <div style={{
@@ -66,7 +67,14 @@ function AppHeader({ displayName, totalXP, level, xpAtual, onLogout }) {
             <RankBadge totalXP={totalXP} size="sm" />
           </div>
         </div>
-        <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
+        <div style={{ display: 'flex', gap: 6, flexShrink: 0, alignItems: 'center' }}>
+          {refreshing && (
+            <motion.div
+              animate={{ opacity: [0.3, 1, 0.3] }}
+              transition={{ duration: 1.2, repeat: Infinity, ease: 'easeInOut' }}
+              style={{ width: 6, height: 6, borderRadius: '50%', background: PUR }}
+            />
+          )}
           <button style={ICON_BTN}><Bell size={15} color={MUTED} /></button>
           <button style={ICON_BTN} onClick={onLogout}><LogOut size={15} color={MUTED} /></button>
         </div>
@@ -273,12 +281,12 @@ function TasksToday({ dailySuggestions, acceptingIds, onAccept }) {
 /* ══ ROOT ══ */
 export default function Dashboard() {
   const navigate = useNavigate()
-  const { profile, tasks, loading, error, reload } = useUserData()
+  const { profile, tasks, loading, refreshing, error, reload } = useUserData()
   const { suggestions: dailySuggestions }         = useDailySuggestions(tasks)
   const [acceptingIds, setAcceptingIds]            = useState(new Set())
 
-  const today               = new Date().toISOString().split('T')[0]
-  const tasksToday          = tasks.filter(t => t.created_at?.startsWith(today))
+  const today               = getTodayKey()
+  const tasksToday          = tasks.filter(t => t.created_at && getLocalDateKey(t.created_at) === today)
   const tasksTodayCompleted = tasksToday.filter(t => t.completed).length
   const tasksTodayTotal     = tasksToday.length
   const pointsToday         = tasksToday.filter(t => t.completed).reduce((s, t) => s + (t.xp_value || 0), 0)
@@ -351,6 +359,7 @@ export default function Dashboard() {
         level={level}
         xpAtual={xpAtual}
         onLogout={handleLogout}
+        refreshing={refreshing}
       />
       <div style={{ paddingTop: 96, paddingBottom: 80 }}>
         <div style={{ maxWidth: 520, margin: '0 auto', padding: '0 16px', display: 'flex', flexDirection: 'column', gap: 10 }}>

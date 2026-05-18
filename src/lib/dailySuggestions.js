@@ -9,8 +9,16 @@ function hashString(str) {
   return Math.abs(hash)
 }
 
-function getTodayKey() {
+export function getTodayKey() {
   const d   = new Date()
+  const y   = d.getFullYear()
+  const m   = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${y}-${m}-${day}`
+}
+
+export function getLocalDateKey(timestamp) {
+  const d   = new Date(timestamp)
   const y   = d.getFullYear()
   const m   = String(d.getMonth() + 1).padStart(2, '0')
   const day = String(d.getDate()).padStart(2, '0')
@@ -34,7 +42,7 @@ export function selectDailySuggestions(suggestions) {
 export function filterAlreadyAccepted(dailySuggestions, userTasks) {
   const today        = getTodayKey()
   const acceptedToday = userTasks.filter(
-    t => new Date(t.created_at).toISOString().split('T')[0] === today
+    t => getLocalDateKey(t.created_at) === today
   )
   const acceptedNames = new Set(acceptedToday.map(t => t.name))
   return dailySuggestions.filter(s => !acceptedNames.has(s.name))

@@ -4,6 +4,7 @@ import { ChevronRight, Trash2, Calendar, Zap, Plus, X, Check, Target } from 'luc
 import BottomNav from './BottomNav'
 import { useUserData } from '../hooks/useUserData'
 import { completeTask, uncompleteTask, deleteTask } from '../lib/userData'
+import { getTodayKey, getLocalDateKey } from '../lib/dailySuggestions'
 
 /* ── Design tokens ── */
 const PUR      = '#7C3AED'
@@ -37,9 +38,7 @@ const LABEL = {
 
 function isCompletedToday(task) {
   if (!task.completed || !task.completed_at) return false
-  const completedDate = new Date(task.completed_at).toISOString().split('T')[0]
-  const today         = new Date().toISOString().split('T')[0]
-  return completedDate === today
+  return getLocalDateKey(task.completed_at) === getTodayKey()
 }
 
 function TaskItem({ task, onToggle, onDelete, isProcessing }) {
@@ -297,11 +296,11 @@ export default function Tasks() {
   const [showModal, setShowModal]              = useState(false)
   const [processingIds, setProcessingIds]      = useState(new Set())
 
-  const today    = new Date().toISOString().split('T')[0]
+  const today    = getTodayKey()
   const pending  = tasks.filter(t => !t.completed)
   const completed = tasks.filter(t => t.completed)
   const earnedXP = tasks
-    .filter(t => t.completed && t.completed_at?.startsWith(today))
+    .filter(t => t.completed && t.completed_at && getLocalDateKey(t.completed_at) === today)
     .reduce((s, t) => s + (t.xp_value || 0), 0)
   const xpPct  = Math.min((earnedXP / DAILY_XP) * 100, 100)
   const allDone = tasks.length > 0 && pending.length === 0
