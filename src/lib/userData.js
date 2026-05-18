@@ -61,3 +61,40 @@ export async function fetchAllUserData() {
   ])
   return { profile, stats, tasks }
 }
+
+// ───────── SUGESTÕES ─────────
+
+export async function fetchAllSuggestions() {
+  const { data, error } = await supabase
+    .from('task_suggestions')
+    .select('*')
+
+  if (error) {
+    console.error('Erro ao buscar task_suggestions:', error)
+    return []
+  }
+  return data || []
+}
+
+export async function acceptSuggestion(suggestion) {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return null
+
+  const { data, error } = await supabase
+    .from('tasks')
+    .insert({
+      user_id:   user.id,
+      name:      suggestion.name,
+      category:  suggestion.category,
+      xp_value:  suggestion.xp_value,
+      completed: false,
+    })
+    .select()
+    .single()
+
+  if (error) {
+    console.error('Erro ao aceitar sugestão:', error)
+    return null
+  }
+  return data
+}

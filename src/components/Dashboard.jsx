@@ -4,12 +4,14 @@ import { motion } from 'framer-motion'
 import {
   Bell, LogOut, ChevronRight,
   Target, Trophy, Activity, Clock,
-  Flame, Star,
+  Flame, Star, Sparkles,
 } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import BottomNav from './BottomNav'
 import RankBadge from './RankBadge'
 import { useUserData } from '../hooks/useUserData'
+import { useDailySuggestions } from '../hooks/useDailySuggestions'
+import { acceptSuggestion } from '../lib/userData'
 import { getInitials } from '../lib/utils'
 
 /* ── Design tokens ── */
@@ -205,7 +207,8 @@ function FavoriteModules() {
 }
 
 /* ══ TASKS TODAY ══ */
-function TasksToday({ tasksPreview }) {
+function TasksToday({ dailySuggestions, tasksPreview, onAccept }) {
+  const isEmpty = dailySuggestions.length === 0 && tasksPreview.length === 0
   return (
     <motion.div {...fadeUp(0.32)} style={CARD}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
@@ -215,17 +218,55 @@ function TasksToday({ tasksPreview }) {
         </button>
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-        {tasksPreview.length === 0 && (
+
+        {isEmpty && (
           <div style={{ textAlign: 'center', padding: '16px 0', fontSize: 13, color: MUTED }}>
             Nenhuma task pra hoje. Crie uma na aba Tasks!
           </div>
         )}
+
+        {/* Sugestões do dia */}
+        {dailySuggestions.map((s, i) => (
+          <motion.div
+            key={`sug-${s.id}`}
+            initial={{ opacity: 0, x: -12 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.35, delay: 0.34 + i * 0.06 }}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 10,
+              padding: '10px 12px',
+              background: '#0e0e18', border: `1px solid ${PUR}22`, borderRadius: 10,
+            }}
+          >
+            <div style={{ width: 30, height: 30, borderRadius: 8, background: '#1a1a2e', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <Sparkles size={14} color={PUR} />
+            </div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 13, fontWeight: 700, color: '#fff', lineHeight: 1.2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {s.name}
+              </div>
+              <div style={{ fontSize: 11, color: DIM, marginTop: 2 }}>{s.category} · +{s.xp_value} XP</div>
+            </div>
+            <motion.button
+              whileTap={{ scale: 0.88 }}
+              onClick={() => onAccept(s)}
+              style={{
+                width: 28, height: 28, borderRadius: 7, flexShrink: 0,
+                background: PUR, border: 'none', color: '#fff',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                cursor: 'pointer', fontSize: 20, fontWeight: 700, lineHeight: 1,
+              }}
+            >+</motion.button>
+          </motion.div>
+        ))}
+
+        {/* Tasks aceitas hoje */}
         {tasksPreview.map((t, i) => (
           <motion.div
             key={t.id}
             initial={{ opacity: 0, x: -12 }}
             animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.35, delay: 0.34 + i * 0.06 }}
+            transition={{ duration: 0.35, delay: 0.34 + (dailySuggestions.length + i) * 0.06 }}
             style={{
               display: 'flex', alignItems: 'center', gap: 10,
               padding: '10px 12px',
@@ -254,6 +295,7 @@ function TasksToday({ tasksPreview }) {
             </div>
           </motion.div>
         ))}
+
       </div>
     </motion.div>
   )
@@ -263,13 +305,14 @@ function TasksToday({ tasksPreview }) {
 export default function Dashboard() {
   const navigate = useNavigate()
   const { profile, tasks, loading, error, reload } = useUserData()
+  const { suggestions: dailySuggestions }         = useDailySuggestions(tasks)
 
   const today               = new Date().toISOString().split('T')[0]
   const tasksToday          = tasks.filter(t => t.created_at?.startsWith(today))
   const tasksTodayCompleted = tasksToday.filter(t => t.completed).length
   const tasksTodayTotal     = tasksToday.length
   const pointsToday         = tasksToday.filter(t => t.completed).reduce((s, t) => s + (t.xp_value || 0), 0)
-  const tasksPreview        = tasksToday.slice(0, 5)
+  const tasksPreview        = tasksToday.slice(0, 4)
 
   const displayName = profile?.display_name || 'Usuário'
   const totalXP     = profile?.total_xp     || 0
@@ -284,6 +327,11 @@ export default function Dashboard() {
   async function handleLogout() {
     await supabase.auth.signOut()
     navigate('/login')
+  }
+
+  async function handleAcceptSuggestion(suggestion) {
+    const created = await acceptSuggestion(suggestion)
+    if (created) reload()
   }
 
   if (loading) {
@@ -339,7 +387,11 @@ export default function Dashboard() {
             totalXP={totalXP}
           />
           <FavoriteModules />
-          <TasksToday tasksPreview={tasksPreview} />
+          <TasksToday
+            dailySuggestions={dailySuggestions}
+            tasksPreview={tasksPreview}
+            onAccept={handleAcceptSuggestion}
+          />
         </div>
       </div>
       <BottomNav />
