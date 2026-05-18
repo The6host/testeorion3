@@ -3,8 +3,9 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { ChevronRight, Trash2, Calendar, Zap, Plus, X, Check, Target } from 'lucide-react'
 import BottomNav from './BottomNav'
 import { useUserData } from '../hooks/useUserData'
-import { completeTask, uncompleteTask, deleteTask } from '../lib/userData'
+import { completeTask, uncompleteTask, deleteTask, createTask } from '../lib/userData'
 import { getTodayKey, getLocalDateKey } from '../lib/dailySuggestions'
+import { TASK_CATEGORIES, CATEGORY_COLORS } from '../lib/categories'
 
 /* ── Design tokens ── */
 const PUR      = '#7C3AED'
@@ -12,16 +13,6 @@ const MUTED    = '#888888'
 const DIM      = '#444444'
 const DAILY_XP = 500
 const XP_OPTIONS = [50, 75, 100, 150]
-const CATEGORIES = ['Saúde', 'Foco', 'Fitness', 'Mindfulness', 'Nutrição', 'Produtividade']
-
-const CAT_COLOR = {
-  Saúde:         '#10B981',
-  Foco:          '#3B82F6',
-  Fitness:       '#F59E0B',
-  Mindfulness:   PUR,
-  Nutrição:      '#EC4899',
-  Produtividade: '#6366F1',
-}
 
 const CARD = {
   background: '#111111',
@@ -42,7 +33,7 @@ function isCompletedToday(task) {
 }
 
 function TaskItem({ task, onToggle, onDelete, isProcessing }) {
-  const color    = CAT_COLOR[task.category] || PUR
+  const color    = CATEGORY_COLORS[task.category] || PUR
   const isLocked = task.completed && !isCompletedToday(task)
 
   return (
@@ -138,11 +129,29 @@ function TaskItem({ task, onToggle, onDelete, isProcessing }) {
   )
 }
 
-function NewTaskModal({ onCancel }) {
-  const [name,    setName]    = useState('')
-  const [xp,      setXp]      = useState(50)
-  const [cat,     setCat]     = useState('Saúde')
-  const [focused, setFocused] = useState(false)
+function NewTaskModal({ onCancel, onSuccess }) {
+  const [name,     setName]     = useState('')
+  const [xp,       setXp]       = useState(50)
+  const [cat,      setCat]      = useState(null)
+  const [focused,  setFocused]  = useState(false)
+  const [creating, setCreating] = useState(false)
+
+  const canSubmit = name.trim() !== '' && cat !== null && !creating
+
+  async function handleCreate() {
+    if (!canSubmit) return
+    setCreating(true)
+    try {
+      const created = await createTask({ name: name.trim(), category: cat, xp_value: xp })
+      if (created) {
+        onSuccess()
+      } else {
+        alert('Não foi possível criar a task. Tenta de novo.')
+      }
+    } finally {
+      setCreating(false)
+    }
+  }
 
   return (
     <>
@@ -202,6 +211,7 @@ function NewTaskModal({ onCancel }) {
             onFocus={() => setFocused(true)}
             onBlur={() => setFocused(false)}
             placeholder="Ex: Treinar 45 minutos…"
+            maxLength={60}
             autoFocus
             style={{
               width: '100%', padding: '13px 16px', boxSizing: 'border-box',
@@ -238,9 +248,9 @@ function NewTaskModal({ onCancel }) {
         <div style={{ marginBottom: 28 }}>
           <label style={LABEL}>Categoria</label>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
-            {CATEGORIES.map(c => {
+            {TASK_CATEGORIES.map(c => {
               const active = cat === c
-              const color  = CAT_COLOR[c]
+              const color  = CATEGORY_COLORS[c]
               return (
                 <button
                   key={c}
@@ -272,18 +282,19 @@ function NewTaskModal({ onCancel }) {
             Cancelar
           </button>
           <button
-            disabled={!name.trim()}
-            onClick={onCancel}
+            disabled={!canSubmit}
+            onClick={handleCreate}
             style={{
               flex: 2, padding: '14px 0', borderRadius: 10, fontWeight: 900, fontSize: 14,
-              background: name.trim() ? PUR : '#1a1a2e',
+              background: canSubmit ? PUR : '#1a1a2e',
               border: 'none',
-              color: name.trim() ? '#fff' : PUR + '66',
-              cursor: name.trim() ? 'pointer' : 'not-allowed',
+              color: canSubmit ? '#fff' : PUR + '66',
+              cursor: canSubmit ? 'pointer' : 'not-allowed',
+              opacity: creating ? 0.6 : 1,
               transition: 'all 0.2s',
             }}
           >
-            Criar Task
+            {creating ? 'Criando…' : 'Criar Task'}
           </button>
         </div>
       </motion.div>
@@ -575,6 +586,7 @@ export default function Tasks() {
           <NewTaskModal
             key="modal"
             onCancel={() => setShowModal(false)}
+            onSuccess={() => { setShowModal(false); reload() }}
           />
         )}
       </AnimatePresence>

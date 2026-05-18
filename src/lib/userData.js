@@ -213,3 +213,29 @@ export async function deleteTask(taskId) {
   if (error) { console.error('Erro ao deletar task:', error); return false }
   return true
 }
+
+// ───────── CRIAR ─────────
+
+export async function createTask({ name, category, xp_value }) {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return null
+
+  if (!name || !name.trim()) { console.error('createTask: nome obrigatório'); return null }
+  if (!category)             { console.error('createTask: categoria obrigatória'); return null }
+  if (!xp_value || xp_value <= 0) { console.error('createTask: xp_value deve ser positivo'); return null }
+
+  const { data, error } = await supabase
+    .from('tasks')
+    .insert({
+      user_id:   user.id,
+      name:      name.trim(),
+      category,
+      xp_value,
+      completed: false,
+    })
+    .select()
+    .single()
+
+  if (error) { console.error('Erro ao criar task:', error); return null }
+  return data
+}
