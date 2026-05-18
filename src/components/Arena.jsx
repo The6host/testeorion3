@@ -6,7 +6,8 @@ import {
   Swords, Skull, Heart, Brain, Eye, Dumbbell, Droplets, MessageCircle,
 } from 'lucide-react'
 import BottomNav from './BottomNav'
-import { getUserAttributes, ATTRIBUTE_KEYS, ATTRIBUTE_META } from '../lib/userStats'
+import { ATTRIBUTE_KEYS, ATTRIBUTE_META, getEmptyAttributes } from '../lib/userStats'
+import { useUserData } from '../hooks/useUserData'
 
 /* ── Design tokens ── */
 const PUR   = '#7C3AED'
@@ -194,7 +195,8 @@ function PhaseWrap({ children, k }) {
 
 export default function Arena() {
   const navigate   = useNavigate()
-  const userAttrs  = getUserAttributes()
+  const { stats }  = useUserData()
+  const userAttrs  = stats || getEmptyAttributes()
 
   const [phase,     setPhase]     = useState('initial')
   const [myHP,      setMyHP]      = useState(MAX_HP)

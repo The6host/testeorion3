@@ -1,5 +1,6 @@
 import { supabase } from './supabase'
 import { getTodayKey, getLocalDateKey } from './dailySuggestions'
+import { CATEGORY_ATTRIBUTES, MAX_ATTRIBUTE_VALUE, MIN_ATTRIBUTE_VALUE } from './categories'
 
 // ───────── LEITURA ─────────
 
@@ -138,6 +139,42 @@ async function addXP(amount) {
   if (updateError) console.error('Erro ao atualizar XP:', updateError)
 }
 
+async function adjustAttributesByCategory(category, amount) {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return
+
+  const attrsToUpdate = CATEGORY_ATTRIBUTES[category]
+  if (!attrsToUpdate || attrsToUpdate.length === 0) {
+    console.warn('Categoria sem mapeamento de atributos:', category)
+    return
+  }
+
+  const { data: currentStats, error: fetchError } = await supabase
+    .from('user_stats')
+    .select('*')
+    .eq('user_id', user.id)
+    .single()
+
+  if (fetchError || !currentStats) {
+    console.error('Erro ao buscar user_stats:', fetchError)
+    return
+  }
+
+  const updates = {}
+  attrsToUpdate.forEach(attr => {
+    const current = currentStats[attr] || 0
+    updates[attr] = Math.max(MIN_ATTRIBUTE_VALUE, Math.min(MAX_ATTRIBUTE_VALUE, current + amount))
+  })
+  updates.updated_at = new Date().toISOString()
+
+  const { error: updateError } = await supabase
+    .from('user_stats')
+    .update(updates)
+    .eq('user_id', user.id)
+
+  if (updateError) console.error('Erro ao atualizar atributos:', updateError)
+}
+
 export async function completeTask(taskId) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return null
@@ -162,6 +199,7 @@ export async function completeTask(taskId) {
   if (updateError) { console.error('Erro ao completar task:', updateError); return null }
 
   await addXP(task.xp_value)
+  await adjustAttributesByCategory(task.category, +1)
   return updatedTask
 }
 
@@ -197,6 +235,7 @@ export async function uncompleteTask(taskId) {
   if (updateError) { console.error('Erro ao desmarcar task:', updateError); return null }
 
   await addXP(-task.xp_value)
+  await adjustAttributesByCategory(task.category, -1)
   return updatedTask
 }
 

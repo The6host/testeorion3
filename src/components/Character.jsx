@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { ArrowLeft, Swords, Heart, Brain, Shield, Zap, Eye, User, MessageCircle, Droplets } from 'lucide-react'
 import { getRankByXP } from '../lib/rank'
-import { getUserAttributes, ATTRIBUTE_KEYS, ATTRIBUTE_META } from '../lib/userStats'
+import { ATTRIBUTE_KEYS, ATTRIBUTE_META, getEmptyAttributes } from '../lib/userStats'
+import { useUserData } from '../hooks/useUserData'
 import { supabase } from '../lib/supabase'
 import BottomNav from './BottomNav'
 
@@ -61,9 +62,10 @@ export default function Character() {
     })
   }, [])
 
+  const { stats } = useUserData()
   const username  = email ? email.split('@')[0] : 'usuario'
   const rank      = getRankByXP(0)
-  const userAttrs = getUserAttributes()
+  const userAttrs = stats || getEmptyAttributes()
 
   return (
     <div style={{ minHeight: '100dvh', background: '#000000', color: '#fff' }}>

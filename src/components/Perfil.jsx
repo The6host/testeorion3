@@ -14,9 +14,10 @@ import { supabase } from '../lib/supabase'
 import BottomNav from './BottomNav'
 import RankBadge from './RankBadge'
 import {
-  getUserAttributes, ATTRIBUTE_KEYS, ATTRIBUTE_META,
-  MAX_ATTRIBUTE_VALUE, getAttributesSum, getAttributesAverage,
+  ATTRIBUTE_KEYS, ATTRIBUTE_META, MAX_ATTRIBUTE_VALUE,
+  getAttributesSum, getAttributesAverage, getEmptyAttributes,
 } from '../lib/userStats'
+import { useUserData } from '../hooks/useUserData'
 
 /* ── Design tokens ── */
 const PUR   = '#7C3AED'
@@ -103,13 +104,14 @@ export default function Perfil() {
   const [email,       setEmail]       = useState('')
   const [activeTheme, setActiveTheme] = useState('Padrão')
 
-  const userAttrs = getUserAttributes()
-  const attrSum   = getAttributesSum()
-  const attrAvg   = getAttributesAverage()
+  const { stats } = useUserData()
+  const attrs     = stats || getEmptyAttributes()
+  const attrSum   = getAttributesSum(stats)
+  const attrAvg   = getAttributesAverage(stats)
   const maxSum    = ATTRIBUTE_KEYS.length * MAX_ATTRIBUTE_VALUE
   const radarData = ATTRIBUTE_KEYS.map(key => ({
     subject:  ATTRIBUTE_META[key].label,
-    value:    userAttrs[key],
+    value:    attrs[key],
     fullMark: MAX_ATTRIBUTE_VALUE,
   }))
 
@@ -371,7 +373,7 @@ export default function Perfil() {
             {ATTRIBUTE_KEYS.map((key, i) => {
               const { label, color } = ATTRIBUTE_META[key]
               const Icon  = PERFIL_ATTR_ICONS[key]
-              const value = userAttrs[key]
+              const value = attrs[key]
               return (
                 <div key={key} style={{ marginBottom: 12 }}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 5 }}>
@@ -409,8 +411,9 @@ export default function Perfil() {
           }}>
             <Lightbulb size={16} color={PUR} style={{ flexShrink: 0, marginTop: 1 }} />
             <p style={{ fontSize: 12, color: MUTED, lineHeight: 1.65, margin: 0 }}>
-              Complete tarefas regularmente para aumentar seus status. Exercícios aumentam Força e Agilidade,
-              estudos aumentam Inteligência e Foco, beber água aumenta Hidratação.
+              Complete tasks regularmente para aumentar seus atributos. Fitness fortalece Força e Agilidade,
+              Foco desenvolve Inteligência, Nutrição melhora Hidratação e Vitalidade,
+              Mindfulness e Social elevam Carisma, e Produtividade aumenta Disciplina.
             </p>
           </div>
         </motion.div>
