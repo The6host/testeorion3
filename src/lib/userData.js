@@ -55,12 +55,38 @@ export async function fetchTasks() {
   return data || []
 }
 
+export async function checkAndDecayStreak(profile) {
+  if (!profile) return profile
+  if (!profile.last_active_date) return profile
+  if (profile.streak_count === 0) return profile
+
+  const today     = getTodayKey()
+  const lastDate  = new Date(`${profile.last_active_date}T00:00:00`)
+  const todayDate = new Date(`${today}T00:00:00`)
+  const diffDays  = Math.round((todayDate - lastDate) / (1000 * 60 * 60 * 24))
+
+  if (diffDays <= 1) return profile
+
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return profile
+
+  const { error } = await supabase
+    .from('profiles')
+    .update({ streak_count: 0, updated_at: new Date().toISOString() })
+    .eq('id', user.id)
+
+  if (error) { console.error('Erro ao decair streak:', error); return profile }
+
+  return { ...profile, streak_count: 0 }
+}
+
 export async function fetchAllUserData() {
-  const [profile, stats, tasks] = await Promise.all([
+  const [profileRaw, stats, tasks] = await Promise.all([
     fetchProfile(),
     fetchUserStats(),
     fetchTasks(),
   ])
+  const profile = await checkAndDecayStreak(profileRaw)
   return { profile, stats, tasks }
 }
 
@@ -175,6 +201,73 @@ async function adjustAttributesByCategory(category, amount) {
   if (updateError) console.error('Erro ao atualizar atributos:', updateError)
 }
 
+async function updateStreakAfterCompletion() {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return
+
+  const { data: profile, error: profileError } = await supabase
+    .from('profiles')
+    .select('streak_count, last_active_date')
+    .eq('id', user.id)
+    .single()
+
+  if (profileError || !profile) {
+    console.error('Erro ao buscar profile pro streak:', profileError)
+    return
+  }
+
+  const today      = getTodayKey()
+  const startOfDay = new Date(`${today}T00:00:00`).toISOString()
+  const endOfDay   = new Date(`${today}T23:59:59.999`).toISOString()
+
+  const { count, error: countError } = await supabase
+    .from('tasks')
+    .select('id', { count: 'exact', head: true })
+    .eq('user_id', user.id)
+    .eq('completed', true)
+    .gte('completed_at', startOfDay)
+    .lte('completed_at', endOfDay)
+
+  if (countError) {
+    console.error('Erro ao contar tasks de hoje:', countError)
+    return
+  }
+
+  if (count > 1) {
+    await supabase
+      .from('profiles')
+      .update({ last_active_date: today, updated_at: new Date().toISOString() })
+      .eq('id', user.id)
+    return
+  }
+
+  let newStreakCount
+  const lastActive = profile.last_active_date
+
+  if (!lastActive) {
+    newStreakCount = 1
+  } else {
+    const lastDate  = new Date(`${lastActive}T00:00:00`)
+    const todayDate = new Date(`${today}T00:00:00`)
+    const diffDays  = Math.round((todayDate - lastDate) / (1000 * 60 * 60 * 24))
+
+    if (diffDays === 0)      newStreakCount = profile.streak_count
+    else if (diffDays === 1) newStreakCount = profile.streak_count + 1
+    else                     newStreakCount = 1
+  }
+
+  const { error: updateError } = await supabase
+    .from('profiles')
+    .update({
+      streak_count:     newStreakCount,
+      last_active_date: today,
+      updated_at:       new Date().toISOString(),
+    })
+    .eq('id', user.id)
+
+  if (updateError) console.error('Erro ao atualizar streak:', updateError)
+}
+
 export async function completeTask(taskId) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return null
@@ -200,6 +293,7 @@ export async function completeTask(taskId) {
 
   await addXP(task.xp_value)
   await adjustAttributesByCategory(task.category, +1)
+  await updateStreakAfterCompletion()
   return updatedTask
 }
 
