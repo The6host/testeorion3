@@ -1,11 +1,10 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { ArrowLeft, Swords, Heart, Brain, Shield, Zap, Eye, User, MessageCircle, Droplets } from 'lucide-react'
 import { getRankByXP } from '../lib/rank'
 import { ATTRIBUTE_KEYS, ATTRIBUTE_META, getEmptyAttributes } from '../lib/userStats'
 import { useUserData } from '../hooks/useUserData'
-import { supabase } from '../lib/supabase'
 import BottomNav from './BottomNav'
 
 /* ── Design tokens ── */
@@ -53,18 +52,15 @@ function CharacterSilhouette() {
 
 export default function Character() {
   const navigate  = useNavigate()
-  const [email,    setEmail]    = useState('')
   const [imgError, setImgError] = useState(false)
 
-  useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
-      if (data?.user) setEmail(data.user.email)
-    })
-  }, [])
-
-  const { stats } = useUserData()
-  const username  = email ? email.split('@')[0] : 'usuario'
-  const rank      = getRankByXP(0)
+  const { profile, stats } = useUserData()
+  const totalXP   = profile?.total_xp  || 0
+  const level     = profile?.level     || 1
+  const xpAtual   = totalXP % 500
+  const xpPct     = (xpAtual / 500) * 100
+  const username  = profile?.username  || 'usuario'
+  const rank      = getRankByXP(totalXP)
   const userAttrs = stats || getEmptyAttributes()
 
   return (
@@ -107,7 +103,7 @@ export default function Character() {
             fontSize: 13, fontWeight: 800, color: ORANGE,
             backdropFilter: 'blur(10px)',
           }}>
-            {rank.code} • Level 1
+            {rank.code} • Level {level}
           </div>
         </div>
 
@@ -152,7 +148,7 @@ export default function Character() {
             @{username}
           </div>
           <div style={{ fontSize: 20, fontWeight: 900, color: '#fff', marginBottom: 14 }}>
-            Caçador Fraco
+            {rank.title}
           </div>
 
           {/* XP bar */}
@@ -160,13 +156,13 @@ export default function Character() {
             <div style={{ height: 5, background: '#1e1e1e', borderRadius: 99, overflow: 'hidden', marginBottom: 6 }}>
               <motion.div
                 initial={{ width: 0 }}
-                animate={{ width: '0%' }}
+                animate={{ width: `${xpPct}%` }}
                 transition={{ duration: 1.1, ease: [0.22, 1, 0.36, 1], delay: 0.45 }}
                 style={{ height: '100%', borderRadius: 99, background: ORANGE }}
               />
             </div>
             <div style={{ fontSize: 11, fontWeight: 700, color: ORANGE }}>
-              0/500 XP para Level 2
+              {xpAtual}/500 XP para Level {level + 1}
             </div>
           </div>
         </motion.div>
@@ -237,8 +233,8 @@ export default function Character() {
           style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginTop: 20, marginBottom: 10 }}
         >
           {[
-            { label: 'NÍVEL ATUAL', value: '1' },
-            { label: 'XP TOTAL',    value: '0' },
+            { label: 'NÍVEL ATUAL', value: level   },
+            { label: 'XP TOTAL',    value: totalXP },
           ].map((s, i) => (
             <div key={i} style={{ ...CARD }}>
               <div style={LABEL}>{s.label}</div>

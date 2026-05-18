@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { motion } from 'framer-motion'
 import {
   Share2, Settings, Camera, Pencil, RefreshCw,
@@ -10,8 +10,8 @@ import {
 import {
   Radar, RadarChart, PolarGrid, PolarAngleAxis, ResponsiveContainer,
 } from 'recharts'
-import { supabase } from '../lib/supabase'
 import BottomNav from './BottomNav'
+import { getInitials } from '../lib/utils'
 import RankBadge from './RankBadge'
 import {
   ATTRIBUTE_KEYS, ATTRIBUTE_META, MAX_ATTRIBUTE_VALUE,
@@ -71,14 +71,6 @@ const ACHIEVEMENTS = [
   { name: 'Lendário',        emoji: '🏆', unlocked: false, desc: 'Alcance o rank S'            },
 ]
 
-function getInitials(email) {
-  if (!email) return 'U'
-  const local = email.split('@')[0]
-  const parts = local.split(/[._-]/)
-  if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase()
-  return local.slice(0, 2).toUpperCase()
-}
-
 const fadeUp = (delay = 0) => ({
   initial:    { opacity: 0, y: 16 },
   animate:    { opacity: 1, y: 0  },
@@ -101,10 +93,15 @@ function RadarTick({ x, y, payload }) {
 }
 
 export default function Perfil() {
-  const [email,       setEmail]       = useState('')
   const [activeTheme, setActiveTheme] = useState('Padrão')
 
-  const { stats } = useUserData()
+  const { profile, stats } = useUserData()
+  const level    = profile?.level        || 1
+  const totalXP  = profile?.total_xp     || 0
+  const xpAtual  = totalXP % 500
+  const xpPct    = (xpAtual / 500) * 100
+  const streak   = profile?.streak_count || 0
+
   const attrs     = stats || getEmptyAttributes()
   const attrSum   = getAttributesSum(stats)
   const attrAvg   = getAttributesAverage(stats)
@@ -115,13 +112,12 @@ export default function Perfil() {
     fullMark: MAX_ATTRIBUTE_VALUE,
   }))
 
-  useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
-      if (data?.user) setEmail(data.user.email)
-    })
-  }, [])
-
-  const initials = getInitials(email)
+  const displayStats = [
+    { Icon: Flame,  label: 'Dias de Streak', value: streak  },
+    { Icon: Trophy, label: 'Pontos Totais',  value: totalXP },
+    { Icon: MapPin, label: 'Km Corridos',    value: '0.0'   },
+    { Icon: Shield, label: 'Vitórias Arena', value: '0'     },
+  ]
 
   return (
     <div style={{ minHeight: '100dvh', background: '#080808', color: '#fff' }}>
@@ -154,7 +150,7 @@ export default function Perfil() {
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 fontSize: 24, fontWeight: 900, color: '#fff',
               }}>
-                {initials}
+                {getInitials(profile?.display_name || '')}
               </div>
               <div style={{
                 position: 'absolute', bottom: -4, right: -4,
@@ -167,36 +163,36 @@ export default function Perfil() {
             </div>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-              <span style={{ fontSize: 17, fontWeight: 900, color: '#fff' }}>Kauê Vinícius</span>
+              <span style={{ fontSize: 17, fontWeight: 900, color: '#fff' }}>{profile?.display_name || 'Usuário'}</span>
               <button style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 2, display: 'flex' }}>
                 <Pencil size={13} color={MUTED} />
               </button>
             </div>
             <div style={{ fontSize: 12, color: MUTED, marginBottom: 12 }}>
-              @{email.split('@')[0] || 'usuario'}
+              @{profile?.username || 'usuario'}
             </div>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16, flexWrap: 'wrap', justifyContent: 'center' }}>
-              <RankBadge totalXP={0} size="sm" />
+              <RankBadge totalXP={totalXP} size="sm" />
               <div style={{
                 background: '#1a1a1a', border: '1px solid #222222',
                 borderRadius: 20, padding: '4px 12px',
                 fontSize: 12, fontWeight: 700, color: '#fff',
               }}>
-                Level 1
+                Level {level}
               </div>
             </div>
           </div>
 
           <div style={{ borderTop: '1px solid #1e1e1e', paddingTop: 14 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, marginBottom: 6 }}>
-              <span style={{ color: MUTED, fontWeight: 600 }}>Progresso para Level 2</span>
-              <span style={{ color: PUR, fontWeight: 700 }}>0/500 XP</span>
+              <span style={{ color: MUTED, fontWeight: 600 }}>Progresso para Level {level + 1}</span>
+              <span style={{ color: PUR, fontWeight: 700 }}>{xpAtual}/500 XP</span>
             </div>
             <div style={{ height: 4, background: '#222222', borderRadius: 99, overflow: 'hidden' }}>
               <motion.div
                 initial={{ width: 0 }}
-                animate={{ width: '0%' }}
+                animate={{ width: `${xpPct}%` }}
                 transition={{ duration: 1.1, ease: [0.22, 1, 0.36, 1], delay: 0.3 }}
                 style={{ height: '100%', borderRadius: 99, background: PUR }}
               />
@@ -300,7 +296,7 @@ export default function Perfil() {
 
         {/* Stats 2x2 */}
         <motion.div {...fadeUp(0.22)} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 10 }}>
-          {STATS.map((s, i) => (
+          {displayStats.map((s, i) => (
             <div key={i} style={{ ...CARD, padding: '14px 16px' }}>
               <div style={{
                 width: 32, height: 32, borderRadius: 8, background: '#1a1a2e',
