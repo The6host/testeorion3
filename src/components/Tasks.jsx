@@ -1,7 +1,9 @@
-import { useState, useRef } from 'react'
+import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ChevronRight, Trash2, Calendar, Zap, Plus, X, Check, Target } from 'lucide-react'
 import BottomNav from './BottomNav'
+import { useUserData } from '../hooks/useUserData'
+import { completeTask, uncompleteTask, deleteTask } from '../lib/userData'
 
 /* ── Design tokens ── */
 const PUR      = '#7C3AED'
@@ -33,38 +35,47 @@ const LABEL = {
   letterSpacing: '0.08em', marginBottom: 8,
 }
 
-const INIT_TASKS = []
+function isCompletedToday(task) {
+  if (!task.completed || !task.completed_at) return false
+  const completedDate = new Date(task.completed_at).toISOString().split('T')[0]
+  const today         = new Date().toISOString().split('T')[0]
+  return completedDate === today
+}
 
-function TaskItem({ task, onToggle, onDelete }) {
-  const color = CAT_COLOR[task.category] || PUR
+function TaskItem({ task, onToggle, onDelete, isProcessing }) {
+  const color    = CAT_COLOR[task.category] || PUR
+  const isLocked = task.completed && !isCompletedToday(task)
 
   return (
     <motion.div
       layout
       initial={{ opacity: 0, y: -8 }}
-      animate={{ opacity: task.done ? 0.5 : 1, y: 0 }}
+      animate={{ opacity: task.completed || isProcessing ? 0.5 : 1, y: 0 }}
       exit={{ opacity: 0, x: -24, transition: { duration: 0.22 } }}
       transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
       style={{
         display: 'flex', alignItems: 'center', gap: 12,
         padding: '12px 14px', marginBottom: 8,
-        background: task.done ? '#0d1a14' : '#0f0f0f',
-        border: `1px solid ${task.done ? '#1a3325' : '#1e1e1e'}`,
+        background: task.completed ? '#0d1a14' : '#0f0f0f',
+        border: `1px solid ${task.completed ? '#1a3325' : '#1e1e1e'}`,
         borderRadius: 10,
       }}
     >
       <button
-        onClick={() => onToggle(task.id)}
+        onClick={() => onToggle(task)}
+        disabled={isProcessing}
         style={{
           width: 24, height: 24, borderRadius: 7, flexShrink: 0,
-          border: `2px solid ${task.done ? '#10B981' : DIM}`,
-          background: task.done ? '#10B981' : 'transparent',
+          border: `2px solid ${task.completed ? '#10B981' : DIM}`,
+          background: task.completed ? '#10B981' : 'transparent',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          cursor: 'pointer', transition: 'all 0.2s', padding: 0,
+          cursor: isProcessing ? 'not-allowed' : isLocked ? 'not-allowed' : 'pointer',
+          opacity: isLocked ? 0.6 : 1,
+          transition: 'all 0.2s', padding: 0,
         }}
       >
         <AnimatePresence>
-          {task.done && (
+          {task.completed && (
             <motion.div
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
@@ -80,7 +91,7 @@ function TaskItem({ task, onToggle, onDelete }) {
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{
           fontSize: 14, fontWeight: 700, color: '#fff', lineHeight: 1.2,
-          textDecoration: task.done ? 'line-through' : 'none',
+          textDecoration: task.completed ? 'line-through' : 'none',
           textDecorationColor: DIM,
           overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
         }}>
@@ -101,22 +112,25 @@ function TaskItem({ task, onToggle, onDelete }) {
 
       <div style={{
         fontSize: 12, fontWeight: 800, flexShrink: 0,
-        color:      task.done ? DIM : PUR,
-        background: task.done ? '#1a1a1a' : '#1a1a2e',
-        border:     `1px solid ${task.done ? '#2a2a2a' : PUR + '33'}`,
+        color:      task.completed ? DIM : PUR,
+        background: task.completed ? '#1a1a1a' : '#1a1a2e',
+        border:     `1px solid ${task.completed ? '#2a2a2a' : PUR + '33'}`,
         borderRadius: 6, padding: '3px 9px',
-        textDecoration: task.done ? 'line-through' : 'none',
+        textDecoration: task.completed ? 'line-through' : 'none',
       }}>
-        +{task.xp} XP
+        +{task.xp_value} XP
       </div>
 
       <button
         onClick={() => onDelete(task.id)}
+        disabled={isProcessing}
         style={{
-          background: 'none', border: 'none', cursor: 'pointer', padding: 4, flexShrink: 0,
+          background: 'none', border: 'none',
+          cursor: isProcessing ? 'not-allowed' : 'pointer',
+          padding: 4, flexShrink: 0,
           color: '#2a2a2a', display: 'flex', transition: 'color 0.2s',
         }}
-        onMouseEnter={e => e.currentTarget.style.color = 'rgba(239,68,68,0.65)'}
+        onMouseEnter={e => { if (!isProcessing) e.currentTarget.style.color = 'rgba(239,68,68,0.65)' }}
         onMouseLeave={e => e.currentTarget.style.color = '#2a2a2a'}
       >
         <Trash2 size={15} />
@@ -125,16 +139,11 @@ function TaskItem({ task, onToggle, onDelete }) {
   )
 }
 
-function NewTaskModal({ onConfirm, onCancel }) {
+function NewTaskModal({ onCancel }) {
   const [name,    setName]    = useState('')
   const [xp,      setXp]      = useState(50)
   const [cat,     setCat]     = useState('Saúde')
   const [focused, setFocused] = useState(false)
-
-  function handleConfirm() {
-    if (!name.trim()) return
-    onConfirm({ name: name.trim(), xp, category: cat })
-  }
 
   return (
     <>
@@ -193,7 +202,6 @@ function NewTaskModal({ onConfirm, onCancel }) {
             onChange={e => setName(e.target.value)}
             onFocus={() => setFocused(true)}
             onBlur={() => setFocused(false)}
-            onKeyDown={e => e.key === 'Enter' && handleConfirm()}
             placeholder="Ex: Treinar 45 minutos…"
             autoFocus
             style={{
@@ -265,8 +273,8 @@ function NewTaskModal({ onConfirm, onCancel }) {
             Cancelar
           </button>
           <button
-            onClick={handleConfirm}
             disabled={!name.trim()}
+            onClick={onCancel}
             style={{
               flex: 2, padding: '14px 0', borderRadius: 10, fontWeight: 900, fontSize: 14,
               background: name.trim() ? PUR : '#1a1a2e',
@@ -285,31 +293,63 @@ function NewTaskModal({ onConfirm, onCancel }) {
 }
 
 export default function Tasks() {
-  const [tasks,     setTasks]     = useState(INIT_TASKS)
-  const [showModal, setShowModal] = useState(false)
-  const nextId = useRef(1)
+  const { tasks, reload }                      = useUserData()
+  const [showModal, setShowModal]              = useState(false)
+  const [processingIds, setProcessingIds]      = useState(new Set())
 
-  const pending   = tasks.filter(t => !t.done)
-  const completed = tasks.filter(t => t.done)
-  const earnedXP  = completed.reduce((s, t) => s + t.xp, 0)
-  const xpPct     = Math.min((earnedXP / DAILY_XP) * 100, 100)
-  const allDone   = tasks.length > 0 && pending.length === 0
+  const today    = new Date().toISOString().split('T')[0]
+  const pending  = tasks.filter(t => !t.completed)
+  const completed = tasks.filter(t => t.completed)
+  const earnedXP = tasks
+    .filter(t => t.completed && t.completed_at?.startsWith(today))
+    .reduce((s, t) => s + (t.xp_value || 0), 0)
+  const xpPct  = Math.min((earnedXP / DAILY_XP) * 100, 100)
+  const allDone = tasks.length > 0 && pending.length === 0
 
   const subtitle = tasks.length === 0
     ? 'Nenhuma task ainda'
     : `${completed.length}/${tasks.length} completas`
 
-  function toggleTask(id) {
-    setTasks(ts => ts.map(t => t.id === id ? { ...t, done: !t.done } : t))
+  function addProcessing(id) {
+    setProcessingIds(prev => new Set(prev).add(id))
+  }
+  function removeProcessing(id) {
+    setProcessingIds(prev => { const n = new Set(prev); n.delete(id); return n })
   }
 
-  function deleteTask(id) {
-    setTasks(ts => ts.filter(t => t.id !== id))
+  async function handleToggle(task) {
+    if (processingIds.has(task.id)) return
+    if (task.completed && !isCompletedToday(task)) {
+      alert('Tasks completadas em dias anteriores não podem ser desmarcadas.')
+      return
+    }
+    addProcessing(task.id)
+    try {
+      if (task.completed) {
+        const result = await uncompleteTask(task.id)
+        if (result?.locked) {
+          alert('Tasks completadas em dias anteriores não podem ser desmarcadas.')
+          return
+        }
+      } else {
+        await completeTask(task.id)
+      }
+      reload()
+    } finally {
+      removeProcessing(task.id)
+    }
   }
 
-  function createTask({ name, xp, category }) {
-    setTasks(ts => [...ts, { id: nextId.current++, name, xp, category, done: false }])
-    setShowModal(false)
+  async function handleDelete(taskId) {
+    if (!confirm('Tem certeza que deseja deletar essa task?')) return
+    if (processingIds.has(taskId)) return
+    addProcessing(taskId)
+    try {
+      await deleteTask(taskId)
+      reload()
+    } finally {
+      removeProcessing(taskId)
+    }
   }
 
   return (
@@ -485,7 +525,13 @@ export default function Tasks() {
                 </div>
                 <AnimatePresence mode="popLayout">
                   {pending.map(task => (
-                    <TaskItem key={task.id} task={task} onToggle={toggleTask} onDelete={deleteTask} />
+                    <TaskItem
+                      key={task.id}
+                      task={task}
+                      onToggle={handleToggle}
+                      onDelete={handleDelete}
+                      isProcessing={processingIds.has(task.id)}
+                    />
                   ))}
                 </AnimatePresence>
               </motion.div>
@@ -508,7 +554,13 @@ export default function Tasks() {
               </div>
               <AnimatePresence mode="popLayout">
                 {completed.map(task => (
-                  <TaskItem key={task.id} task={task} onToggle={toggleTask} onDelete={deleteTask} />
+                  <TaskItem
+                    key={task.id}
+                    task={task}
+                    onToggle={handleToggle}
+                    onDelete={handleDelete}
+                    isProcessing={processingIds.has(task.id)}
+                  />
                 ))}
               </AnimatePresence>
             </motion.div>
@@ -523,7 +575,6 @@ export default function Tasks() {
         {showModal && (
           <NewTaskModal
             key="modal"
-            onConfirm={createTask}
             onCancel={() => setShowModal(false)}
           />
         )}

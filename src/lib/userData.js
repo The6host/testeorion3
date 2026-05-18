@@ -80,6 +80,17 @@ export async function acceptSuggestion(suggestion) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return null
 
+  const today = new Date().toISOString().split('T')[0]
+  const { data: existing } = await supabase
+    .from('tasks')
+    .select('id')
+    .eq('user_id', user.id)
+    .eq('name', suggestion.name)
+    .gte('created_at', today + 'T00:00:00')
+    .lte('created_at', today + 'T23:59:59')
+
+  if (existing && existing.length > 0) return existing[0]
+
   const { data, error } = await supabase
     .from('tasks')
     .insert({
@@ -97,4 +108,105 @@ export async function acceptSuggestion(suggestion) {
     return null
   }
   return data
+}
+
+// ───────── XP / COMPLETAR ─────────
+
+async function addXP(amount) {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return
+
+  const { data: profile, error: profileError } = await supabase
+    .from('profiles')
+    .select('total_xp')
+    .eq('id', user.id)
+    .single()
+
+  if (profileError || !profile) return
+
+  const newTotalXP = Math.max(0, profile.total_xp + amount)
+  const newLevel   = Math.floor(newTotalXP / 500) + 1
+
+  const { error: updateError } = await supabase
+    .from('profiles')
+    .update({ total_xp: newTotalXP, level: newLevel, updated_at: new Date().toISOString() })
+    .eq('id', user.id)
+
+  if (updateError) console.error('Erro ao atualizar XP:', updateError)
+}
+
+export async function completeTask(taskId) {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return null
+
+  const { data: task, error: taskError } = await supabase
+    .from('tasks')
+    .select('*')
+    .eq('id', taskId)
+    .eq('user_id', user.id)
+    .single()
+
+  if (taskError || !task) { console.error('Erro ao buscar task:', taskError); return null }
+
+  const { data: updatedTask, error: updateError } = await supabase
+    .from('tasks')
+    .update({ completed: true, completed_at: new Date().toISOString() })
+    .eq('id', taskId)
+    .eq('user_id', user.id)
+    .select()
+    .single()
+
+  if (updateError) { console.error('Erro ao completar task:', updateError); return null }
+
+  await addXP(task.xp_value)
+  return updatedTask
+}
+
+export async function uncompleteTask(taskId) {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return null
+
+  const { data: task, error: taskError } = await supabase
+    .from('tasks')
+    .select('*')
+    .eq('id', taskId)
+    .eq('user_id', user.id)
+    .single()
+
+  if (taskError || !task) { console.error('Erro ao buscar task:', taskError); return null }
+  if (!task.completed || !task.completed_at) return null
+
+  const completedDate = new Date(task.completed_at).toISOString().split('T')[0]
+  const today         = new Date().toISOString().split('T')[0]
+  if (completedDate !== today) {
+    console.warn('Task completada em dia anterior — não pode ser desmarcada')
+    return { locked: true }
+  }
+
+  const { data: updatedTask, error: updateError } = await supabase
+    .from('tasks')
+    .update({ completed: false, completed_at: null })
+    .eq('id', taskId)
+    .eq('user_id', user.id)
+    .select()
+    .single()
+
+  if (updateError) { console.error('Erro ao desmarcar task:', updateError); return null }
+
+  await addXP(-task.xp_value)
+  return updatedTask
+}
+
+export async function deleteTask(taskId) {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return false
+
+  const { error } = await supabase
+    .from('tasks')
+    .delete()
+    .eq('id', taskId)
+    .eq('user_id', user.id)
+
+  if (error) { console.error('Erro ao deletar task:', error); return false }
+  return true
 }

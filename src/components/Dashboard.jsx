@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import {
@@ -207,8 +207,7 @@ function FavoriteModules() {
 }
 
 /* ══ TASKS TODAY ══ */
-function TasksToday({ dailySuggestions, tasksPreview, onAccept }) {
-  const isEmpty = dailySuggestions.length === 0 && tasksPreview.length === 0
+function TasksToday({ dailySuggestions, acceptingIds, onAccept }) {
   return (
     <motion.div {...fadeUp(0.32)} style={CARD}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
@@ -219,82 +218,52 @@ function TasksToday({ dailySuggestions, tasksPreview, onAccept }) {
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
 
-        {isEmpty && (
+        {dailySuggestions.length === 0 && (
           <div style={{ textAlign: 'center', padding: '16px 0', fontSize: 13, color: MUTED }}>
-            Nenhuma task pra hoje. Crie uma na aba Tasks!
+            Todas as sugestões de hoje foram aceitas. Veja suas tasks na aba Tasks.
           </div>
         )}
 
-        {/* Sugestões do dia */}
-        {dailySuggestions.map((s, i) => (
-          <motion.div
-            key={`sug-${s.id}`}
-            initial={{ opacity: 0, x: -12 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.35, delay: 0.34 + i * 0.06 }}
-            style={{
-              display: 'flex', alignItems: 'center', gap: 10,
-              padding: '10px 12px',
-              background: '#0e0e18', border: `1px solid ${PUR}22`, borderRadius: 10,
-            }}
-          >
-            <div style={{ width: 30, height: 30, borderRadius: 8, background: '#1a1a2e', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-              <Sparkles size={14} color={PUR} />
-            </div>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: '#fff', lineHeight: 1.2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                {s.name}
-              </div>
-              <div style={{ fontSize: 11, color: DIM, marginTop: 2 }}>{s.category} · +{s.xp_value} XP</div>
-            </div>
-            <motion.button
-              whileTap={{ scale: 0.88 }}
-              onClick={() => onAccept(s)}
+        {dailySuggestions.map((s, i) => {
+          const isAccepting = acceptingIds.has(s.id)
+          return (
+            <motion.div
+              key={`sug-${s.id}`}
+              initial={{ opacity: 0, x: -12 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.35, delay: 0.34 + i * 0.06 }}
               style={{
-                width: 28, height: 28, borderRadius: 7, flexShrink: 0,
-                background: PUR, border: 'none', color: '#fff',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                cursor: 'pointer', fontSize: 20, fontWeight: 700, lineHeight: 1,
+                display: 'flex', alignItems: 'center', gap: 10,
+                padding: '10px 12px',
+                background: '#0e0e18', border: `1px solid ${PUR}22`, borderRadius: 10,
+                opacity: isAccepting ? 0.5 : 1,
               }}
-            >+</motion.button>
-          </motion.div>
-        ))}
-
-        {/* Tasks aceitas hoje */}
-        {tasksPreview.map((t, i) => (
-          <motion.div
-            key={t.id}
-            initial={{ opacity: 0, x: -12 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.35, delay: 0.34 + (dailySuggestions.length + i) * 0.06 }}
-            style={{
-              display: 'flex', alignItems: 'center', gap: 10,
-              padding: '10px 12px',
-              background: '#0f0f0f', border: '1px solid #1e1e1e', borderRadius: 10,
-              opacity: t.completed ? 0.5 : 1,
-            }}
-          >
-            <div style={{ width: 30, height: 30, borderRadius: 8, background: '#1a1a2e', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-              <Target size={14} color={PUR} />
-            </div>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: '#fff', lineHeight: 1.2, textDecoration: t.completed ? 'line-through' : 'none', textDecorationColor: '#444', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                {t.name}
+            >
+              <div style={{ width: 30, height: 30, borderRadius: 8, background: '#1a1a2e', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <Sparkles size={14} color={PUR} />
               </div>
-              <div style={{ fontSize: 11, color: DIM, marginTop: 2 }}>{t.category}</div>
-            </div>
-            <div style={{
-              fontSize: 11, fontWeight: 700, flexShrink: 0,
-              color: t.completed ? DIM : PUR,
-              background: t.completed ? '#1a1a1a' : '#1a1a2e',
-              border: `1px solid ${t.completed ? '#2a2a2a' : PUR + '33'}`,
-              borderRadius: 6, padding: '3px 8px',
-              textDecoration: t.completed ? 'line-through' : 'none',
-            }}>
-              +{t.xp_value} XP
-            </div>
-          </motion.div>
-        ))}
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 13, fontWeight: 700, color: '#fff', lineHeight: 1.2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {s.name}
+                </div>
+                <div style={{ fontSize: 11, color: DIM, marginTop: 2 }}>{s.category} · +{s.xp_value} XP</div>
+              </div>
+              <motion.button
+                whileTap={isAccepting ? {} : { scale: 0.88 }}
+                onClick={() => !isAccepting && onAccept(s)}
+                disabled={isAccepting}
+                style={{
+                  width: 28, height: 28, borderRadius: 7, flexShrink: 0,
+                  background: PUR, border: 'none', color: '#fff',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  cursor: isAccepting ? 'not-allowed' : 'pointer',
+                  fontSize: 20, fontWeight: 700, lineHeight: 1,
+                  opacity: isAccepting ? 0.5 : 1,
+                }}
+              >+</motion.button>
+            </motion.div>
+          )
+        })}
 
       </div>
     </motion.div>
@@ -306,13 +275,13 @@ export default function Dashboard() {
   const navigate = useNavigate()
   const { profile, tasks, loading, error, reload } = useUserData()
   const { suggestions: dailySuggestions }         = useDailySuggestions(tasks)
+  const [acceptingIds, setAcceptingIds]            = useState(new Set())
 
   const today               = new Date().toISOString().split('T')[0]
   const tasksToday          = tasks.filter(t => t.created_at?.startsWith(today))
   const tasksTodayCompleted = tasksToday.filter(t => t.completed).length
   const tasksTodayTotal     = tasksToday.length
   const pointsToday         = tasksToday.filter(t => t.completed).reduce((s, t) => s + (t.xp_value || 0), 0)
-  const tasksPreview        = tasksToday.slice(0, 4)
 
   const displayName = profile?.display_name || 'Usuário'
   const totalXP     = profile?.total_xp     || 0
@@ -330,8 +299,14 @@ export default function Dashboard() {
   }
 
   async function handleAcceptSuggestion(suggestion) {
-    const created = await acceptSuggestion(suggestion)
-    if (created) reload()
+    if (acceptingIds.has(suggestion.id)) return
+    setAcceptingIds(prev => new Set(prev).add(suggestion.id))
+    try {
+      const created = await acceptSuggestion(suggestion)
+      if (created) reload()
+    } finally {
+      setAcceptingIds(prev => { const n = new Set(prev); n.delete(suggestion.id); return n })
+    }
   }
 
   if (loading) {
@@ -389,7 +364,7 @@ export default function Dashboard() {
           <FavoriteModules />
           <TasksToday
             dailySuggestions={dailySuggestions}
-            tasksPreview={tasksPreview}
+            acceptingIds={acceptingIds}
             onAccept={handleAcceptSuggestion}
           />
         </div>
