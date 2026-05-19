@@ -55,6 +55,29 @@ export async function fetchTasks() {
   return data || []
 }
 
+export async function expireOverdueTasks() {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return 0
+
+  const today                  = getTodayKey()
+  const startOfTodayLocalAsUtc = new Date(`${today}T00:00:00`).toISOString()
+
+  const { data, error } = await supabase
+    .from('tasks')
+    .delete()
+    .eq('user_id', user.id)
+    .eq('completed', false)
+    .lt('created_at', startOfTodayLocalAsUtc)
+    .select('id')
+
+  if (error) {
+    console.error('Erro ao expirar tasks vencidas:', error)
+    return 0
+  }
+
+  return data ? data.length : 0
+}
+
 export async function checkAndDecayStreak(profile) {
   if (!profile) return profile
   if (!profile.last_active_date) return profile
@@ -81,11 +104,14 @@ export async function checkAndDecayStreak(profile) {
 }
 
 export async function fetchAllUserData() {
+  await expireOverdueTasks()
+
   const [profileRaw, stats, tasks] = await Promise.all([
     fetchProfile(),
     fetchUserStats(),
     fetchTasks(),
   ])
+
   const profile = await checkAndDecayStreak(profileRaw)
   return { profile, stats, tasks }
 }
