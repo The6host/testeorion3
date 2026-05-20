@@ -1,8 +1,12 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ArrowLeft, Droplets, Star, Clock, CheckCircle2 } from 'lucide-react'
 import BottomNav from '../../BottomNav'
+import { fetchRoutinesByModule, fetchRoutineSteps, completeRoutine } from '../../../lib/userData'
+import { useUserData } from '../../../hooks/useUserData'
+
+const ROUTINE_NAME = 'Tratamento Semanal Intensivo'
 
 const BLUE  = '#3B82F6'
 const MUTED = '#888888'
@@ -14,48 +18,54 @@ const BTN_ICON = {
   display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
 }
 
-const DATA = {
-  name: 'Tratamento Semanal Intensivo',
-  time: '25 min',
-  pts: 200,
-  level: 'Avançado',
-  levelColor: '#EF4444',
-  levelBg: '#1a0808',
-  levelBorder: '#EF444433',
-  benefits: ['Limpeza profunda', 'Remove células mortas', 'Trata problemas específicos', 'Nutrição intensa', 'Resultados visíveis'],
-  steps: [
-    'Limpeza dupla completa',
-    'Vapor facial: 5 min sobre água quente (abre poros)',
-    'Esfoliação química ou física suave',
-    'Máscara de argila ou sheet mask específica',
-    'Aguarde 15-20 min com a máscara',
-    'Remova com água morna',
-    'Tônico calmante',
-    'Sérum concentrado (vitamina C, niacinamida ou peptídeos)',
-    'Ampola ou booster intensivo',
-    'Creme hidratante rico',
-    'Protetor labial',
-  ],
+const LEVEL_COLORS = {
+  Iniciante:     { color: '#10B981', bg: '#052e16', border: '#10B98133' },
+  Intermediário: { color: '#F59E0B', bg: '#1a1200', border: '#F59E0B33' },
+  Avançado:      { color: '#EF4444', bg: '#1a0808', border: '#EF444433' },
 }
 
 export default function TratamentoSemanal() {
   const navigate = useNavigate()
-  const [isFav,   setIsFav]   = useState(false)
-  const [checked, setChecked] = useState(new Set())
-  const [done,    setDone]    = useState(false)
+  const { reload } = useUserData()
 
-  function toggleStep(i) {
+  const [isFav,      setIsFav]      = useState(false)
+  const [routine,    setRoutine]    = useState(null)
+  const [steps,      setSteps]      = useState([])
+  const [checked,    setChecked]    = useState(new Set())
+  const [done,       setDone]       = useState(false)
+  const [completing, setCompleting] = useState(false)
+
+  useEffect(() => {
+    fetchRoutinesByModule('skincare').then(routines => {
+      const found = routines.find(r => r.name === ROUTINE_NAME)
+      if (!found) return
+      setRoutine(found)
+      fetchRoutineSteps(found.id).then(setSteps)
+    })
+  }, [])
+
+  function toggleStep(id) {
     if (done) return
     setChecked(prev => {
       const next = new Set(prev)
-      if (next.has(i)) next.delete(i)
-      else next.add(i)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
       return next
     })
   }
 
-  const allDone  = checked.size === DATA.steps.length
-  const progress = Math.round((checked.size / DATA.steps.length) * 100)
+  async function handleComplete() {
+    if (!allDone || completing || done || !routine) return
+    setCompleting(true)
+    await completeRoutine(routine)
+    await reload()
+    setDone(true)
+    setCompleting(false)
+  }
+
+  const allDone  = steps.length > 0 && checked.size === steps.length
+  const progress = steps.length > 0 ? Math.round((checked.size / steps.length) * 100) : 0
+  const lvl      = routine ? (LEVEL_COLORS[routine.difficulty] || LEVEL_COLORS['Iniciante']) : LEVEL_COLORS['Iniciante']
 
   return (
     <div style={{ minHeight: '100dvh', background: '#080808', color: '#fff' }}>
@@ -79,8 +89,8 @@ export default function TratamentoSemanal() {
             <Droplets size={18} color={BLUE} />
           </div>
           <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontSize: 16, fontWeight: 900, color: '#fff', lineHeight: 1.2 }}>{DATA.name}</div>
-            <div style={{ fontSize: 11, color: MUTED, marginTop: 2 }}>{DATA.time}</div>
+            <div style={{ fontSize: 16, fontWeight: 900, color: '#fff', lineHeight: 1.2 }}>{routine?.name ?? ROUTINE_NAME}</div>
+            <div style={{ fontSize: 11, color: MUTED, marginTop: 2 }}>{routine ? `${routine.duration_minutes} min` : '...'}</div>
           </div>
           <button onClick={() => setIsFav(v => !v)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 6, flexShrink: 0 }}>
             <Star size={22} color={isFav ? '#F59E0B' : MUTED} fill={isFav ? '#F59E0B' : 'none'} style={{ transition: 'all 0.2s' }} />
@@ -96,11 +106,11 @@ export default function TratamentoSemanal() {
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 14 }}>
             <span style={{
-              fontSize: 11, fontWeight: 700, color: DATA.levelColor,
-              background: DATA.levelBg, border: `1px solid ${DATA.levelBorder}`,
+              fontSize: 11, fontWeight: 700, color: lvl.color,
+              background: lvl.bg, border: `1px solid ${lvl.border}`,
               borderRadius: 20, padding: '4px 12px',
             }}>
-              {DATA.level}
+              {routine?.difficulty ?? '...'}
             </span>
             <span style={{
               display: 'flex', alignItems: 'center', gap: 5,
@@ -108,18 +118,18 @@ export default function TratamentoSemanal() {
               background: '#1a1a1a', border: '1px solid #2a2a2a',
               borderRadius: 20, padding: '4px 10px',
             }}>
-              <Clock size={11} color={MUTED} />{DATA.time}
+              <Clock size={11} color={MUTED} />{routine ? `${routine.duration_minutes} min` : '...'}
             </span>
             <span style={{
               fontSize: 13, fontWeight: 900, color: BLUE,
               background: '#0a0f1e', border: `1px solid ${BLUE}33`,
               borderRadius: 20, padding: '4px 12px', marginLeft: 'auto',
             }}>
-              +{DATA.pts} pontos
+              +{routine?.xp_value ?? '...'} pontos
             </span>
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-            <span style={{ fontSize: 11, color: MUTED, fontWeight: 600 }}>{checked.size}/{DATA.steps.length} passos</span>
+            <span style={{ fontSize: 11, color: MUTED, fontWeight: 600 }}>{checked.size}/{steps.length} passos</span>
             <span style={{ fontSize: 11, fontWeight: 800, color: GREEN }}>{progress}%</span>
           </div>
           <div style={{ height: 5, background: '#1e1e1e', borderRadius: 99, overflow: 'hidden' }}>
@@ -132,80 +142,84 @@ export default function TratamentoSemanal() {
         </motion.div>
 
         {/* Benefits */}
-        <motion.div
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: 0.12 }}
-          style={{ background: '#111111', border: '1px solid #222222', borderRadius: 14, padding: 16, marginBottom: 14 }}
-        >
-          <div style={{ fontSize: 10, fontWeight: 700, color: MUTED, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 10 }}>
-            Benefícios
-          </div>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-            {DATA.benefits.map(b => (
-              <span key={b} style={{
-                fontSize: 11, fontWeight: 700, color: GREEN,
-                background: '#052e16', border: '1px solid #10B98133',
-                borderRadius: 20, padding: '4px 12px',
-              }}>
-                {b}
-              </span>
-            ))}
-          </div>
-        </motion.div>
+        {routine?.benefits?.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: 0.12 }}
+            style={{ background: '#111111', border: '1px solid #222222', borderRadius: 14, padding: 16, marginBottom: 14 }}
+          >
+            <div style={{ fontSize: 10, fontWeight: 700, color: MUTED, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 10 }}>
+              Benefícios
+            </div>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+              {routine.benefits.map(b => (
+                <span key={b} style={{
+                  fontSize: 11, fontWeight: 700, color: GREEN,
+                  background: '#052e16', border: '1px solid #10B98133',
+                  borderRadius: 20, padding: '4px 12px',
+                }}>
+                  {b}
+                </span>
+              ))}
+            </div>
+          </motion.div>
+        )}
 
         {/* Steps */}
-        <motion.div
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: 0.17 }}
-          style={{ background: '#111111', border: '1px solid #222222', borderRadius: 14, padding: 16, marginBottom: 16 }}
-        >
-          <div style={{ fontSize: 10, fontWeight: 700, color: MUTED, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 12 }}>
-            Passos
-          </div>
-          {DATA.steps.map((step, i) => {
-            const isChecked = checked.has(i)
-            return (
-              <motion.button
-                key={i}
-                onClick={() => toggleStep(i)}
-                whileHover={!done ? { scale: 1.01 } : {}}
-                whileTap={!done ? { scale: 0.99 } : {}}
-                style={{
-                  width: '100%', background: isChecked ? '#052e16' : '#0f0f0f',
-                  border: `1px solid ${isChecked ? '#10B98133' : '#1e1e1e'}`,
-                  borderRadius: 10, padding: '12px 14px',
-                  display: 'flex', alignItems: 'flex-start', gap: 12,
-                  cursor: done ? 'default' : 'pointer', textAlign: 'left',
-                  marginBottom: 8, transition: 'all 0.25s',
-                }}
-              >
-                <div style={{
-                  width: 28, height: 28, borderRadius: 8, flexShrink: 0,
-                  background: isChecked ? '#10B98122' : '#1a1a1a',
-                  border: `1px solid ${isChecked ? '#10B98133' : '#2a2a2a'}`,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  transition: 'all 0.25s',
-                }}>
-                  {isChecked
-                    ? <CheckCircle2 size={16} color={GREEN} />
-                    : <span style={{ fontSize: 11, fontWeight: 800, color: MUTED }}>{i + 1}</span>
-                  }
-                </div>
-                <div style={{
-                  flex: 1, fontSize: 13, fontWeight: 600, lineHeight: 1.5,
-                  color: isChecked ? MUTED : '#fff',
-                  textDecoration: isChecked ? 'line-through' : 'none',
-                  textDecorationColor: '#444',
-                  marginTop: 4, transition: 'all 0.2s',
-                }}>
-                  {step}
-                </div>
-              </motion.button>
-            )
-          })}
-        </motion.div>
+        {steps.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: 0.17 }}
+            style={{ background: '#111111', border: '1px solid #222222', borderRadius: 14, padding: 16, marginBottom: 16 }}
+          >
+            <div style={{ fontSize: 10, fontWeight: 700, color: MUTED, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 12 }}>
+              Passos
+            </div>
+            {steps.map((step, i) => {
+              const isChecked = checked.has(step.id)
+              return (
+                <motion.button
+                  key={step.id}
+                  onClick={() => toggleStep(step.id)}
+                  whileHover={!done ? { scale: 1.01 } : {}}
+                  whileTap={!done ? { scale: 0.99 } : {}}
+                  style={{
+                    width: '100%', background: isChecked ? '#052e16' : '#0f0f0f',
+                    border: `1px solid ${isChecked ? '#10B98133' : '#1e1e1e'}`,
+                    borderRadius: 10, padding: '12px 14px',
+                    display: 'flex', alignItems: 'flex-start', gap: 12,
+                    cursor: done ? 'default' : 'pointer', textAlign: 'left',
+                    marginBottom: 8, transition: 'all 0.25s',
+                  }}
+                >
+                  <div style={{
+                    width: 28, height: 28, borderRadius: 8, flexShrink: 0,
+                    background: isChecked ? '#10B98122' : '#1a1a1a',
+                    border: `1px solid ${isChecked ? '#10B98133' : '#2a2a2a'}`,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    transition: 'all 0.25s',
+                  }}>
+                    {isChecked
+                      ? <CheckCircle2 size={16} color={GREEN} />
+                      : <span style={{ fontSize: 11, fontWeight: 800, color: MUTED }}>{i + 1}</span>
+                    }
+                  </div>
+                  <div style={{
+                    flex: 1, fontSize: 13, fontWeight: 600, lineHeight: 1.5,
+                    color: isChecked ? MUTED : '#fff',
+                    textDecoration: isChecked ? 'line-through' : 'none',
+                    textDecorationColor: '#444',
+                    marginTop: 4, transition: 'all 0.2s',
+                  }}>
+                    {step.description}
+                  </div>
+                </motion.button>
+              )
+            })}
+          </motion.div>
+        )}
 
         {/* Complete button */}
         <AnimatePresence mode="wait">
@@ -217,12 +231,12 @@ export default function TratamentoSemanal() {
               style={{ background: '#052e16', border: '1px solid #10B98133', borderRadius: 12, padding: '16px 20px', textAlign: 'center' }}
             >
               <div style={{ fontSize: 15, fontWeight: 900, color: GREEN, marginBottom: 4 }}>Rotina Concluída!</div>
-              <div style={{ fontSize: 12, color: MUTED }}>+{DATA.pts} pontos adicionados ao seu perfil</div>
+              <div style={{ fontSize: 12, color: MUTED }}>+{routine?.xp_value} pontos adicionados ao seu perfil</div>
             </motion.div>
           ) : (
             <motion.button
               key="btn"
-              onClick={() => allDone && setDone(true)}
+              onClick={handleComplete}
               whileHover={allDone ? { scale: 1.02 } : {}}
               whileTap={allDone ? { scale: 0.97 } : {}}
               style={{
@@ -230,11 +244,11 @@ export default function TratamentoSemanal() {
                 background: allDone ? GREEN : '#1a1a1a',
                 color: allDone ? '#fff' : '#333',
                 fontWeight: 800, fontSize: 15,
-                cursor: allDone ? 'pointer' : 'not-allowed',
+                cursor: allDone && !completing ? 'pointer' : 'not-allowed',
                 transition: 'all 0.3s',
               }}
             >
-              ✓ Concluir Rotina (+{DATA.pts} pts)
+              {completing ? 'Salvando...' : `✓ Concluir Rotina (+${routine?.xp_value ?? '...'} pts)`}
             </motion.button>
           )}
         </AnimatePresence>

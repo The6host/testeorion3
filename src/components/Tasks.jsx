@@ -303,16 +303,22 @@ function NewTaskModal({ onCancel, onSuccess }) {
 }
 
 export default function Tasks() {
-  const { tasks, reload }                      = useUserData()
+  const { tasks, routineCompletions, exerciseCompletions, dayCompletions, reload } = useUserData()
   const [showModal, setShowModal]              = useState(false)
   const [processingIds, setProcessingIds]      = useState(new Set())
 
   const today    = getTodayKey()
   const pending  = tasks.filter(t => !t.completed)
   const completed = tasks.filter(t => t.completed)
-  const earnedXP = tasks
+  const xpFromTasks        = tasks
     .filter(t => t.completed && t.completed_at && getLocalDateKey(t.completed_at) === today)
     .reduce((s, t) => s + (t.xp_value || 0), 0)
+  const xpFromRoutines     = routineCompletions
+    .filter(rc => rc.completed_at && getLocalDateKey(rc.completed_at) === today)
+    .reduce((s, rc) => s + (rc.routine?.xp_value || 0), 0)
+  const xpFromExercises    = exerciseCompletions.reduce((s, ec) => s + (ec.exercise?.day?.plan?.xp_per_exercise || 0), 0)
+  const xpFromWorkoutDays  = dayCompletions.reduce((s, dc) => s + (dc.day?.plan?.xp_bonus_per_day || 0), 0)
+  const earnedXP           = xpFromTasks + xpFromRoutines + xpFromExercises + xpFromWorkoutDays
   const xpPct  = Math.min((earnedXP / DAILY_XP) * 100, 100)
   const allDone = tasks.length > 0 && pending.length === 0
 

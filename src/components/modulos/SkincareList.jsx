@@ -1,10 +1,10 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { ArrowLeft, Sparkles, Star, Clock, ChevronRight, Droplets } from 'lucide-react'
+import { ArrowLeft, Droplets, Star, Clock, ChevronRight } from 'lucide-react'
 import BottomNav from '../BottomNav'
+import { fetchRoutinesByModule, fetchRoutineStepsCount } from '../../lib/userData'
 
-const PINK  = '#EC4899'
 const BLUE  = '#3B82F6'
 const MUTED = '#888888'
 const GREEN = '#10B981'
@@ -28,44 +28,18 @@ const LEVEL_COLORS = {
   Avançado:      { color: '#EF4444', bg: '#1a0808', border: '#EF444433' },
 }
 
-const ROUTINES = [
-  {
-    id: 'matinal',
-    path: '/modulos/aparencia/skincare/matinal',
-    name: 'Rotina Matinal Completa',
-    pts: 100,
-    time: '8 min',
-    level: 'Iniciante',
-    benefits: ['Proteção solar', 'Hidratação profunda', 'Prepara pele para maquiagem'],
-    extraBenefits: 2,
-    steps: 9,
-  },
-  {
-    id: 'noturna',
-    path: '/modulos/aparencia/skincare/noturna',
-    name: 'Rotina Noturna de Regeneração',
-    pts: 120,
-    time: '12 min',
-    level: 'Intermediário',
-    benefits: ['Regeneração celular', 'Combate sinais de idade', 'Reparação noturna'],
-    extraBenefits: 2,
-    steps: 9,
-  },
-  {
-    id: 'semanal',
-    path: '/modulos/aparencia/skincare/semanal',
-    name: 'Tratamento Semanal Intensivo',
-    pts: 200,
-    time: '25 min',
-    level: 'Avançado',
-    benefits: ['Limpeza profunda', 'Remove células mortas', 'Trata problemas específicos'],
-    extraBenefits: 2,
-    steps: 11,
-  },
-]
+const ROUTINE_PATHS = {
+  'Rotina Matinal Completa':       '/modulos/aparencia/skincare/matinal',
+  'Rotina Noturna de Regeneração': '/modulos/aparencia/skincare/noturna',
+  'Tratamento Semanal Intensivo':  '/modulos/aparencia/skincare/semanal',
+}
 
 function RoutineCard({ routine, index, onStart }) {
-  const lvl = LEVEL_COLORS[routine.level]
+  const lvl      = LEVEL_COLORS[routine.difficulty] || LEVEL_COLORS['Iniciante']
+  const benefits = routine.benefits || []
+  const shown    = benefits.slice(0, 3)
+  const extra    = benefits.length - shown.length
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 16 }}
@@ -79,11 +53,11 @@ function RoutineCard({ routine, index, onStart }) {
           {routine.name}
         </div>
         <div style={{
-          fontSize: 13, fontWeight: 900, color: PINK, flexShrink: 0,
-          background: '#1a0814', border: `1px solid ${PINK}33`,
+          fontSize: 13, fontWeight: 900, color: BLUE, flexShrink: 0,
+          background: '#0a0f1e', border: `1px solid ${BLUE}33`,
           borderRadius: 8, padding: '3px 10px',
         }}>
-          +{routine.pts} pts
+          +{routine.xp_value} pts
         </div>
       </div>
 
@@ -95,14 +69,14 @@ function RoutineCard({ routine, index, onStart }) {
           borderRadius: 20, padding: '4px 10px',
         }}>
           <Clock size={11} color={MUTED} />
-          <span style={{ fontSize: 11, fontWeight: 700, color: MUTED }}>{routine.time}</span>
+          <span style={{ fontSize: 11, fontWeight: 700, color: MUTED }}>{routine.duration_minutes} min</span>
         </div>
         <div style={{
           background: lvl.bg, border: `1px solid ${lvl.border}`,
           borderRadius: 20, padding: '4px 10px',
           fontSize: 11, fontWeight: 700, color: lvl.color,
         }}>
-          {routine.level}
+          {routine.difficulty}
         </div>
       </div>
 
@@ -112,7 +86,7 @@ function RoutineCard({ routine, index, onStart }) {
           Benefícios:
         </div>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-          {routine.benefits.map(b => (
+          {shown.map(b => (
             <span key={b} style={{
               fontSize: 11, fontWeight: 700, color: GREEN,
               background: '#052e16', border: '1px solid #10B98133',
@@ -121,19 +95,21 @@ function RoutineCard({ routine, index, onStart }) {
               {b}
             </span>
           ))}
-          <span style={{
-            fontSize: 11, fontWeight: 700, color: MUTED,
-            background: '#1a1a1a', border: '1px solid #2a2a2a',
-            borderRadius: 20, padding: '3px 10px',
-          }}>
-            +{routine.extraBenefits}
-          </span>
+          {extra > 0 && (
+            <span style={{
+              fontSize: 11, fontWeight: 700, color: MUTED,
+              background: '#1a1a1a', border: '1px solid #2a2a2a',
+              borderRadius: 20, padding: '3px 10px',
+            }}>
+              +{extra}
+            </span>
+          )}
         </div>
       </div>
 
       {/* Footer */}
       <div style={{ borderTop: '1px solid #1e1e1e', paddingTop: 12, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <span style={{ fontSize: 12, color: MUTED, fontWeight: 600 }}>{routine.steps} passos</span>
+        <span style={{ fontSize: 12, color: MUTED, fontWeight: 600 }}>{routine.stepsCount} passos</span>
         <motion.button
           whileHover={{ scale: 1.04 }}
           whileTap={{ scale: 0.96 }}
@@ -141,7 +117,7 @@ function RoutineCard({ routine, index, onStart }) {
           style={{
             display: 'flex', alignItems: 'center', gap: 5,
             padding: '8px 16px', borderRadius: 8, border: 'none',
-            background: '#1a0814', color: PINK,
+            background: '#0a0f1e', color: BLUE,
             fontWeight: 700, fontSize: 13, cursor: 'pointer',
           }}
         >
@@ -154,7 +130,17 @@ function RoutineCard({ routine, index, onStart }) {
 
 export default function SkincareList() {
   const navigate = useNavigate()
-  const [isFav, setIsFav] = useState(false)
+  const [isFav,    setIsFav]    = useState(false)
+  const [routines, setRoutines] = useState([])
+  const [loading,  setLoading]  = useState(true)
+
+  useEffect(() => {
+    fetchRoutinesByModule('skincare').then(async data => {
+      const counts = await Promise.all(data.map(r => fetchRoutineStepsCount(r.id)))
+      setRoutines(data.map((r, i) => ({ ...r, stepsCount: counts[i] })))
+      setLoading(false)
+    })
+  }, [])
 
   return (
     <div style={{ minHeight: '100dvh', background: '#080808', color: '#fff' }}>
@@ -198,16 +184,19 @@ export default function SkincareList() {
           transition={{ delay: 0.08 }}
           style={{ fontSize: 13, color: MUTED, marginBottom: 24, paddingLeft: 2 }}
         >
-          3 rotinas disponíveis
+          {loading ? '...' : `${routines.length} rotinas disponíveis`}
         </motion.div>
 
         {/* Cards */}
-        {ROUTINES.map((r, i) => (
+        {routines.map((r, i) => (
           <RoutineCard
             key={r.id}
             routine={r}
             index={i}
-            onStart={r => navigate(r.path)}
+            onStart={r => {
+              const path = ROUTINE_PATHS[r.name]
+              if (path) navigate(path)
+            }}
           />
         ))}
       </div>

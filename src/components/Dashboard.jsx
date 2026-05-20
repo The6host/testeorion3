@@ -281,7 +281,7 @@ function TasksToday({ dailySuggestions, acceptingIds, onAccept }) {
 /* ══ ROOT ══ */
 export default function Dashboard() {
   const navigate = useNavigate()
-  const { profile, tasks, loading, refreshing, error, reload } = useUserData()
+  const { profile, tasks, routineCompletions, exerciseCompletions, dayCompletions, loading, refreshing, error, reload } = useUserData()
   const { suggestions: dailySuggestions }         = useDailySuggestions(tasks)
   const [acceptingIds, setAcceptingIds]            = useState(new Set())
 
@@ -289,7 +289,13 @@ export default function Dashboard() {
   const tasksToday          = tasks.filter(t => t.created_at && getLocalDateKey(t.created_at) === today)
   const tasksTodayCompleted = tasksToday.filter(t => t.completed).length
   const tasksTodayTotal     = tasksToday.length
-  const pointsToday         = tasksToday.filter(t => t.completed).reduce((s, t) => s + (t.xp_value || 0), 0)
+  const pointsFromTasks     = tasksToday.filter(t => t.completed).reduce((s, t) => s + (t.xp_value || 0), 0)
+  const pointsFromRoutines  = routineCompletions
+    .filter(rc => rc.completed_at && getLocalDateKey(rc.completed_at) === today)
+    .reduce((s, rc) => s + (rc.routine?.xp_value || 0), 0)
+  const pointsFromExercises    = exerciseCompletions.reduce((s, ec) => s + (ec.exercise?.day?.plan?.xp_per_exercise || 0), 0)
+  const pointsFromWorkoutDays  = dayCompletions.reduce((s, dc) => s + (dc.day?.plan?.xp_bonus_per_day || 0), 0)
+  const pointsToday            = pointsFromTasks + pointsFromRoutines + pointsFromExercises + pointsFromWorkoutDays
 
   const displayName = profile?.display_name || 'Usuário'
   const totalXP     = profile?.total_xp     || 0

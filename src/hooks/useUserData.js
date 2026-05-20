@@ -3,7 +3,7 @@ import { fetchAllUserData } from '../lib/userData'
 import { supabase } from '../lib/supabase'
 
 export function useUserData() {
-  const [data,       setData]       = useState({ profile: null, stats: null, tasks: [] })
+  const [data,       setData]       = useState({ profile: null, stats: null, tasks: [], routineCompletions: [], exerciseCompletions: [], dayCompletions: [] })
   const [loading,    setLoading]    = useState(true)
   const [refreshing, setRefreshing] = useState(false)
   const [error,      setError]      = useState(null)
@@ -48,9 +48,12 @@ export function useUserData() {
   }, [])
 
   return {
-    profile:    data.profile,
-    stats:      data.stats,
-    tasks:      data.tasks,
+    profile:             data.profile,
+    stats:               data.stats,
+    tasks:               data.tasks,
+    routineCompletions:  data.routineCompletions,
+    exerciseCompletions: data.exerciseCompletions,
+    dayCompletions:      data.dayCompletions,
     loading,
     refreshing,
     error,

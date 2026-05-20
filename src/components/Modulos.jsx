@@ -2,8 +2,8 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import {
-  Plus, Star, ChevronRight, Info,
-  MapPin, Dumbbell, Brain, Apple, Wallet, Sparkles,
+  Plus, Star, ChevronRight,
+  MapPin, Dumbbell, Sparkles,
 } from 'lucide-react'
 import BottomNav from './BottomNav'
 
@@ -41,28 +41,7 @@ const MODULES = [
     givesPts: true,
   },
   {
-    id: 3, Icon: Brain,    iconColor: '#3B82F6', iconBg: '#0a0f1e',
-    name: 'Estudos',
-    desc: 'Assistente de IA com flashcards e simulados',
-    current: 0, total: 30, unit: 'sessão',
-    givesPts: false,
-  },
-  {
-    id: 4, Icon: Apple,    iconColor: '#10B981', iconBg: '#052e16',
-    name: 'Nutrição',
-    desc: 'IA analisa suas refeições por foto',
-    current: 0, total: 90, unit: 'refeição',
-    givesPts: false,
-  },
-  {
-    id: 5, Icon: Wallet,   iconColor: '#F59E0B', iconBg: '#1a1200',
-    name: 'Finanças',
-    desc: 'Educação financeira com IA e controle de gastos',
-    current: 0, total: 60, unit: 'ação',
-    givesPts: false,
-  },
-  {
-    id: 6, Icon: Sparkles, iconColor: '#EC4899', iconBg: '#1a0814',
+    id: 3, Icon: Sparkles, iconColor: '#EC4899', iconBg: '#1a0814',
     name: 'Aparência',
     desc: 'Massagens faciais, skincare e rotinas de beleza',
     current: 0, total: 60, unit: 'rotina',
@@ -108,7 +87,7 @@ export default function Modulos() {
               Módulos
             </h1>
             <p style={{ fontSize: 13, color: MUTED, marginTop: 5, marginBottom: 0 }}>
-              6 módulos principais
+              3 módulos
             </p>
           </div>
           <button style={{
@@ -119,25 +98,6 @@ export default function Modulos() {
           }}>
             <Plus size={15} /> Criar
           </button>
-        </motion.div>
-
-        {/* ── Warning card ── */}
-        <motion.div
-          initial={{ opacity: 0, y: 14 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.45, delay: 0.06 }}
-          style={{
-            background: '#0f172a',
-            border: '1px solid #1e40af',
-            borderRadius: 12, padding: '12px 14px',
-            display: 'flex', gap: 10, alignItems: 'flex-start',
-            marginBottom: 20,
-          }}
-        >
-          <Info size={16} color='#3B82F6' style={{ flexShrink: 0, marginTop: 1 }} />
-          <p style={{ fontSize: 13, color: '#93c5fd', lineHeight: 1.6, margin: 0 }}>
-            Os módulos de <strong style={{ color: '#fff' }}>Estudos</strong>, <strong style={{ color: '#fff' }}>Nutrição</strong> e <strong style={{ color: '#fff' }}>Finanças</strong> não geram pontos. Foque nas tasks diárias para ganhar pontos!
-          </p>
         </motion.div>
 
         {/* ── Module list ── */}
@@ -240,15 +200,15 @@ export default function Modulos() {
                   onClick={() => {
                     if (mod.id === 1) navigate('/modulos/corrida')
                     else if (mod.id === 2) navigate('/modulos/treino')
-                    else if (mod.id === 6) navigate('/modulos/aparencia')
+                    else if (mod.id === 3) navigate('/modulos/aparencia')
                   }}
                   style={{
                     flex: 1, padding: '8px 0', borderRadius: 8, border: 'none',
-                    cursor: (mod.id === 1 || mod.id === 2 || mod.id === 6) ? 'pointer' : 'default',
+                    cursor: 'pointer',
                     display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4,
                     fontSize: 12, fontWeight: 700,
                     background: '#1a1a2e',
-                    color: (mod.id === 1 || mod.id === 2 || mod.id === 6) ? '#fff' : MUTED,
+                    color: '#fff',
                   }}
                 >
                   Abrir <ChevronRight size={14} />

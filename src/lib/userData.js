@@ -38,6 +38,32 @@ export async function fetchUserStats() {
   return data
 }
 
+export async function fetchRoutineCompletions() {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return []
+
+  const { data, error } = await supabase
+    .from('routine_completions')
+    .select(`
+      id,
+      completed_at,
+      routine:routines (
+        id,
+        name,
+        xp_value,
+        module
+      )
+    `)
+    .eq('user_id', user.id)
+    .order('completed_at', { ascending: false })
+
+  if (error) {
+    console.error('Erro ao buscar routine_completions:', error)
+    return []
+  }
+  return data || []
+}
+
 export async function fetchTasks() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return []
@@ -105,15 +131,19 @@ export async function checkAndDecayStreak(profile) {
 
 export async function fetchAllUserData() {
   await expireOverdueTasks()
+  await expireOverdueExerciseCompletions()
 
-  const [profileRaw, stats, tasks] = await Promise.all([
+  const [profileRaw, stats, tasks, routineCompletions, exerciseCompletions, dayCompletions] = await Promise.all([
     fetchProfile(),
     fetchUserStats(),
     fetchTasks(),
+    fetchRoutineCompletions(),
+    fetchTodayExerciseCompletionsWithXP(),
+    fetchTodayDayCompletionsWithXP(),
   ])
 
   const profile = await checkAndDecayStreak(profileRaw)
-  return { profile, stats, tasks }
+  return { profile, stats, tasks, routineCompletions, exerciseCompletions, dayCompletions }
 }
 
 // ───────── SUGESTÕES ─────────
@@ -246,7 +276,7 @@ async function updateStreakAfterCompletion() {
   const startOfDay = new Date(`${today}T00:00:00`).toISOString()
   const endOfDay   = new Date(`${today}T23:59:59.999`).toISOString()
 
-  const { count, error: countError } = await supabase
+  const { count: tasksCount, error: tasksError } = await supabase
     .from('tasks')
     .select('id', { count: 'exact', head: true })
     .eq('user_id', user.id)
@@ -254,12 +284,26 @@ async function updateStreakAfterCompletion() {
     .gte('completed_at', startOfDay)
     .lte('completed_at', endOfDay)
 
-  if (countError) {
-    console.error('Erro ao contar tasks de hoje:', countError)
+  if (tasksError) {
+    console.error('Erro ao contar tasks de hoje:', tasksError)
     return
   }
 
-  if (count > 1) {
+  const { count: routinesCount, error: routinesError } = await supabase
+    .from('routine_completions')
+    .select('id', { count: 'exact', head: true })
+    .eq('user_id', user.id)
+    .gte('completed_at', startOfDay)
+    .lte('completed_at', endOfDay)
+
+  if (routinesError) {
+    console.error('Erro ao contar rotinas de hoje:', routinesError)
+    return
+  }
+
+  const totalActivitiesToday = (tasksCount || 0) + (routinesCount || 0)
+
+  if (totalActivitiesToday > 1) {
     await supabase
       .from('profiles')
       .update({ last_active_date: today, updated_at: new Date().toISOString() })
@@ -371,6 +415,351 @@ export async function deleteTask(taskId) {
 
   if (error) { console.error('Erro ao deletar task:', error); return false }
   return true
+}
+
+// ───────── ROTINAS ─────────
+
+export async function fetchRoutinesByModule(module) {
+  const { data, error } = await supabase
+    .from('routines')
+    .select('*')
+    .eq('module', module)
+    .order('display_order', { ascending: true })
+
+  if (error) { console.error('Erro ao buscar rotinas:', error); return [] }
+  return data || []
+}
+
+export async function fetchRoutineSteps(routineId) {
+  const { data, error } = await supabase
+    .from('routine_steps')
+    .select('*')
+    .eq('routine_id', routineId)
+    .order('step_order', { ascending: true })
+
+  if (error) { console.error('Erro ao buscar passos da rotina:', error); return [] }
+  return data || []
+}
+
+export async function fetchRoutineStepsCount(routineId) {
+  const { count, error } = await supabase
+    .from('routine_steps')
+    .select('id', { count: 'exact', head: true })
+    .eq('routine_id', routineId)
+
+  if (error) { console.error('Erro ao contar passos da rotina:', error); return 0 }
+  return count || 0
+}
+
+async function adjustAttributesByRoutine(attributesObj) {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return
+
+  if (!attributesObj || Object.keys(attributesObj).length === 0) return
+
+  const { data: currentStats, error: fetchError } = await supabase
+    .from('user_stats')
+    .select('*')
+    .eq('user_id', user.id)
+    .single()
+
+  if (fetchError || !currentStats) { console.error('Erro ao buscar user_stats:', fetchError); return }
+
+  const updates = {}
+  for (const [attr, amount] of Object.entries(attributesObj)) {
+    const current = currentStats[attr] || 0
+    updates[attr] = Math.max(MIN_ATTRIBUTE_VALUE, Math.min(MAX_ATTRIBUTE_VALUE, current + amount))
+  }
+  updates.updated_at = new Date().toISOString()
+
+  const { error: updateError } = await supabase
+    .from('user_stats')
+    .update(updates)
+    .eq('user_id', user.id)
+
+  if (updateError) console.error('Erro ao atualizar atributos da rotina:', updateError)
+}
+
+export async function completeRoutine(routine) {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return null
+
+  const { data: completion, error: completionError } = await supabase
+    .from('routine_completions')
+    .insert({ user_id: user.id, routine_id: routine.id })
+    .select()
+    .single()
+
+  if (completionError) { console.error('Erro ao registrar completion:', completionError); return null }
+
+  await addXP(routine.xp_value)
+  await adjustAttributesByRoutine(routine.attributes)
+  await updateStreakAfterCompletion()
+
+  return completion
+}
+
+// ───────── ACADEMIA ─────────
+
+export async function fetchWorkoutPlans() {
+  const { data, error } = await supabase
+    .from('workout_plans')
+    .select('*')
+    .order('display_order', { ascending: true })
+  if (error) { console.error('Erro ao buscar workout_plans:', error); return [] }
+  return data || []
+}
+
+export async function fetchWorkoutPlanFull(planId) {
+  const { data, error } = await supabase
+    .from('workout_plans')
+    .select(`*, workout_days (*, workout_exercises (*))`)
+    .eq('id', planId)
+    .single()
+  if (error) { console.error('Erro ao buscar plano completo:', error); return null }
+  if (data?.workout_days) {
+    data.workout_days.sort((a, b) => a.display_order - b.display_order)
+    data.workout_days.forEach(d => {
+      if (d.workout_exercises) {
+        d.workout_exercises.sort((a, b) => a.display_order - b.display_order)
+      }
+    })
+  }
+  return data
+}
+
+export async function fetchTodayExerciseCompletions() {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return []
+
+  const today      = getTodayKey()
+  const startOfDay = new Date(`${today}T00:00:00`).toISOString()
+  const endOfDay   = new Date(`${today}T23:59:59.999`).toISOString()
+
+  const { data, error } = await supabase
+    .from('exercise_completions')
+    .select('*')
+    .eq('user_id', user.id)
+    .gte('completed_at', startOfDay)
+    .lte('completed_at', endOfDay)
+
+  if (error) { console.error('Erro ao buscar exercise_completions:', error); return [] }
+  return data || []
+}
+
+export async function selectWorkoutPlan(planId) {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return false
+  const { error } = await supabase
+    .from('profiles')
+    .update({ current_workout_plan_id: planId, updated_at: new Date().toISOString() })
+    .eq('id', user.id)
+  if (error) { console.error('Erro ao selecionar planilha:', error); return false }
+  return true
+}
+
+export async function completeExercise(exercise, planXpPerExercise) {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return null
+
+  const { data, error } = await supabase
+    .from('exercise_completions')
+    .insert({ user_id: user.id, exercise_id: exercise.id })
+    .select()
+    .single()
+
+  if (error) { console.error('Erro ao registrar exercise_completion:', error); return null }
+
+  await addXP(planXpPerExercise)
+  return data
+}
+
+export async function uncompleteExercise(exerciseId, planXpPerExercise) {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return null
+
+  const today      = getTodayKey()
+  const startOfDay = new Date(`${today}T00:00:00`).toISOString()
+  const endOfDay   = new Date(`${today}T23:59:59.999`).toISOString()
+
+  const { data: completion, error: fetchError } = await supabase
+    .from('exercise_completions')
+    .select('id')
+    .eq('user_id', user.id)
+    .eq('exercise_id', exerciseId)
+    .gte('completed_at', startOfDay)
+    .lte('completed_at', endOfDay)
+    .order('completed_at', { ascending: false })
+    .limit(1)
+    .single()
+
+  if (fetchError || !completion) return null
+
+  const { error: deleteError } = await supabase
+    .from('exercise_completions')
+    .delete()
+    .eq('id', completion.id)
+
+  if (deleteError) { console.error('Erro ao desmarcar exercício:', deleteError); return null }
+
+  await addXP(-planXpPerExercise)
+  return { ok: true }
+}
+
+async function adjustFitnessAttributes(amount) {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return
+
+  const { data: currentStats, error: fetchError } = await supabase
+    .from('user_stats')
+    .select('*')
+    .eq('user_id', user.id)
+    .single()
+
+  if (fetchError || !currentStats) return
+
+  const newForca     = Math.max(MIN_ATTRIBUTE_VALUE, Math.min(MAX_ATTRIBUTE_VALUE, (currentStats.forca || 0) + amount))
+  const newAgilidade = Math.max(MIN_ATTRIBUTE_VALUE, Math.min(MAX_ATTRIBUTE_VALUE, (currentStats.agilidade || 0) + amount))
+
+  const { error } = await supabase
+    .from('user_stats')
+    .update({ forca: newForca, agilidade: newAgilidade, updated_at: new Date().toISOString() })
+    .eq('user_id', user.id)
+
+  if (error) console.error('Erro ao ajustar atributos fitness:', error)
+}
+
+export async function completeWorkoutDay(dayId, planBonusXp) {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return null
+
+  const { data, error } = await supabase
+    .from('workout_day_completions')
+    .insert({ user_id: user.id, day_id: dayId })
+    .select()
+    .single()
+
+  if (error) { console.error('Erro ao registrar workout_day_completion:', error); return null }
+
+  await addXP(planBonusXp)
+  await adjustFitnessAttributes(+1)
+  await updateStreakAfterCompletion()
+  return data
+}
+
+export async function fetchTodayCompletedDayIds(dayIds) {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user || !dayIds.length) return []
+
+  const today      = getTodayKey()
+  const startOfDay = new Date(`${today}T00:00:00`).toISOString()
+  const endOfDay   = new Date(`${today}T23:59:59.999`).toISOString()
+
+  const { data, error } = await supabase
+    .from('workout_day_completions')
+    .select('day_id')
+    .eq('user_id', user.id)
+    .in('day_id', dayIds)
+    .gte('completed_at', startOfDay)
+    .lte('completed_at', endOfDay)
+
+  if (error) { console.error('Erro ao buscar dias completos:', error); return [] }
+  return (data || []).map(r => r.day_id)
+}
+
+export async function isDayAlreadyCompletedToday(dayId) {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return false
+
+  const today      = getTodayKey()
+  const startOfDay = new Date(`${today}T00:00:00`).toISOString()
+  const endOfDay   = new Date(`${today}T23:59:59.999`).toISOString()
+
+  const { data, error } = await supabase
+    .from('workout_day_completions')
+    .select('id')
+    .eq('user_id', user.id)
+    .eq('day_id', dayId)
+    .gte('completed_at', startOfDay)
+    .lte('completed_at', endOfDay)
+
+  if (error) return false
+  return (data || []).length > 0
+}
+
+export async function expireOverdueExerciseCompletions() {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return 0
+
+  const today                  = getTodayKey()
+  const startOfTodayLocalAsUtc = new Date(`${today}T00:00:00`).toISOString()
+
+  const { data, error } = await supabase
+    .from('exercise_completions')
+    .delete()
+    .eq('user_id', user.id)
+    .lt('completed_at', startOfTodayLocalAsUtc)
+    .select('id')
+
+  if (error) { console.error('Erro ao expirar exercise_completions:', error); return 0 }
+  return data ? data.length : 0
+}
+
+export async function fetchTodayExerciseCompletionsWithXP() {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return []
+
+  const today      = getTodayKey()
+  const startOfDay = new Date(`${today}T00:00:00`).toISOString()
+  const endOfDay   = new Date(`${today}T23:59:59.999`).toISOString()
+
+  const { data, error } = await supabase
+    .from('exercise_completions')
+    .select(`
+      id,
+      completed_at,
+      exercise:workout_exercises (
+        id,
+        day:workout_days (
+          plan:workout_plans (
+            xp_per_exercise
+          )
+        )
+      )
+    `)
+    .eq('user_id', user.id)
+    .gte('completed_at', startOfDay)
+    .lte('completed_at', endOfDay)
+
+  if (error) { console.error('Erro ao buscar exercise_completions com XP:', error); return [] }
+  return data || []
+}
+
+export async function fetchTodayDayCompletionsWithXP() {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return []
+
+  const today      = getTodayKey()
+  const startOfDay = new Date(`${today}T00:00:00`).toISOString()
+  const endOfDay   = new Date(`${today}T23:59:59.999`).toISOString()
+
+  const { data, error } = await supabase
+    .from('workout_day_completions')
+    .select(`
+      id,
+      completed_at,
+      day:workout_days (
+        plan:workout_plans (
+          xp_bonus_per_day
+        )
+      )
+    `)
+    .eq('user_id', user.id)
+    .gte('completed_at', startOfDay)
+    .lte('completed_at', endOfDay)
+
+  if (error) { console.error('Erro ao buscar workout_day_completions com XP:', error); return [] }
+  return data || []
 }
 
 // ───────── CRIAR ─────────
