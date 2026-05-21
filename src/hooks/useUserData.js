@@ -8,22 +8,29 @@ export function useUserData() {
   const [refreshing, setRefreshing] = useState(false)
   const [error,      setError]      = useState(null)
   const hasLoadedOnce               = useRef(false)
+  const fetchGenRef                 = useRef(0)
 
   async function fetchData(isInitial = false) {
+    const myGen = ++fetchGenRef.current
+
     if (isInitial) setLoading(true)
     else           setRefreshing(true)
 
     try {
       const userData = await fetchAllUserData()
+      if (myGen !== fetchGenRef.current) return
       setData(userData)
       setError(null)
       hasLoadedOnce.current = true
     } catch (err) {
+      if (myGen !== fetchGenRef.current) return
       console.error('Erro no useUserData:', err)
       setError(err)
     } finally {
-      if (isInitial) setLoading(false)
-      else           setRefreshing(false)
+      if (myGen === fetchGenRef.current) {
+        if (isInitial) setLoading(false)
+        else           setRefreshing(false)
+      }
     }
   }
 
