@@ -303,7 +303,10 @@ function NewTaskModal({ onCancel, onSuccess }) {
 }
 
 export default function Tasks() {
-  const { tasks, routineCompletions, exerciseCompletions, dayCompletions, reload } = useUserData()
+  const {
+    tasks, routineCompletions, exerciseCompletions, dayCompletions, reload,
+    optimisticCompleteTask, optimisticUncompleteTask, revertOptimisticTaskChange,
+  } = useUserData()
   const [showModal, setShowModal]              = useState(false)
   const [processingIds, setProcessingIds]      = useState(new Set())
 
@@ -335,22 +338,44 @@ export default function Tasks() {
 
   async function handleToggle(task) {
     if (processingIds.has(task.id)) return
+
     if (task.completed && !isCompletedToday(task)) {
       alert('Tasks completadas em dias anteriores não podem ser desmarcadas.')
       return
     }
+
+    const previousState = { completed: task.completed, completed_at: task.completed_at }
+
+    if (task.completed) {
+      optimisticUncompleteTask(task.id)
+    } else {
+      optimisticCompleteTask(task.id)
+    }
+
     addProcessing(task.id)
     try {
       if (task.completed) {
         const result = await uncompleteTask(task.id)
         if (result?.locked) {
+          revertOptimisticTaskChange(task.id, previousState)
           alert('Tasks completadas em dias anteriores não podem ser desmarcadas.')
           return
         }
+        if (!result) {
+          revertOptimisticTaskChange(task.id, previousState)
+          return
+        }
       } else {
-        await completeTask(task.id)
+        const result = await completeTask(task.id)
+        if (!result) {
+          revertOptimisticTaskChange(task.id, previousState)
+          return
+        }
       }
       reload()
+    } catch (err) {
+      console.error('Erro ao toggle task:', err)
+      revertOptimisticTaskChange(task.id, previousState)
     } finally {
       removeProcessing(task.id)
     }

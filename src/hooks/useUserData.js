@@ -47,16 +47,53 @@ export function useUserData() {
     }
   }, [])
 
+  function optimisticCompleteTask(taskId) {
+    setData(prev => {
+      const idx = prev.tasks.findIndex(t => t.id === taskId)
+      if (idx === -1) return prev
+      const task = prev.tasks[idx]
+      if (task.completed) return prev
+      const updated = [...prev.tasks]
+      updated[idx] = { ...task, completed: true, completed_at: new Date().toISOString() }
+      return { ...prev, tasks: updated }
+    })
+  }
+
+  function optimisticUncompleteTask(taskId) {
+    setData(prev => {
+      const idx = prev.tasks.findIndex(t => t.id === taskId)
+      if (idx === -1) return prev
+      const task = prev.tasks[idx]
+      if (!task.completed) return prev
+      const updated = [...prev.tasks]
+      updated[idx] = { ...task, completed: false, completed_at: null }
+      return { ...prev, tasks: updated }
+    })
+  }
+
+  function revertOptimisticTaskChange(taskId, previousState) {
+    setData(prev => {
+      const idx = prev.tasks.findIndex(t => t.id === taskId)
+      if (idx === -1) return prev
+      const updated = [...prev.tasks]
+      updated[idx] = { ...updated[idx], completed: previousState.completed, completed_at: previousState.completed_at }
+      return { ...prev, tasks: updated }
+    })
+  }
+
   return {
-    profile:             data.profile,
-    stats:               data.stats,
-    tasks:               data.tasks,
-    routineCompletions:  data.routineCompletions,
-    exerciseCompletions: data.exerciseCompletions,
-    dayCompletions:      data.dayCompletions,
+    profile:                    data.profile,
+    stats:                      data.stats,
+    tasks:                      data.tasks,
+    routineCompletions:         data.routineCompletions,
+    exerciseCompletions:        data.exerciseCompletions,
+    dayCompletions:             data.dayCompletions,
     loading,
     refreshing,
     error,
     reload,
+    optimisticCompleteTask,
+    optimisticUncompleteTask,
+    revertOptimisticTaskChange,
   }
 }
