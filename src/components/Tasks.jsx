@@ -304,7 +304,8 @@ function NewTaskModal({ onCancel, onSuccess }) {
 
 export default function Tasks() {
   const {
-    tasks, routineCompletions, exerciseCompletions, dayCompletions, reload,
+    tasks, routineCompletions, exerciseCompletions, dayCompletions,
+    reload, debouncedReload,
     optimisticCompleteTask, optimisticUncompleteTask, revertOptimisticTaskChange,
   } = useUserData()
   const [showModal, setShowModal]              = useState(false)
@@ -358,24 +359,28 @@ export default function Tasks() {
         const result = await uncompleteTask(task.id)
         if (result?.locked) {
           revertOptimisticTaskChange(task.id, previousState)
+          reload()
           alert('Tasks completadas em dias anteriores não podem ser desmarcadas.')
           return
         }
         if (!result) {
           revertOptimisticTaskChange(task.id, previousState)
+          reload()
           return
         }
       } else {
         const result = await completeTask(task.id)
         if (!result) {
           revertOptimisticTaskChange(task.id, previousState)
+          reload()
           return
         }
       }
-      reload()
+      debouncedReload()
     } catch (err) {
       console.error('Erro ao toggle task:', err)
       revertOptimisticTaskChange(task.id, previousState)
+      reload()
     } finally {
       removeProcessing(task.id)
     }
