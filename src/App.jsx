@@ -1,5 +1,6 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
-import { Routes, Route, useNavigate } from 'react-router-dom'
+import { Routes, Route, Outlet, useNavigate } from 'react-router-dom'
+import { UserDataProvider } from './context/UserDataProvider'
 import { motion, AnimatePresence } from 'framer-motion'
 import { playClick } from './utils/clickSFX'
 import './index.css'
@@ -182,6 +183,17 @@ function AppShell({ children }) {
   )
 }
 
+/* ── Layout das rotas autenticadas — Provider instanciado uma única vez ── */
+function AuthLayout() {
+  return (
+    <UserDataProvider>
+      <AppShell>
+        <Outlet />
+      </AppShell>
+    </UserDataProvider>
+  )
+}
+
 /* ── Root ── */
 export default function App() {
   const { start, toggle, muted, started, audioRef } = useAudio()
@@ -203,26 +215,28 @@ export default function App() {
         <Route path="/analyzing" element={<AnalyzingPage />} />
         <Route path="/voice"     element={<VoicePage bgAudioRef={audioRef} />} />
         <Route path="/pricing"   element={<PricingPage />} />
-        <Route path="/login"     element={<AppShell><Login /></AppShell>} />
-        <Route path="/dashboard" element={<AppShell><Dashboard /></AppShell>} />
-        <Route path="/tasks"     element={<AppShell><Tasks /></AppShell>} />
-        <Route path="/arena"     element={<AppShell><Arena /></AppShell>} />
-        <Route path="/ranking"   element={<AppShell><Ranking /></AppShell>} />
-        <Route path="/perfil"    element={<AppShell><Perfil /></AppShell>} />
-        <Route path="/character" element={<AppShell><Character /></AppShell>} />
-        <Route path="/modulos"           element={<AppShell><Modulos /></AppShell>} />
-        <Route path="/modulos/corrida"   element={<AppShell><Corrida /></AppShell>} />
-        <Route path="/modulos/treino"    element={<AppShell><Treino /></AppShell>} />
-        <Route path="/modulos/academia"   element={<AppShell><Academia /></AppShell>} />
-        <Route path="/modulos/aparencia"           element={<AppShell><Aparencia /></AppShell>} />
-        <Route path="/modulos/aparencia/massagens"          element={<AppShell><MassagensFaciais /></AppShell>} />
-        <Route path="/modulos/aparencia/massagens/guasha"   element={<AppShell><GuaSha /></AppShell>} />
-        <Route path="/modulos/aparencia/massagens/kobido"   element={<AppShell><Kobido /></AppShell>} />
-        <Route path="/modulos/aparencia/massagens/drenagem"  element={<AppShell><DrenagemlFacial /></AppShell>} />
-        <Route path="/modulos/aparencia/skincare"           element={<AppShell><SkincareList /></AppShell>} />
-        <Route path="/modulos/aparencia/skincare/matinal"   element={<AppShell><RotinaMatinal /></AppShell>} />
-        <Route path="/modulos/aparencia/skincare/noturna"   element={<AppShell><RotinaNoturna /></AppShell>} />
-        <Route path="/modulos/aparencia/skincare/semanal"   element={<AppShell><TratamentoSemanal /></AppShell>} />
+        <Route path="/login" element={<AppShell><Login /></AppShell>} />
+        <Route element={<AuthLayout />}>
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/tasks"     element={<Tasks />} />
+          <Route path="/arena"     element={<Arena />} />
+          <Route path="/ranking"   element={<Ranking />} />
+          <Route path="/perfil"    element={<Perfil />} />
+          <Route path="/character" element={<Character />} />
+          <Route path="/modulos"                              element={<Modulos />} />
+          <Route path="/modulos/corrida"                      element={<Corrida />} />
+          <Route path="/modulos/treino"                       element={<Treino />} />
+          <Route path="/modulos/academia"                     element={<Academia />} />
+          <Route path="/modulos/aparencia"                    element={<Aparencia />} />
+          <Route path="/modulos/aparencia/massagens"          element={<MassagensFaciais />} />
+          <Route path="/modulos/aparencia/massagens/guasha"   element={<GuaSha />} />
+          <Route path="/modulos/aparencia/massagens/kobido"   element={<Kobido />} />
+          <Route path="/modulos/aparencia/massagens/drenagem" element={<DrenagemlFacial />} />
+          <Route path="/modulos/aparencia/skincare"           element={<SkincareList />} />
+          <Route path="/modulos/aparencia/skincare/matinal"   element={<RotinaMatinal />} />
+          <Route path="/modulos/aparencia/skincare/noturna"   element={<RotinaNoturna />} />
+          <Route path="/modulos/aparencia/skincare/semanal"   element={<TratamentoSemanal />} />
+        </Route>
       </Routes>
 
       <MuteButton muted={muted} onToggle={toggle} visible={started} />

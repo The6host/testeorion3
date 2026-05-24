@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ChevronRight, Trash2, Calendar, Zap, Plus, X, Check, Target } from 'lucide-react'
 import BottomNav from './BottomNav'
-import { useUserData } from '../hooks/useUserData'
+import { useUserDataContext } from '../context/UserDataContext'
 import { completeTask, uncompleteTask, deleteTask, createTask } from '../lib/userData'
 import { getTodayKey, getLocalDateKey } from '../lib/dailySuggestions'
 import { TASK_CATEGORIES, CATEGORY_COLORS } from '../lib/categories'
@@ -307,7 +307,7 @@ export default function Tasks() {
     tasks, routineCompletions, exerciseCompletions, dayCompletions,
     reload, debouncedReload,
     optimisticCompleteTask, optimisticUncompleteTask, revertOptimisticTaskChange,
-  } = useUserData()
+  } = useUserDataContext()
   const [showModal, setShowModal]              = useState(false)
   const [processingIds, setProcessingIds]      = useState(new Set())
 

@@ -7,7 +7,7 @@ import {
 } from 'lucide-react'
 import BottomNav from './BottomNav'
 import { ATTRIBUTE_KEYS, ATTRIBUTE_META, getEmptyAttributes } from '../lib/userStats'
-import { useUserData } from '../hooks/useUserData'
+import { useUserDataContext } from '../context/UserDataContext'
 
 /* ── Design tokens ── */
 const PUR   = '#7C3AED'
@@ -195,7 +195,7 @@ function PhaseWrap({ children, k }) {
 
 export default function Arena() {
   const navigate   = useNavigate()
-  const { stats }  = useUserData()
+  const { stats }  = useUserDataContext()
   const userAttrs  = stats || getEmptyAttributes()
 
   const [phase,     setPhase]     = useState('initial')

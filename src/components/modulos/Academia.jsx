@@ -6,7 +6,7 @@ import {
   CheckCircle2, Circle, Plus, Trash2,
 } from 'lucide-react'
 import BottomNav from '../BottomNav'
-import { useUserData } from '../../hooks/useUserData'
+import { useUserDataContext } from '../../context/UserDataContext'
 import { getPlanMeta } from '../../lib/workoutPlansMeta'
 import {
   fetchWorkoutPlans,
@@ -517,7 +517,7 @@ function CustomPlan({ onReset }) {
 /* ── Root ── */
 export default function Academia() {
   const navigate = useNavigate()
-  const { profile, reload } = useUserData()
+  const { profile, reload } = useUserDataContext()
 
   const [isFav,            setIsFav]            = useState(false)
   const [plans,            setPlans]            = useState([])

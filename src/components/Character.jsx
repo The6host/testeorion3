@@ -4,7 +4,7 @@ import { motion } from 'framer-motion'
 import { ArrowLeft, Swords, Heart, Brain, Shield, Zap, Eye, User, MessageCircle, Droplets } from 'lucide-react'
 import { getRankByXP } from '../lib/rank'
 import { ATTRIBUTE_KEYS, ATTRIBUTE_META, getEmptyAttributes } from '../lib/userStats'
-import { useUserData } from '../hooks/useUserData'
+import { useUserDataContext } from '../context/UserDataContext'
 import BottomNav from './BottomNav'
 
 /* ── Design tokens ── */
@@ -54,7 +54,7 @@ export default function Character() {
   const navigate  = useNavigate()
   const [imgError, setImgError] = useState(false)
 
-  const { profile, stats } = useUserData()
+  const { profile, stats } = useUserDataContext()
   const totalXP   = profile?.total_xp  || 0
   const level     = profile?.level     || 1
   const xpAtual   = totalXP % 500

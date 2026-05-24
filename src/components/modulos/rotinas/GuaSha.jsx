@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { ArrowLeft, Sparkles, Star, Clock, CheckCircle2 } from 'lucide-react'
 import BottomNav from '../../BottomNav'
 import { fetchRoutinesByModule, fetchRoutineSteps, completeRoutine } from '../../../lib/userData'
-import { useUserData } from '../../../hooks/useUserData'
+import { useUserDataContext } from '../../../context/UserDataContext'
 
 const ROUTINE_NAME = 'Gua Sha'
 
@@ -26,7 +26,7 @@ const LEVEL_COLORS = {
 
 export default function GuaSha() {
   const navigate = useNavigate()
-  const { reload } = useUserData()
+  const { reload } = useUserDataContext()
 
   const [isFav,      setIsFav]      = useState(false)
   const [routine,    setRoutine]    = useState(null)

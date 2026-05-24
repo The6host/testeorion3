@@ -9,7 +9,7 @@ import {
 import { supabase } from '../lib/supabase'
 import BottomNav from './BottomNav'
 import RankBadge from './RankBadge'
-import { useUserData } from '../hooks/useUserData'
+import { useUserDataContext } from '../context/UserDataContext'
 import { useDailySuggestions } from '../hooks/useDailySuggestions'
 import { acceptSuggestion } from '../lib/userData'
 import { getInitials } from '../lib/utils'
@@ -281,7 +281,7 @@ function TasksToday({ dailySuggestions, acceptingIds, onAccept }) {
 /* ══ ROOT ══ */
 export default function Dashboard() {
   const navigate = useNavigate()
-  const { profile, tasks, routineCompletions, exerciseCompletions, dayCompletions, loading, refreshing, error, reload } = useUserData()
+  const { profile, tasks, routineCompletions, exerciseCompletions, dayCompletions, loading, refreshing, error, reload } = useUserDataContext()
   const { suggestions: dailySuggestions }         = useDailySuggestions(tasks)
   const [acceptingIds, setAcceptingIds]            = useState(new Set())
 

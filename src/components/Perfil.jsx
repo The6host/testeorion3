@@ -17,7 +17,7 @@ import {
   ATTRIBUTE_KEYS, ATTRIBUTE_META, MAX_ATTRIBUTE_VALUE,
   getAttributesSum, getAttributesAverage, getEmptyAttributes,
 } from '../lib/userStats'
-import { useUserData } from '../hooks/useUserData'
+import { useUserDataContext } from '../context/UserDataContext'
 
 /* ── Design tokens ── */
 const PUR   = '#7C3AED'
@@ -95,7 +95,7 @@ function RadarTick({ x, y, payload }) {
 export default function Perfil() {
   const [activeTheme, setActiveTheme] = useState('Padrão')
 
-  const { profile, stats } = useUserData()
+  const { profile, stats } = useUserDataContext()
   const level    = profile?.level        || 1
   const totalXP  = profile?.total_xp     || 0
   const xpAtual  = totalXP % 500
