@@ -519,7 +519,7 @@ function CustomPlan({ onReset }) {
 /* ── Root ── */
 export default function Academia() {
   const navigate = useNavigate()
-  const { profile, reload, debouncedReload, optimisticCompleteWorkoutDay, revertOptimisticWorkoutDayCompletion } = useUserDataContext()
+  const { profile, reload, debouncedReload, optimisticCompleteExercise, optimisticUncompleteExercise, revertOptimisticExerciseChange, optimisticCompleteWorkoutDay, revertOptimisticWorkoutDayCompletion } = useUserDataContext()
 
   const [isFav,            setIsFav]            = useState(false)
   const [plans,            setPlans]            = useState([])
@@ -568,16 +568,46 @@ export default function Academia() {
   }
 
   async function handleToggleExercise(exercise, isDone) {
+    if (!currentPlan) return
+    const planXp = currentPlan.xp_per_exercise || 0
+    const prevCompletion = isDone ? todayCompletions.find(c => c.exercise_id === exercise.id) : null
+
     if (isDone) {
-      const result = await uncompleteExercise(exercise.id, currentPlan.xp_per_exercise)
-      if (result) {
+      setTodayCompletions(prev => prev.filter(c => c.exercise_id !== exercise.id))
+      optimisticUncompleteExercise(exercise.id, planXp)
+    } else {
+      setTodayCompletions(prev => [...prev, { id: `temp-${Date.now()}`, exercise_id: exercise.id }])
+      optimisticCompleteExercise(exercise, planXp)
+    }
+
+    try {
+      if (isDone) {
+        const result = await uncompleteExercise(exercise.id, planXp)
+        if (!result) {
+          if (prevCompletion) setTodayCompletions(prev => [...prev, prevCompletion])
+          revertOptimisticExerciseChange(exercise, planXp, isDone)
+          return
+        }
+      } else {
+        const result = await completeExercise(exercise, planXp)
+        if (!result) {
+          setTodayCompletions(prev => prev.filter(c => c.exercise_id !== exercise.id))
+          revertOptimisticExerciseChange(exercise, planXp, isDone)
+          return
+        }
+        setTodayCompletions(prev =>
+          prev.map(c => c.exercise_id === exercise.id && c.id?.startsWith('temp-') ? result : c)
+        )
+      }
+      debouncedReload()
+    } catch (err) {
+      console.error('Erro ao toggle exercise:', err)
+      if (isDone) {
+        if (prevCompletion) setTodayCompletions(prev => [...prev, prevCompletion])
+      } else {
         setTodayCompletions(prev => prev.filter(c => c.exercise_id !== exercise.id))
       }
-    } else {
-      const completion = await completeExercise(exercise, currentPlan.xp_per_exercise)
-      if (completion) {
-        setTodayCompletions(prev => [...prev, completion])
-      }
+      revertOptimisticExerciseChange(exercise, planXp, isDone)
     }
   }
 

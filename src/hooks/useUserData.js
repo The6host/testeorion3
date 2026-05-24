@@ -106,6 +106,44 @@ export function useUserData() {
     })
   }
 
+  function optimisticCompleteExercise(exercise, planXpPerExercise) {
+    fetchGenRef.current += 1
+    setData(prev => ({
+      ...prev,
+      exerciseCompletions: [
+        ...prev.exerciseCompletions,
+        {
+          id: `temp-${Date.now()}-${exercise.id}`,
+          exercise_id: exercise.id,
+          completed_at: new Date().toISOString(),
+          exercise: { id: exercise.id, day: { plan: { xp_per_exercise: planXpPerExercise } } },
+        },
+      ],
+      profile: prev.profile
+        ? { ...prev.profile, total_xp: (prev.profile.total_xp || 0) + (planXpPerExercise || 0) }
+        : prev.profile,
+    }))
+  }
+
+  function optimisticUncompleteExercise(exerciseId, planXpPerExercise) {
+    fetchGenRef.current += 1
+    setData(prev => ({
+      ...prev,
+      exerciseCompletions: prev.exerciseCompletions.filter(ec => ec.exercise_id !== exerciseId),
+      profile: prev.profile
+        ? { ...prev.profile, total_xp: Math.max(0, (prev.profile.total_xp || 0) - (planXpPerExercise || 0)) }
+        : prev.profile,
+    }))
+  }
+
+  function revertOptimisticExerciseChange(exercise, planXpPerExercise, wasCompleted) {
+    if (wasCompleted) {
+      optimisticCompleteExercise(exercise, planXpPerExercise)
+    } else {
+      optimisticUncompleteExercise(exercise.id, planXpPerExercise)
+    }
+  }
+
   function optimisticCompleteRoutine(routine) {
     fetchGenRef.current += 1
     setData(prev => ({
@@ -177,6 +215,9 @@ export function useUserData() {
     optimisticCompleteTask,
     optimisticUncompleteTask,
     revertOptimisticTaskChange,
+    optimisticCompleteExercise,
+    optimisticUncompleteExercise,
+    revertOptimisticExerciseChange,
     optimisticCompleteRoutine,
     revertOptimisticRoutineCompletion,
     optimisticCompleteWorkoutDay,
