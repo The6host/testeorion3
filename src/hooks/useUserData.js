@@ -9,6 +9,8 @@ export function useUserData() {
   const [error,      setError]      = useState(null)
   const hasLoadedOnce               = useRef(false)
   const fetchGenRef                 = useRef(0)
+  const reloadTimeoutRef            = useRef(null)
+  const DEBOUNCE_MS                 = 300
 
   async function fetchData(isInitial = false) {
     const myGen = ++fetchGenRef.current
@@ -39,22 +41,37 @@ export function useUserData() {
     else                        await fetchData(false)
   }
 
+  function debouncedReload() {
+    if (reloadTimeoutRef.current) clearTimeout(reloadTimeoutRef.current)
+    reloadTimeoutRef.current = setTimeout(() => {
+      reloadTimeoutRef.current = null
+      reload()
+    }, DEBOUNCE_MS)
+  }
+
   useEffect(() => {
     fetchData(true)
 
     const { data: authListener } = supabase.auth.onAuthStateChange((event) => {
-      if (event === 'SIGNED_IN' || event === 'SIGNED_OUT') {
+      if (event === 'SIGNED_OUT') {
         hasLoadedOnce.current = false
+        fetchData(true)
+      } else if (event === 'SIGNED_IN' && !hasLoadedOnce.current) {
         fetchData(true)
       }
     })
 
     return () => {
       authListener.subscription.unsubscribe()
+      if (reloadTimeoutRef.current) {
+        clearTimeout(reloadTimeoutRef.current)
+        reloadTimeoutRef.current = null
+      }
     }
   }, [])
 
   function optimisticCompleteTask(taskId) {
+    fetchGenRef.current += 1
     setData(prev => {
       const idx = prev.tasks.findIndex(t => t.id === taskId)
       if (idx === -1) return prev
@@ -67,6 +84,7 @@ export function useUserData() {
   }
 
   function optimisticUncompleteTask(taskId) {
+    fetchGenRef.current += 1
     setData(prev => {
       const idx = prev.tasks.findIndex(t => t.id === taskId)
       if (idx === -1) return prev
@@ -99,6 +117,7 @@ export function useUserData() {
     refreshing,
     error,
     reload,
+    debouncedReload,
     optimisticCompleteTask,
     optimisticUncompleteTask,
     revertOptimisticTaskChange,
