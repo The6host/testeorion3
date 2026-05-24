@@ -202,10 +202,12 @@ function WorkoutPlan({ plan, completedExerciseIds, onToggleExercise, onCompleteD
   }, [days.length])
 
   async function handleCompleteDay(day) {
-    if (completingDay === day.id) return
+    if (completingDay === day.id || completedDays.has(day.id)) return
     setCompletingDay(day.id)
-    await onCompleteDay(day)
     setCompletedDays(prev => new Set([...prev, day.id]))
+    await onCompleteDay(day, () => {
+      setCompletedDays(prev => { const n = new Set(prev); n.delete(day.id); return n })
+    })
     setCompletingDay(null)
   }
 
@@ -517,7 +519,7 @@ function CustomPlan({ onReset }) {
 /* ── Root ── */
 export default function Academia() {
   const navigate = useNavigate()
-  const { profile, reload } = useUserDataContext()
+  const { profile, reload, debouncedReload, optimisticCompleteWorkoutDay, revertOptimisticWorkoutDayCompletion } = useUserDataContext()
 
   const [isFav,            setIsFav]            = useState(false)
   const [plans,            setPlans]            = useState([])
@@ -579,9 +581,21 @@ export default function Academia() {
     }
   }
 
-  async function handleCompleteDay(day) {
-    await completeWorkoutDay(day.id, currentPlan.xp_bonus_per_day)
-    await reload()
+  async function handleCompleteDay(day, onLocalRevert) {
+    optimisticCompleteWorkoutDay(day.id, currentPlan.xp_bonus_per_day)
+    try {
+      const result = await completeWorkoutDay(day.id, currentPlan.xp_bonus_per_day)
+      if (!result) {
+        revertOptimisticWorkoutDayCompletion(currentPlan.xp_bonus_per_day)
+        if (onLocalRevert) onLocalRevert()
+        return
+      }
+      debouncedReload()
+    } catch (err) {
+      console.error('Erro ao completar dia de treino:', err)
+      revertOptimisticWorkoutDayCompletion(currentPlan.xp_bonus_per_day)
+      if (onLocalRevert) onLocalRevert()
+    }
   }
 
   const subtitle = showGoalSelect

@@ -26,7 +26,7 @@ const LEVEL_COLORS = {
 
 export default function DrenagemlFacial() {
   const navigate = useNavigate()
-  const { reload } = useUserDataContext()
+  const { optimisticCompleteRoutine, revertOptimisticRoutineCompletion, debouncedReload } = useUserDataContext()
 
   const [isFav,      setIsFav]      = useState(false)
   const [routine,    setRoutine]    = useState(null)
@@ -56,11 +56,21 @@ export default function DrenagemlFacial() {
 
   async function handleComplete() {
     if (!allDone || completing || done || !routine) return
-    setCompleting(true)
-    await completeRoutine(routine)
-    await reload()
+    optimisticCompleteRoutine(routine)
     setDone(true)
-    setCompleting(false)
+    try {
+      const result = await completeRoutine(routine)
+      if (!result) {
+        revertOptimisticRoutineCompletion(routine)
+        setDone(false)
+        return
+      }
+      debouncedReload()
+    } catch (err) {
+      console.error('Erro ao completar rotina:', err)
+      revertOptimisticRoutineCompletion(routine)
+      setDone(false)
+    }
   }
 
   const allDone  = steps.length > 0 && checked.size === steps.length

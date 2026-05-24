@@ -106,6 +106,62 @@ export function useUserData() {
     })
   }
 
+  function optimisticCompleteRoutine(routine) {
+    fetchGenRef.current += 1
+    setData(prev => ({
+      ...prev,
+      routineCompletions: [
+        {
+          id: `temp-${Date.now()}`,
+          completed_at: new Date().toISOString(),
+          routine: { id: routine.id, name: routine.name, xp_value: routine.xp_value, module: routine.module },
+        },
+        ...prev.routineCompletions,
+      ],
+      profile: prev.profile
+        ? { ...prev.profile, total_xp: (prev.profile.total_xp || 0) + (routine.xp_value || 0) }
+        : prev.profile,
+    }))
+  }
+
+  function revertOptimisticRoutineCompletion(routine) {
+    setData(prev => ({
+      ...prev,
+      routineCompletions: prev.routineCompletions.filter(rc => !rc.id.startsWith('temp-')),
+      profile: prev.profile
+        ? { ...prev.profile, total_xp: Math.max(0, (prev.profile.total_xp || 0) - (routine.xp_value || 0)) }
+        : prev.profile,
+    }))
+  }
+
+  function optimisticCompleteWorkoutDay(dayId, planBonusXp) {
+    fetchGenRef.current += 1
+    setData(prev => ({
+      ...prev,
+      dayCompletions: [
+        {
+          id: `temp-${Date.now()}`,
+          completed_at: new Date().toISOString(),
+          day: { plan: { xp_bonus_per_day: planBonusXp } },
+        },
+        ...prev.dayCompletions,
+      ],
+      profile: prev.profile
+        ? { ...prev.profile, total_xp: (prev.profile.total_xp || 0) + (planBonusXp || 0) }
+        : prev.profile,
+    }))
+  }
+
+  function revertOptimisticWorkoutDayCompletion(planBonusXp) {
+    setData(prev => ({
+      ...prev,
+      dayCompletions: prev.dayCompletions.filter(dc => !dc.id.startsWith('temp-')),
+      profile: prev.profile
+        ? { ...prev.profile, total_xp: Math.max(0, (prev.profile.total_xp || 0) - (planBonusXp || 0)) }
+        : prev.profile,
+    }))
+  }
+
   return {
     profile:                    data.profile,
     stats:                      data.stats,
@@ -121,5 +177,9 @@ export function useUserData() {
     optimisticCompleteTask,
     optimisticUncompleteTask,
     revertOptimisticTaskChange,
+    optimisticCompleteRoutine,
+    revertOptimisticRoutineCompletion,
+    optimisticCompleteWorkoutDay,
+    revertOptimisticWorkoutDayCompletion,
   }
 }
