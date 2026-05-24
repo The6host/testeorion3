@@ -200,6 +200,32 @@ export function useUserData() {
     }))
   }
 
+  function optimisticAcceptSuggestion(suggestion) {
+    fetchGenRef.current += 1
+    setData(prev => ({
+      ...prev,
+      tasks: [
+        ...prev.tasks,
+        {
+          id:           `temp-suggestion-${Date.now()}-${suggestion.id}`,
+          name:         suggestion.name,
+          category:     suggestion.category,
+          xp_value:     suggestion.xp_value,
+          completed:    false,
+          completed_at: null,
+          created_at:   new Date().toISOString(),
+        },
+      ],
+    }))
+  }
+
+  function revertOptimisticSuggestion() {
+    setData(prev => ({
+      ...prev,
+      tasks: prev.tasks.filter(t => !t.id.startsWith('temp-suggestion-')),
+    }))
+  }
+
   return {
     profile:                    data.profile,
     stats:                      data.stats,
@@ -215,6 +241,8 @@ export function useUserData() {
     optimisticCompleteTask,
     optimisticUncompleteTask,
     revertOptimisticTaskChange,
+    optimisticAcceptSuggestion,
+    revertOptimisticSuggestion,
     optimisticCompleteExercise,
     optimisticUncompleteExercise,
     revertOptimisticExerciseChange,

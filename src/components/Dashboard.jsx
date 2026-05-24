@@ -281,7 +281,7 @@ function TasksToday({ dailySuggestions, acceptingIds, onAccept }) {
 /* ══ ROOT ══ */
 export default function Dashboard() {
   const navigate = useNavigate()
-  const { profile, tasks, routineCompletions, exerciseCompletions, dayCompletions, loading, refreshing, error, reload } = useUserDataContext()
+  const { profile, tasks, routineCompletions, exerciseCompletions, dayCompletions, loading, refreshing, error, reload, debouncedReload, optimisticAcceptSuggestion, revertOptimisticSuggestion } = useUserDataContext()
   const { suggestions: dailySuggestions }         = useDailySuggestions(tasks)
   const [acceptingIds, setAcceptingIds]            = useState(new Set())
 
@@ -315,9 +315,19 @@ export default function Dashboard() {
   async function handleAcceptSuggestion(suggestion) {
     if (acceptingIds.has(suggestion.id)) return
     setAcceptingIds(prev => new Set(prev).add(suggestion.id))
+    optimisticAcceptSuggestion(suggestion)
     try {
-      const created = await acceptSuggestion(suggestion)
-      if (created) reload()
+      const result = await acceptSuggestion(suggestion)
+      if (!result) {
+        revertOptimisticSuggestion()
+        reload()
+        return
+      }
+      debouncedReload()
+    } catch (err) {
+      console.error('Erro ao aceitar sugestão:', err)
+      revertOptimisticSuggestion()
+      reload()
     } finally {
       setAcceptingIds(prev => { const n = new Set(prev); n.delete(suggestion.id); return n })
     }
