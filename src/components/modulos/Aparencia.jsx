@@ -242,9 +242,10 @@ export default function Aparencia() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1], delay: 0.16 + i * 0.07 }}
                   onClick={() => {
-                    if (cat.id === 'massagens') navigate('/modulos/aparencia/massagens')
-                    else if (cat.id === 'skincare') navigate('/modulos/aparencia/skincare')
-                    else setOpenCat(cat.id)
+                    if (cat.id === 'massagens')   navigate('/modulos/aparencia/massagens')
+                    else if (cat.id === 'skincare')     navigate('/modulos/aparencia/skincare')
+                    else if (cat.id === 'tratamentos')  navigate('/modulos/aparencia/tratamentos')
+                    else if (cat.id === 'corporais')    navigate('/modulos/aparencia/corporais')
                   }}
                   whileHover={{ scale: 1.015 }}
                   whileTap={{ scale: 0.97 }}

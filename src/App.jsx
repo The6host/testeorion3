@@ -39,7 +39,15 @@ import DrenagemlFacial  from './components/modulos/rotinas/DrenagemlFacial'
 import SkincareList      from './components/modulos/SkincareList'
 import RotinaMatinal     from './components/modulos/rotinas/RotinaMatinal'
 import RotinaNoturna     from './components/modulos/rotinas/RotinaNoturna'
-import TratamentoSemanal from './components/modulos/rotinas/TratamentoSemanal'
+import TratamentoSemanal    from './components/modulos/rotinas/TratamentoSemanal'
+import TratamentosList      from './components/modulos/TratamentosList'
+import CorporaisList        from './components/modulos/CorporaisList'
+import TratamentoAntiAcne   from './components/modulos/rotinas/TratamentoAntiAcne'
+import TratamentoAntiManchas from './components/modulos/rotinas/TratamentoAntiManchas'
+import TratamentoAntiIdade  from './components/modulos/rotinas/TratamentoAntiIdade'
+import HidratacaoCorporal   from './components/modulos/rotinas/HidratacaoCorporal'
+import EsfoliacaoCorporal   from './components/modulos/rotinas/EsfoliacaoCorporal'
+import CuidadoCapilar       from './components/modulos/rotinas/CuidadoCapilar'
 
 const AUDIO_URL = 'https://res.cloudinary.com/dctzllsly/video/upload/v1778378449/music-bg-orion_j3uur9.mp3'
 const NEON = '#ccff00'
@@ -237,7 +245,15 @@ export default function App() {
           <Route path="/modulos/aparencia/skincare"           element={<SkincareList />} />
           <Route path="/modulos/aparencia/skincare/matinal"   element={<RotinaMatinal />} />
           <Route path="/modulos/aparencia/skincare/noturna"   element={<RotinaNoturna />} />
-          <Route path="/modulos/aparencia/skincare/semanal"   element={<TratamentoSemanal />} />
+          <Route path="/modulos/aparencia/skincare/semanal"              element={<TratamentoSemanal />} />
+          <Route path="/modulos/aparencia/tratamentos"                  element={<TratamentosList />} />
+          <Route path="/modulos/aparencia/tratamentos/anti-acne"        element={<TratamentoAntiAcne />} />
+          <Route path="/modulos/aparencia/tratamentos/anti-manchas"     element={<TratamentoAntiManchas />} />
+          <Route path="/modulos/aparencia/tratamentos/anti-idade"       element={<TratamentoAntiIdade />} />
+          <Route path="/modulos/aparencia/corporais"                    element={<CorporaisList />} />
+          <Route path="/modulos/aparencia/corporais/hidratacao"         element={<HidratacaoCorporal />} />
+          <Route path="/modulos/aparencia/corporais/esfoliacao"         element={<EsfoliacaoCorporal />} />
+          <Route path="/modulos/aparencia/corporais/capilar"            element={<CuidadoCapilar />} />
         </Route>
       </Routes>
 
