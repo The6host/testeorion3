@@ -232,7 +232,7 @@ export default function Perfil() {
                 <>
                   <polygon
                     points={radarPts.map((p, i) => {
-                      const r = (attrs[ATTRIBUTE_KEYS[i]] / 100) * RADAR_OUTER_R
+                      const r = Math.sqrt(attrs[ATTRIBUTE_KEYS[i]] / 100) * RADAR_OUTER_R
                       return `${RADAR_CX + r * p.cos},${RADAR_CY + r * p.sin}`
                     }).join(' ')}
                     fill={PUR}
@@ -244,7 +244,7 @@ export default function Perfil() {
                   {radarPts.map((p, i) => {
                     const val = attrs[ATTRIBUTE_KEYS[i]]
                     if (!val) return null
-                    const r = (val / 100) * RADAR_OUTER_R
+                    const r = Math.sqrt(val / 100) * RADAR_OUTER_R
                     return <circle key={i} cx={RADAR_CX + r * p.cos} cy={RADAR_CY + r * p.sin} r={3} fill={PUR} />
                   })}
                 </>
