@@ -7,9 +7,6 @@ import {
   Heart, Droplets, Dumbbell, Brain, Target, Zap, Eye, Users,
   Lightbulb, Palette, Medal,
 } from 'lucide-react'
-import {
-  Radar, RadarChart, PolarGrid, PolarAngleAxis, ResponsiveContainer,
-} from 'recharts'
 import BottomNav from './BottomNav'
 import { getInitials } from '../lib/utils'
 import RankBadge from './RankBadge'
@@ -77,21 +74,6 @@ const fadeUp = (delay = 0) => ({
   transition: { duration: 0.45, ease: [0.22, 1, 0.36, 1], delay },
 })
 
-function RadarTick({ x, y, payload }) {
-  return (
-    <text
-      x={x} y={y}
-      textAnchor="middle"
-      dominantBaseline="central"
-      fill={MUTED}
-      fontSize={11}
-      fontWeight={600}
-    >
-      {payload.value}
-    </text>
-  )
-}
-
 export default function Perfil() {
   const [activeTheme, setActiveTheme] = useState('Padrão')
 
@@ -111,6 +93,13 @@ export default function Perfil() {
     value:    attrs[key],
     fullMark: MAX_ATTRIBUTE_VALUE,
   }))
+
+  const hasAnyValue = ATTRIBUTE_KEYS.some(k => attrs[k] > 0)
+  const RADAR_CX = 130, RADAR_CY = 130, RADAR_OUTER_R = 90
+  const radarPts = ATTRIBUTE_KEYS.map((_, i) => {
+    const rad = (Math.PI / 180) * (-90 + i * 45)
+    return { cos: Math.cos(rad), sin: Math.sin(rad) }
+  })
 
   const displayStats = [
     { Icon: Flame,  label: 'Dias de Streak', value: streak  },
@@ -219,20 +208,59 @@ export default function Perfil() {
           </div>
 
           <div style={{ position: 'relative' }}>
-            <ResponsiveContainer width="100%" height={220}>
-              <RadarChart data={radarData} margin={{ top: 10, right: 20, bottom: 10, left: 20 }}>
-                <PolarGrid stroke="#222222" />
-                <PolarAngleAxis dataKey="subject" tick={<RadarTick />} />
-                <Radar
-                  dataKey="value"
-                  stroke={PUR}
-                  fill={PUR}
-                  fillOpacity={0.2}
-                  strokeWidth={2}
-                  dot={{ fill: PUR, r: 3, strokeWidth: 0 }}
+            <svg viewBox="0 0 260 260" width="100%" height={220} style={{ overflow: 'visible' }}>
+              {[0.25, 0.5, 0.75, 1].map(pct => (
+                <polygon
+                  key={pct}
+                  points={radarPts.map(p => `${RADAR_CX + RADAR_OUTER_R * pct * p.cos},${RADAR_CY + RADAR_OUTER_R * pct * p.sin}`).join(' ')}
+                  fill="none"
+                  stroke="#222222"
+                  strokeWidth={0.8}
                 />
-              </RadarChart>
-            </ResponsiveContainer>
+              ))}
+              {radarPts.map((p, i) => (
+                <line
+                  key={i}
+                  x1={RADAR_CX} y1={RADAR_CY}
+                  x2={RADAR_CX + RADAR_OUTER_R * p.cos}
+                  y2={RADAR_CY + RADAR_OUTER_R * p.sin}
+                  stroke="#2a2a2a"
+                  strokeWidth={0.5}
+                />
+              ))}
+              {hasAnyValue && (
+                <>
+                  <polygon
+                    points={radarPts.map((p, i) => {
+                      const r = (attrs[ATTRIBUTE_KEYS[i]] / 100) * RADAR_OUTER_R
+                      return `${RADAR_CX + r * p.cos},${RADAR_CY + r * p.sin}`
+                    }).join(' ')}
+                    fill={PUR}
+                    fillOpacity={0.25}
+                    stroke={PUR}
+                    strokeWidth={2}
+                    strokeLinejoin="round"
+                  />
+                  {radarPts.map((p, i) => {
+                    const val = attrs[ATTRIBUTE_KEYS[i]]
+                    if (!val) return null
+                    const r = (val / 100) * RADAR_OUTER_R
+                    return <circle key={i} cx={RADAR_CX + r * p.cos} cy={RADAR_CY + r * p.sin} r={3} fill={PUR} />
+                  })}
+                </>
+              )}
+              {radarPts.map((p, i) => {
+                const lx = RADAR_CX + (RADAR_OUTER_R + 22) * p.cos
+                const ly = RADAR_CY + (RADAR_OUTER_R + 22) * p.sin
+                const anchor = p.cos > 0.1 ? 'start' : p.cos < -0.1 ? 'end' : 'middle'
+                const baseline = p.sin > 0.1 ? 'hanging' : p.sin < -0.1 ? 'auto' : 'middle'
+                return (
+                  <text key={i} x={lx} y={ly} textAnchor={anchor} dominantBaseline={baseline} fill={MUTED} fontSize={11} fontWeight={600}>
+                    {ATTRIBUTE_META[ATTRIBUTE_KEYS[i]].label}
+                  </text>
+                )
+              })}
+            </svg>
             <div style={{
               position: 'absolute', top: '50%', left: '50%',
               transform: 'translate(-50%, -46%)',
