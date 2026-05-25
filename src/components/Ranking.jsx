@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useUserDataContext } from '../context/UserDataContext'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Trophy, Users, Info, TrendingUp, TrendingDown, Crown, Star, Sprout } from 'lucide-react'
 import BottomNav from './BottomNav'
@@ -251,8 +252,9 @@ function PlayerRow({ player, pos, avatarIndex, delay }) {
 export default function Ranking() {
   const [mainTab, setMainTab] = useState('Global')
   const [timeTab, setTimeTab] = useState('Total')
+  const { profile } = useUserDataContext()
 
-  const USER_XP  = 0
+  const USER_XP  = profile?.total_xp ?? 0
   const userRank = getRankByXP(USER_XP)
   const nextRank = getNextRank(USER_XP)
   const rankPct  = Math.round(getRankProgress(USER_XP))
