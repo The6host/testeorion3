@@ -1,4 +1,4 @@
-import { TrendingUp, Flame, Target, Zap } from 'lucide-react'
+import { TrendingUp, Flame, Target, Zap, Sprout, Compass, Mountain, Sparkles } from 'lucide-react'
 
 export const WORKOUT_PLAN_META = {
   'Ganhar Massa Muscular': {
@@ -40,6 +40,46 @@ export const WORKOUT_PLAN_META = {
     glowColor:   '#F59E0B18',
     iconBg:      '#1a1200',
     longDescription: 'Treino equilibrado para manutenção do condicionamento',
+  },
+  'Calistenia Iniciante': {
+    Icon:        Sprout,
+    color:       '#84CC16',
+    colorBg:     '#84CC1620',
+    headerBg:    'linear-gradient(135deg, #0a1400 0%, #050900 100%)',
+    headerBorder:'#84CC1633',
+    glowColor:   '#84CC1618',
+    iconBg:      '#0a1400',
+    longDescription: 'Construa base de força com peso corporal e padrões fundamentais',
+  },
+  'Calistenia Intermediária': {
+    Icon:        Compass,
+    color:       '#06B6D4',
+    colorBg:     '#06B6D420',
+    headerBg:    'linear-gradient(135deg, #001a20 0%, #000d14 100%)',
+    headerBorder:'#06B6D433',
+    glowColor:   '#06B6D418',
+    iconBg:      '#001a20',
+    longDescription: 'Movimentos completos com variações unilaterais e progressões',
+  },
+  'Calistenia Avançada': {
+    Icon:        Mountain,
+    color:       '#EA580C',
+    colorBg:     '#EA580C20',
+    headerBg:    'linear-gradient(135deg, #1a0800 0%, #0d0400 100%)',
+    headerBorder:'#EA580C33',
+    glowColor:   '#EA580C18',
+    iconBg:      '#1a0800',
+    longDescription: 'Alto volume e intensidade com introdução a movimentos de elite',
+  },
+  'Skill Work': {
+    Icon:        Sparkles,
+    color:       '#EC4899',
+    colorBg:     '#EC489920',
+    headerBg:    'linear-gradient(135deg, #1a0814 0%, #0d050e 100%)',
+    headerBorder:'#EC489933',
+    glowColor:   '#EC489918',
+    iconBg:      '#1a0814',
+    longDescription: 'Domine as 4 skills lendárias: Handstand, Planche, Front Lever e Muscle-up',
   },
 }
 

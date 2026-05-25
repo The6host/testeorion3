@@ -501,11 +501,13 @@ export async function completeRoutine(routine) {
 
 // ───────── ACADEMIA ─────────
 
-export async function fetchWorkoutPlans() {
-  const { data, error } = await supabase
+export async function fetchWorkoutPlans(module = null) {
+  let query = supabase
     .from('workout_plans')
     .select('*')
     .order('display_order', { ascending: true })
+  if (module) query = query.eq('module', module)
+  const { data, error } = await query
   if (error) { console.error('Erro ao buscar workout_plans:', error); return [] }
   return data || []
 }
@@ -547,12 +549,13 @@ export async function fetchTodayExerciseCompletions() {
   return data || []
 }
 
-export async function selectWorkoutPlan(planId) {
+export async function selectWorkoutPlan(planId, module = 'academia') {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return false
+  const column = module === 'calistenia' ? 'current_calisthenics_plan_id' : 'current_workout_plan_id'
   const { error } = await supabase
     .from('profiles')
-    .update({ current_workout_plan_id: planId, updated_at: new Date().toISOString() })
+    .update({ [column]: planId, updated_at: new Date().toISOString() })
     .eq('id', user.id)
   if (error) { console.error('Erro ao selecionar planilha:', error); return false }
   return true
@@ -606,6 +609,29 @@ export async function uncompleteExercise(exerciseId, planXpPerExercise) {
   return { ok: true }
 }
 
+async function adjustCalisthenicsAttributes(amount) {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return
+
+  const { data: currentStats, error: fetchError } = await supabase
+    .from('user_stats')
+    .select('*')
+    .eq('user_id', user.id)
+    .single()
+
+  if (fetchError || !currentStats) return
+
+  const newAgilidade  = Math.max(MIN_ATTRIBUTE_VALUE, Math.min(MAX_ATTRIBUTE_VALUE, (currentStats.agilidade  || 0) + amount))
+  const newVitalidade = Math.max(MIN_ATTRIBUTE_VALUE, Math.min(MAX_ATTRIBUTE_VALUE, (currentStats.vitalidade || 0) + amount))
+
+  const { error } = await supabase
+    .from('user_stats')
+    .update({ agilidade: newAgilidade, vitalidade: newVitalidade, updated_at: new Date().toISOString() })
+    .eq('user_id', user.id)
+
+  if (error) console.error('Erro ao ajustar atributos calistenia:', error)
+}
+
 async function adjustFitnessAttributes(amount) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return
@@ -629,7 +655,7 @@ async function adjustFitnessAttributes(amount) {
   if (error) console.error('Erro ao ajustar atributos fitness:', error)
 }
 
-export async function completeWorkoutDay(dayId, planBonusXp) {
+export async function completeWorkoutDay(dayId, planBonusXp, planModule = 'academia') {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return null
 
@@ -642,7 +668,11 @@ export async function completeWorkoutDay(dayId, planBonusXp) {
   if (error) { console.error('Erro ao registrar workout_day_completion:', error); return null }
 
   await addXP(planBonusXp)
-  await adjustFitnessAttributes(+1)
+  if (planModule === 'calistenia') {
+    await adjustCalisthenicsAttributes(+1)
+  } else {
+    await adjustFitnessAttributes(+1)
+  }
   await updateStreakAfterCompletion()
   return data
 }

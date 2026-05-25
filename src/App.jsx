@@ -30,6 +30,7 @@ import Modulos          from './components/Modulos'
 import Corrida          from './components/modulos/Corrida'
 import Treino           from './components/modulos/Treino'
 import Academia         from './components/modulos/Academia'
+import Calistenia       from './components/modulos/Calistenia'
 import Aparencia        from './components/modulos/Aparencia'
 import MassagensFaciais from './components/modulos/MassagensFaciais'
 import GuaSha           from './components/modulos/rotinas/GuaSha'
@@ -227,6 +228,7 @@ export default function App() {
           <Route path="/modulos/corrida"                      element={<Corrida />} />
           <Route path="/modulos/treino"                       element={<Treino />} />
           <Route path="/modulos/academia"                     element={<Academia />} />
+          <Route path="/modulos/calistenia"                   element={<Calistenia />} />
           <Route path="/modulos/aparencia"                    element={<Aparencia />} />
           <Route path="/modulos/aparencia/massagens"          element={<MassagensFaciais />} />
           <Route path="/modulos/aparencia/massagens/guasha"   element={<GuaSha />} />

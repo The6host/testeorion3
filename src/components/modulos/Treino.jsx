@@ -38,7 +38,7 @@ const TYPES = [
     name: 'Calistenia',
     desc: 'Exercícios com peso corporal',
     pts: 'Pontos = reps × dificuldade',
-    path: null,
+    path: '/modulos/calistenia',
   },
 ]
 
