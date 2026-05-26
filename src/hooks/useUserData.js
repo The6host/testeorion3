@@ -226,6 +226,36 @@ export function useUserData() {
     }))
   }
 
+  function optimisticUpdateDisplayName(newName) {
+    fetchGenRef.current += 1
+    setData(prev => ({
+      ...prev,
+      profile: prev.profile ? { ...prev.profile, display_name: newName } : prev.profile,
+    }))
+  }
+
+  function revertOptimisticDisplayName(oldName) {
+    setData(prev => ({
+      ...prev,
+      profile: prev.profile ? { ...prev.profile, display_name: oldName } : prev.profile,
+    }))
+  }
+
+  function optimisticUpdateAvatar(newUrl) {
+    fetchGenRef.current += 1
+    setData(prev => ({
+      ...prev,
+      profile: prev.profile ? { ...prev.profile, avatar_url: newUrl } : prev.profile,
+    }))
+  }
+
+  function revertOptimisticAvatar(oldUrl) {
+    setData(prev => ({
+      ...prev,
+      profile: prev.profile ? { ...prev.profile, avatar_url: oldUrl } : prev.profile,
+    }))
+  }
+
   return {
     profile:                    data.profile,
     stats:                      data.stats,
@@ -250,5 +280,9 @@ export function useUserData() {
     revertOptimisticRoutineCompletion,
     optimisticCompleteWorkoutDay,
     revertOptimisticWorkoutDayCompletion,
+    optimisticUpdateDisplayName,
+    revertOptimisticDisplayName,
+    optimisticUpdateAvatar,
+    revertOptimisticAvatar,
   }
 }

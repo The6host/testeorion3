@@ -792,6 +792,116 @@ export async function fetchTodayDayCompletionsWithXP() {
   return data || []
 }
 
+// ───────── PERFIL ─────────
+
+export async function updateDisplayName(newName) {
+  const trimmed = newName.trim()
+  if (!/^[a-zA-Z0-9_]{3,20}$/.test(trimmed)) return null
+
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return null
+
+  const { data, error } = await supabase
+    .from('profiles')
+    .update({ display_name: trimmed, updated_at: new Date().toISOString() })
+    .eq('id', user.id)
+    .select()
+    .single()
+
+  if (error) { console.error('Erro ao atualizar display_name:', error); return null }
+  return data
+}
+
+async function resizeToWebP(file) {
+  return new Promise((resolve, reject) => {
+    const img = new Image()
+    const url = URL.createObjectURL(file)
+    img.onload = () => {
+      URL.revokeObjectURL(url)
+      const SIZE = 400
+      const canvas = document.createElement('canvas')
+      canvas.width  = SIZE
+      canvas.height = SIZE
+      const ctx = canvas.getContext('2d')
+      const min = Math.min(img.width, img.height)
+      const sx  = (img.width  - min) / 2
+      const sy  = (img.height - min) / 2
+      ctx.drawImage(img, sx, sy, min, min, 0, 0, SIZE, SIZE)
+      canvas.toBlob(
+        blob => blob ? resolve(blob) : reject(new Error('Falha ao converter imagem')),
+        'image/webp',
+        0.85
+      )
+    }
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('Falha ao carregar imagem')) }
+    img.src = url
+  })
+}
+
+export async function uploadAvatar(file) {
+  if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+    return { error: 'Formato inválido. Use JPG, PNG ou WebP' }
+  }
+  if (file.size > 2097152) {
+    return { error: 'Arquivo muito grande. Máximo 2MB' }
+  }
+
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Erro ao enviar. Tente novamente' }
+
+  let blob
+  try {
+    blob = await resizeToWebP(file)
+  } catch (err) {
+    console.error('Erro ao redimensionar imagem:', err)
+    return { error: 'Erro ao enviar. Tente novamente' }
+  }
+
+  const path = `${user.id}/avatar.webp`
+  const { error: uploadError } = await supabase.storage
+    .from('avatars')
+    .upload(path, blob, { upsert: true, contentType: 'image/webp' })
+
+  if (uploadError) {
+    console.error('Erro ao fazer upload do avatar:', uploadError)
+    return { error: 'Erro ao enviar. Tente novamente' }
+  }
+
+  const { data: urlData } = supabase.storage.from('avatars').getPublicUrl(path)
+  const newUrl = `${urlData.publicUrl}?v=${Date.now()}`
+
+  const { error: updateError } = await supabase
+    .from('profiles')
+    .update({ avatar_url: newUrl, updated_at: new Date().toISOString() })
+    .eq('id', user.id)
+
+  if (updateError) {
+    console.error('Erro ao atualizar avatar_url:', updateError)
+    return { error: 'Erro ao enviar. Tente novamente' }
+  }
+
+  return { url: newUrl }
+}
+
+export async function removeAvatar() {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return false
+
+  const { error: storageError } = await supabase.storage
+    .from('avatars')
+    .remove([`${user.id}/avatar.webp`])
+
+  if (storageError) console.error('Erro ao remover avatar do storage:', storageError)
+
+  const { error } = await supabase
+    .from('profiles')
+    .update({ avatar_url: null, updated_at: new Date().toISOString() })
+    .eq('id', user.id)
+
+  if (error) { console.error('Erro ao zerar avatar_url:', error); return false }
+  return true
+}
+
 // ───────── CRIAR ─────────
 
 export async function createTask({ name, category, xp_value }) {

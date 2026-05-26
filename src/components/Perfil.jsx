@@ -1,13 +1,14 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { motion } from 'framer-motion'
 import {
   Share2, Settings, Camera, Pencil, RefreshCw,
   ChevronRight, BarChart2, Calendar, Check,
   Flame, Trophy, MapPin, Shield,
   Heart, Droplets, Dumbbell, Brain, Target, Zap, Eye, Users,
-  Lightbulb, Palette, Medal,
+  Lightbulb, Palette, Medal, Loader2,
 } from 'lucide-react'
 import BottomNav from './BottomNav'
+import Avatar from './Avatar'
 import { getInitials } from '../lib/utils'
 import RankBadge from './RankBadge'
 import {
@@ -15,6 +16,7 @@ import {
   getAttributesSum, getAttributesAverage, getEmptyAttributes,
 } from '../lib/userStats'
 import { useUserDataContext } from '../context/UserDataContext'
+import { updateDisplayName, uploadAvatar, removeAvatar } from '../lib/userData'
 
 /* ── Design tokens ── */
 const PUR   = '#7C3AED'
@@ -75,9 +77,22 @@ const fadeUp = (delay = 0) => ({
 })
 
 export default function Perfil() {
-  const [activeTheme, setActiveTheme] = useState('Padrão')
+  const [activeTheme,    setActiveTheme]    = useState('Padrão')
+  const [editingName,    setEditingName]    = useState(false)
+  const [nameValue,      setNameValue]      = useState('')
+  const [nameError,      setNameError]      = useState('')
+  const [savingName,     setSavingName]     = useState(false)
+  const [uploadingAvatar, setUploadingAvatar] = useState(false)
+  const [avatarError,    setAvatarError]    = useState('')
+  const fileInputRef = useRef(null)
+  const savingRef    = useRef(false)
 
-  const { profile, stats } = useUserDataContext()
+  const {
+    profile, stats,
+    optimisticUpdateDisplayName, revertOptimisticDisplayName,
+    optimisticUpdateAvatar, revertOptimisticAvatar,
+    debouncedReload,
+  } = useUserDataContext()
   const level    = profile?.level        || 1
   const totalXP  = profile?.total_xp     || 0
   const xpAtual  = totalXP % 500
@@ -108,6 +123,104 @@ export default function Perfil() {
     { Icon: Shield, label: 'Vitórias Arena', value: '0'     },
   ]
 
+  function handleStartEditName() {
+    setNameValue(profile?.display_name || '')
+    setNameError('')
+    setEditingName(true)
+  }
+
+  function handleCancelEdit() {
+    if (savingRef.current) return
+    setEditingName(false)
+    setNameError('')
+  }
+
+  async function handleSaveName() {
+    const trimmed = nameValue.trim()
+    if (trimmed.length < 3)                          { setNameError('Mínimo 3 caracteres'); return }
+    if (trimmed.length > 20)                         { setNameError('Máximo 20 caracteres'); return }
+    if (!/^[a-zA-Z0-9_]{3,20}$/.test(trimmed))      { setNameError('Apenas letras, números e _'); return }
+
+    savingRef.current = true
+    setSavingName(true)
+    const oldName = profile?.display_name
+    optimisticUpdateDisplayName(trimmed)
+    setEditingName(false)
+
+    try {
+      const result = await updateDisplayName(trimmed)
+      if (!result) {
+        revertOptimisticDisplayName(oldName)
+        setNameValue(trimmed)
+        setEditingName(true)
+        setNameError('Erro ao salvar. Tente novamente.')
+      } else {
+        debouncedReload()
+      }
+    } catch (err) {
+      console.error('Erro ao salvar display_name:', err)
+      revertOptimisticDisplayName(oldName)
+      setNameValue(trimmed)
+      setEditingName(true)
+      setNameError('Erro ao salvar. Tente novamente.')
+    } finally {
+      savingRef.current = false
+      setSavingName(false)
+    }
+  }
+
+  function handleKeyDown(e) {
+    if (e.key === 'Enter')  handleSaveName()
+    if (e.key === 'Escape') handleCancelEdit()
+  }
+
+  function handleAvatarClick() {
+    if (!uploadingAvatar && fileInputRef.current) fileInputRef.current.click()
+  }
+
+  async function handleFileChange(e) {
+    const file = e.target.files?.[0]
+    e.target.value = ''
+    if (!file) return
+
+    setAvatarError('')
+    setUploadingAvatar(true)
+
+    try {
+      const result = await uploadAvatar(file)
+      if (result.error) {
+        setAvatarError(result.error)
+      } else {
+        optimisticUpdateAvatar(result.url)
+        debouncedReload()
+      }
+    } catch (err) {
+      console.error('Erro no upload de avatar:', err)
+      setAvatarError('Erro ao enviar. Tente novamente')
+    } finally {
+      setUploadingAvatar(false)
+    }
+  }
+
+  async function handleRemoveAvatar() {
+    if (!window.confirm('Remover foto de perfil?')) return
+    const oldUrl = profile?.avatar_url
+    optimisticUpdateAvatar(null)
+    try {
+      const ok = await removeAvatar()
+      if (!ok) {
+        revertOptimisticAvatar(oldUrl)
+        setAvatarError('Erro ao remover. Tente novamente.')
+      } else {
+        debouncedReload()
+      }
+    } catch (err) {
+      console.error('Erro ao remover avatar:', err)
+      revertOptimisticAvatar(oldUrl)
+      setAvatarError('Erro ao remover. Tente novamente.')
+    }
+  }
+
   return (
     <div style={{ minHeight: '100dvh', background: '#080808', color: '#fff' }}>
       <div style={{ maxWidth: 520, margin: '0 auto', padding: '24px 16px 88px' }}>
@@ -131,32 +244,85 @@ export default function Perfil() {
         {/* User Card */}
         <motion.div {...fadeUp(0.06)} style={{ ...CARD, marginBottom: 10 }}>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: 16 }}>
-            <div style={{ position: 'relative', marginBottom: 12 }}>
-              <div style={{
-                width: 74, height: 74, borderRadius: 18,
-                background: `linear-gradient(135deg, ${PUR}, #6D28D9)`,
-                border: `3px solid ${PUR}44`,
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: 24, fontWeight: 900, color: '#fff',
-              }}>
-                {getInitials(profile?.display_name || '')}
-              </div>
-              <div style={{
-                position: 'absolute', bottom: -4, right: -4,
-                width: 24, height: 24, borderRadius: '50%',
-                background: PUR, border: '2px solid #080808',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-              }}>
-                <Camera size={11} color="#fff" />
-              </div>
+            <div style={{ marginBottom: 12 }}>
+              <Avatar
+                size="lg"
+                src={profile?.avatar_url}
+                name={profile?.display_name || profile?.username || ''}
+                onClick={handleAvatarClick}
+                loading={uploadingAvatar}
+                showCameraIcon
+              />
+              <input
+                type="file"
+                ref={fileInputRef}
+                accept="image/jpeg,image/png,image/webp"
+                style={{ display: 'none' }}
+                onChange={handleFileChange}
+              />
             </div>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-              <span style={{ fontSize: 17, fontWeight: 900, color: '#fff' }}>{profile?.display_name || 'Usuário'}</span>
-              <button style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 2, display: 'flex' }}>
-                <Pencil size={13} color={MUTED} />
+            {avatarError && (
+              <div style={{ fontSize: 11, color: '#EF4444', marginBottom: 4, textAlign: 'center' }}>
+                {avatarError}
+              </div>
+            )}
+            {profile?.avatar_url && !uploadingAvatar && (
+              <button
+                onClick={handleRemoveAvatar}
+                style={{
+                  background: 'none', border: 'none', cursor: 'pointer',
+                  fontSize: 11, color: MUTED, marginBottom: 4, padding: '2px 0',
+                }}
+              >
+                Remover foto
               </button>
-            </div>
+            )}
+
+            {editingName ? (
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: 4 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <input
+                    autoFocus
+                    value={nameValue}
+                    onChange={e => { setNameValue(e.target.value); setNameError('') }}
+                    onKeyDown={handleKeyDown}
+                    onBlur={handleCancelEdit}
+                    maxLength={20}
+                    style={{
+                      background: '#1a1a1a', border: `1px solid ${PUR}66`,
+                      borderRadius: 8, padding: '4px 10px',
+                      fontSize: 17, fontWeight: 900, color: '#fff',
+                      outline: 'none', width: 160,
+                    }}
+                  />
+                  {savingName && (
+                    <motion.div
+                      animate={{ rotate: 360 }}
+                      transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+                      style={{ display: 'flex' }}
+                    >
+                      <Loader2 size={14} color={PUR} />
+                    </motion.div>
+                  )}
+                </div>
+                {nameError && (
+                  <div style={{ fontSize: 11, color: '#EF4444', marginTop: 4 }}>
+                    {nameError}
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                <span style={{ fontSize: 17, fontWeight: 900, color: '#fff' }}>{profile?.display_name || 'Usuário'}</span>
+                <button
+                  onClick={handleStartEditName}
+                  style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 2, display: 'flex' }}
+                >
+                  <Pencil size={13} color={MUTED} />
+                </button>
+              </div>
+            )}
             <div style={{ fontSize: 12, color: MUTED, marginBottom: 12 }}>
               @{profile?.username || 'usuario'}
             </div>

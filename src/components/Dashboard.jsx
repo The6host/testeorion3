@@ -13,6 +13,7 @@ import { useUserDataContext } from '../context/UserDataContext'
 import { useDailySuggestions } from '../hooks/useDailySuggestions'
 import { acceptSuggestion } from '../lib/userData'
 import { getInitials } from '../lib/utils'
+import Avatar from './Avatar'
 import { getTodayKey, getLocalDateKey } from '../lib/dailySuggestions'
 
 /* ── Design tokens ── */
@@ -40,7 +41,7 @@ const fadeUp = (delay = 0) => ({
 })
 
 /* ══ HEADER ══ */
-function AppHeader({ displayName, totalXP, level, xpAtual, onLogout, refreshing }) {
+function AppHeader({ displayName, avatarUrl, totalXP, level, xpAtual, onLogout, refreshing }) {
   const xpPct = (xpAtual / 500) * 100
   return (
     <div style={{
@@ -51,14 +52,7 @@ function AppHeader({ displayName, totalXP, level, xpAtual, onLogout, refreshing 
       borderBottom: '1px solid #1a1a1a', padding: '12px 20px 10px',
     }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 10 }}>
-        <div style={{
-          width: 38, height: 38, borderRadius: 10, flexShrink: 0,
-          background: PUR, border: `2px solid ${PUR}55`,
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontSize: 13, fontWeight: 900, color: '#fff',
-        }}>
-          {getInitials(displayName)}
-        </div>
+        <Avatar size="sm" src={avatarUrl} name={displayName} />
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ fontSize: 14, fontWeight: 800, color: '#fff', lineHeight: 1.2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
             {displayName}
@@ -371,6 +365,7 @@ export default function Dashboard() {
     >
       <AppHeader
         displayName={displayName}
+        avatarUrl={profile?.avatar_url}
         totalXP={totalXP}
         level={level}
         xpAtual={xpAtual}
