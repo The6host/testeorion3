@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import {
@@ -6,6 +5,8 @@ import {
   MapPin, Dumbbell, Sparkles,
 } from 'lucide-react'
 import BottomNav from './BottomNav'
+import { useUserDataContext } from '../context/UserDataContext'
+import { addFavorite, removeFavorite } from '../lib/userData'
 
 /* ── Design tokens ── */
 const PUR   = '#7C3AED'
@@ -59,16 +60,30 @@ function fmtValue(current, unit) {
 }
 
 export default function Modulos() {
-  const navigate   = useNavigate()
-  const [favorites, setFavorites] = useState(new Set())
+  const navigate = useNavigate()
+  const {
+    favorites,
+    monthlyStats,
+    optimisticAddFavorite,
+    revertOptimisticAddFavorite,
+    optimisticRemoveFavorite,
+    revertOptimisticRemoveFavorite,
+    debouncedReload,
+  } = useUserDataContext()
 
-  function toggleFavorite(id) {
-    setFavorites(prev => {
-      const next = new Set(prev)
-      if (next.has(id)) next.delete(id)
-      else next.add(id)
-      return next
-    })
+  async function toggleFavorite(modId) {
+    const isFav = favorites.includes(modId)
+    if (isFav) {
+      optimisticRemoveFavorite(modId)
+      const ok = await removeFavorite(modId)
+      if (!ok) revertOptimisticRemoveFavorite(modId)
+      else debouncedReload()
+    } else {
+      optimisticAddFavorite(modId)
+      const ok = await addFavorite(modId)
+      if (!ok) revertOptimisticAddFavorite(modId)
+      else debouncedReload()
+    }
   }
 
   return (
@@ -102,8 +117,27 @@ export default function Modulos() {
 
         {/* ── Module list ── */}
         {MODULES.map((mod, i) => {
-          const isFav = favorites.has(mod.id)
-          const progress = pct(mod.current, mod.total)
+          const isFav = favorites.includes(mod.id)
+
+          // Métricas reais por módulo
+          let metricCurrent, metricTotal, metricUnit, metricPct, metricXP, metricSessions
+          if (mod.id === 2) {
+            const t = monthlyStats?.training || { xpTotal: 0, sessionsCount: 0, exercisesCount: 0 }
+            metricCurrent  = t.exercisesCount
+            metricTotal    = 80
+            metricUnit     = 'exercício'
+            metricPct      = Math.min(100, Math.round((t.exercisesCount / 80) * 100))
+            metricXP       = t.xpTotal
+            metricSessions = t.sessionsCount
+          } else if (mod.id === 3) {
+            const a = monthlyStats?.appearance || { xpTotal: 0, routinesCount: 0 }
+            metricCurrent  = a.routinesCount
+            metricTotal    = 60
+            metricUnit     = 'rotina'
+            metricPct      = Math.min(100, Math.round((a.routinesCount / 60) * 100))
+            metricXP       = a.xpTotal
+            metricSessions = a.routinesCount
+          }
 
           return (
             <motion.div
@@ -144,34 +178,47 @@ export default function Modulos() {
                 </div>
               </div>
 
-              {/* Progress row */}
-              <div style={{ marginBottom: mod.givesPts ? 8 : 12 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-                  <span style={{ fontSize: 12, color: MUTED, fontWeight: 600 }}>
-                    {fmtValue(mod.current, mod.unit)}/{mod.total} {mod.unit}
-                  </span>
-                  <span style={{ fontSize: 12, fontWeight: 800, color: GREEN }}>
-                    {progress}%
+              {/* Progress + stats: condicional por módulo */}
+              {mod.id === 1 ? (
+                <div style={{ textAlign: 'center', marginBottom: 12 }}>
+                  <span style={{
+                    display: 'inline-block',
+                    fontSize: 11, color: MUTED,
+                    background: '#1a1a1a', borderRadius: 6, padding: '4px 10px',
+                  }}>
+                    Em breve
                   </span>
                 </div>
-                <div style={{ height: 4, background: '#1e1e1e', borderRadius: 99, overflow: 'hidden' }}>
-                  <motion.div
-                    initial={{ width: 0 }}
-                    animate={{ width: `${progress}%` }}
-                    transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1], delay: 0.2 + i * 0.06 }}
-                    style={{
-                      height: '100%', borderRadius: 99, background: GREEN,
-                      minWidth: progress > 0 ? 4 : 0,
-                    }}
-                  />
-                </div>
-              </div>
+              ) : (
+                <>
+                  {/* Progress row */}
+                  <div style={{ marginBottom: 8 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                      <span style={{ fontSize: 12, color: MUTED, fontWeight: 600 }}>
+                        {metricCurrent}/{metricTotal} {metricUnit}
+                      </span>
+                      <span style={{ fontSize: 12, fontWeight: 800, color: GREEN }}>
+                        {metricPct}%
+                      </span>
+                    </div>
+                    <div style={{ height: 4, background: '#1e1e1e', borderRadius: 99, overflow: 'hidden' }}>
+                      <motion.div
+                        initial={{ width: 0 }}
+                        animate={{ width: `${metricPct}%` }}
+                        transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1], delay: 0.2 + i * 0.06 }}
+                        style={{
+                          height: '100%', borderRadius: 99, background: GREEN,
+                          minWidth: metricPct > 0 ? 4 : 0,
+                        }}
+                      />
+                    </div>
+                  </div>
 
-              {/* Points row (only for modules that give pts) */}
-              {mod.givesPts && (
-                <div style={{ fontSize: 11, color: MUTED, marginBottom: 12 }}>
-                  0 pts este mês • 0 sessões
-                </div>
+                  {/* Points row */}
+                  <div style={{ fontSize: 11, color: MUTED, marginBottom: 12 }}>
+                    {metricXP} pts este mês • {metricSessions} {metricSessions === 1 ? 'sessão' : 'sessões'}
+                  </div>
+                </>
               )}
 
               {/* Divider + action buttons */}
@@ -196,23 +243,38 @@ export default function Modulos() {
                   {isFav ? 'Favoritado' : 'Favoritar'}
                 </button>
 
-                <button
-                  onClick={() => {
-                    if (mod.id === 1) navigate('/modulos/corrida')
-                    else if (mod.id === 2) navigate('/modulos/treino')
-                    else if (mod.id === 3) navigate('/modulos/aparencia')
-                  }}
-                  style={{
-                    flex: 1, padding: '8px 0', borderRadius: 8, border: 'none',
-                    cursor: 'pointer',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4,
-                    fontSize: 12, fontWeight: 700,
-                    background: '#1a1a2e',
-                    color: '#fff',
-                  }}
-                >
-                  Abrir <ChevronRight size={14} />
-                </button>
+                {mod.id === 1 ? (
+                  <button
+                    disabled
+                    style={{
+                      flex: 1, padding: '8px 0', borderRadius: 8, border: 'none',
+                      cursor: 'not-allowed',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      fontSize: 12, fontWeight: 700,
+                      background: '#0f0f0f',
+                      color: MUTED,
+                    }}
+                  >
+                    Em breve
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => {
+                      if (mod.id === 2) navigate('/modulos/treino')
+                      else if (mod.id === 3) navigate('/modulos/aparencia')
+                    }}
+                    style={{
+                      flex: 1, padding: '8px 0', borderRadius: 8, border: 'none',
+                      cursor: 'pointer',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4,
+                      fontSize: 12, fontWeight: 700,
+                      background: '#1a1a2e',
+                      color: '#fff',
+                    }}
+                  >
+                    Abrir <ChevronRight size={14} />
+                  </button>
+                )}
               </div>
             </motion.div>
           )

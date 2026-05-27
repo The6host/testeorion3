@@ -3,7 +3,7 @@ import { fetchAllUserData } from '../lib/userData'
 import { supabase } from '../lib/supabase'
 
 export function useUserData() {
-  const [data,       setData]       = useState({ profile: null, stats: null, tasks: [], routineCompletions: [], exerciseCompletions: [], dayCompletions: [] })
+  const [data,       setData]       = useState({ profile: null, stats: null, tasks: [], routineCompletions: [], exerciseCompletions: [], dayCompletions: [], favorites: [], monthlyStats: { training: null, appearance: null } })
   const [loading,    setLoading]    = useState(true)
   const [refreshing, setRefreshing] = useState(false)
   const [error,      setError]      = useState(null)
@@ -256,6 +256,36 @@ export function useUserData() {
     }))
   }
 
+  function optimisticAddFavorite(moduleId) {
+    fetchGenRef.current += 1
+    setData(prev => ({
+      ...prev,
+      favorites: prev.favorites.includes(moduleId) ? prev.favorites : [...prev.favorites, moduleId],
+    }))
+  }
+
+  function revertOptimisticAddFavorite(moduleId) {
+    setData(prev => ({
+      ...prev,
+      favorites: prev.favorites.filter(id => id !== moduleId),
+    }))
+  }
+
+  function optimisticRemoveFavorite(moduleId) {
+    fetchGenRef.current += 1
+    setData(prev => ({
+      ...prev,
+      favorites: prev.favorites.filter(id => id !== moduleId),
+    }))
+  }
+
+  function revertOptimisticRemoveFavorite(moduleId) {
+    setData(prev => ({
+      ...prev,
+      favorites: prev.favorites.includes(moduleId) ? prev.favorites : [...prev.favorites, moduleId],
+    }))
+  }
+
   return {
     profile:                    data.profile,
     stats:                      data.stats,
@@ -263,6 +293,8 @@ export function useUserData() {
     routineCompletions:         data.routineCompletions,
     exerciseCompletions:        data.exerciseCompletions,
     dayCompletions:             data.dayCompletions,
+    favorites:                  data.favorites,
+    monthlyStats:               data.monthlyStats,
     loading,
     refreshing,
     error,
@@ -284,5 +316,9 @@ export function useUserData() {
     revertOptimisticDisplayName,
     optimisticUpdateAvatar,
     revertOptimisticAvatar,
+    optimisticAddFavorite,
+    revertOptimisticAddFavorite,
+    optimisticRemoveFavorite,
+    revertOptimisticRemoveFavorite,
   }
 }

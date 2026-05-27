@@ -133,17 +133,25 @@ export async function fetchAllUserData() {
   await expireOverdueTasks()
   await expireOverdueExerciseCompletions()
 
-  const [profileRaw, stats, tasks, routineCompletions, exerciseCompletions, dayCompletions] = await Promise.all([
+  const [
+    profileRaw, stats, tasks, routineCompletions,
+    exerciseCompletions, dayCompletions, favorites,
+    monthlyTraining, monthlyAppearance,
+  ] = await Promise.all([
     fetchProfile(),
     fetchUserStats(),
     fetchTasks(),
     fetchRoutineCompletions(),
     fetchTodayExerciseCompletionsWithXP(),
     fetchTodayDayCompletionsWithXP(),
+    fetchFavorites(),
+    fetchMonthlyTrainingStats(),
+    fetchMonthlyAppearanceStats(),
   ])
 
   const profile = await checkAndDecayStreak(profileRaw)
-  return { profile, stats, tasks, routineCompletions, exerciseCompletions, dayCompletions }
+  const monthlyStats = { training: monthlyTraining, appearance: monthlyAppearance }
+  return { profile, stats, tasks, routineCompletions, exerciseCompletions, dayCompletions, favorites, monthlyStats }
 }
 
 // ───────── SUGESTÕES ─────────
@@ -899,6 +907,133 @@ export async function removeAvatar() {
     .eq('id', user.id)
 
   if (error) { console.error('Erro ao zerar avatar_url:', error); return false }
+  return true
+}
+
+// ───────── MÉTRICAS MENSAIS ─────────
+
+function getMonthStartISO() {
+  const now = new Date()
+  return new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0, 0).toISOString()
+}
+
+export async function fetchMonthlyTrainingStats() {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { xpTotal: 0, sessionsCount: 0, exercisesCount: 0 }
+
+  const monthStart = getMonthStartISO()
+
+  const [{ data: exData, error: exError }, { data: dcData, error: dcError }] = await Promise.all([
+    supabase
+      .from('exercise_completions')
+      .select(`
+        completed_at,
+        exercise:workout_exercises (
+          day:workout_days (
+            plan:workout_plans ( xp_per_exercise )
+          )
+        )
+      `)
+      .eq('user_id', user.id)
+      .gte('completed_at', monthStart),
+
+    supabase
+      .from('workout_day_completions')
+      .select(`
+        completed_at,
+        day:workout_days (
+          plan:workout_plans ( xp_bonus_per_day )
+        )
+      `)
+      .eq('user_id', user.id)
+      .gte('completed_at', monthStart),
+  ])
+
+  if (exError) console.error('Erro ao buscar exercise_completions mensais:', exError)
+  if (dcError) console.error('Erro ao buscar workout_day_completions mensais:', dcError)
+
+  const exercisesCount  = (exData || []).length
+  const xpFromExercises = (exData || []).reduce((s, r) => s + (r.exercise?.day?.plan?.xp_per_exercise || 0), 0)
+  const xpFromDays      = (dcData || []).reduce((s, r) => s + (r.day?.plan?.xp_bonus_per_day || 0), 0)
+  const sessionsCount   = new Set((exData || []).map(r => getLocalDateKey(r.completed_at))).size
+
+  return { xpTotal: xpFromExercises + xpFromDays, sessionsCount, exercisesCount }
+}
+
+export async function fetchMonthlyAppearanceStats() {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { xpTotal: 0, routinesCount: 0 }
+
+  const monthStart = getMonthStartISO()
+
+  const { data, error } = await supabase
+    .from('routine_completions')
+    .select(`
+      completed_at,
+      routine:routines ( xp_value )
+    `)
+    .eq('user_id', user.id)
+    .gte('completed_at', monthStart)
+
+  if (error) { console.error('Erro ao buscar routine_completions mensais:', error); return { xpTotal: 0, routinesCount: 0 } }
+
+  const routinesCount = (data || []).length
+  const xpTotal       = (data || []).reduce((s, r) => s + (r.routine?.xp_value || 0), 0)
+
+  return { xpTotal, routinesCount }
+}
+
+// ───────── FAVORITOS ─────────
+
+const MODULE_SLUG_BY_ID = { 1: 'corrida', 2: 'treino', 3: 'aparencia' }
+const MODULE_ID_BY_SLUG = { corrida: 1, treino: 2, aparencia: 3 }
+
+export async function fetchFavorites() {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return []
+
+  const { data, error } = await supabase
+    .from('user_favorites')
+    .select('entity_id')
+    .eq('user_id', user.id)
+    .eq('entity_type', 'module')
+
+  if (error) { console.error('Erro ao buscar favoritos:', error); return [] }
+  return (data || []).map(r => MODULE_ID_BY_SLUG[r.entity_id]).filter(Boolean)
+}
+
+export async function addFavorite(moduleId) {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return false
+
+  const slug = MODULE_SLUG_BY_ID[moduleId]
+  if (!slug) return false
+
+  const { data, error } = await supabase
+    .from('user_favorites')
+    .insert({ user_id: user.id, entity_type: 'module', entity_id: slug })
+    .select()
+    .single()
+
+  if (error) { console.error('Erro ao adicionar favorito:', error); return false }
+  return true
+}
+
+export async function removeFavorite(moduleId) {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return false
+
+  const slug = MODULE_SLUG_BY_ID[moduleId]
+  if (!slug) return false
+
+  const { error } = await supabase
+    .from('user_favorites')
+    .delete()
+    .eq('user_id', user.id)
+    .eq('entity_type', 'module')
+    .eq('entity_id', slug)
+
+  if (error) { console.error('Erro ao remover favorito:', error); return false }
   return true
 }
 

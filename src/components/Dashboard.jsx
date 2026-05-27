@@ -5,6 +5,7 @@ import {
   Bell, LogOut, ChevronRight,
   Target, Trophy, Activity, Clock,
   Flame, Star, Sparkles,
+  MapPin, Dumbbell, Plus,
 } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import BottomNav from './BottomNav'
@@ -148,7 +149,7 @@ function CharacterCard({ level }) {
         >
           Ver Detalhes <ChevronRight size={14} />
         </button>
-        {['20 Evoluções', 'Sistema RPG'].map(t => (
+        {['6 Evoluções', 'Sistema RPG'].map(t => (
           <div key={t} style={{
             padding: '8px 10px', background: '#1a1a1a', border: '1px solid #2a2a2a',
             borderRadius: 8, fontSize: 11, fontWeight: 600, color: MUTED, whiteSpace: 'nowrap', cursor: 'pointer',
@@ -185,24 +186,72 @@ function StatsGrid({ tasksTodayCompleted, tasksTodayTotal, totalXP }) {
 }
 
 /* ══ MODULES ══ */
-function FavoriteModules() {
+const MODULE_INFO = {
+  1: { name: 'Corrida',   Icon: MapPin,    iconColor: '#10B981', iconBg: '#052e16', route: '/modulos/corrida'   },
+  2: { name: 'Treino',    Icon: Dumbbell,  iconColor: '#F97316', iconBg: '#1a0a00', route: '/modulos/treino'    },
+  3: { name: 'Aparência', Icon: Sparkles,  iconColor: '#EC4899', iconBg: '#1a0814', route: '/modulos/aparencia' },
+}
+
+function FavoriteModules({ favorites }) {
   const navigate = useNavigate()
+
+  if (!favorites || favorites.length === 0) {
+    return (
+      <motion.div {...fadeUp(0.26)} style={CARD}>
+        <div style={{ fontSize: 13, fontWeight: 800, color: '#fff', marginBottom: 14 }}>Módulos Favoritos</div>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10, padding: '4px 0' }}>
+          <div style={{ width: 40, height: 40, borderRadius: 10, background: '#1a1a2e', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Star size={18} color={PUR} />
+          </div>
+          <p style={{ fontSize: 13, color: MUTED, margin: 0 }}>Nenhum módulo favorito ainda</p>
+          <button
+            onClick={() => navigate('/modulos')}
+            style={{
+              marginTop: 2, padding: '9px 24px', background: '#1a1a2e',
+              border: `1px solid ${PUR}33`, borderRadius: 8,
+              color: PUR, fontWeight: 700, fontSize: 13, cursor: 'pointer',
+            }}
+          >Explorar Módulos</button>
+        </div>
+      </motion.div>
+    )
+  }
+
   return (
     <motion.div {...fadeUp(0.26)} style={CARD}>
-      <div style={{ fontSize: 13, fontWeight: 800, color: '#fff', marginBottom: 14 }}>Módulos Favoritos</div>
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10, padding: '4px 0' }}>
-        <div style={{ width: 40, height: 40, borderRadius: 10, background: '#1a1a2e', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <Star size={18} color={PUR} />
-        </div>
-        <p style={{ fontSize: 13, color: MUTED, margin: 0 }}>Nenhum módulo favorito ainda</p>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+        <div style={{ fontSize: 13, fontWeight: 800, color: '#fff' }}>Módulos Favoritos</div>
         <button
           onClick={() => navigate('/modulos')}
           style={{
-            marginTop: 2, padding: '9px 24px', background: '#1a1a2e',
-            border: `1px solid ${PUR}33`, borderRadius: 8,
-            color: PUR, fontWeight: 700, fontSize: 13, cursor: 'pointer',
+            width: 28, height: 28, borderRadius: 10, border: 'none', cursor: 'pointer',
+            background: `${PUR}22`,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
           }}
-        >Explorar Módulos</button>
+        >
+          <Plus size={16} color={PUR} />
+        </button>
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
+        {favorites.map(modId => {
+          const mod = MODULE_INFO[modId]
+          if (!mod) return null
+          const { Icon, iconColor, iconBg, route } = mod
+          return (
+            <button
+              key={modId}
+              onClick={() => navigate(route)}
+              style={{
+                width: 52, height: 52, borderRadius: 14, border: 'none',
+                background: iconBg, cursor: 'pointer',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                flexShrink: 0,
+              }}
+            >
+              <Icon size={24} color={iconColor} />
+            </button>
+          )
+        })}
       </div>
     </motion.div>
   )
@@ -275,7 +324,7 @@ function TasksToday({ dailySuggestions, acceptingIds, onAccept }) {
 /* ══ ROOT ══ */
 export default function Dashboard() {
   const navigate = useNavigate()
-  const { profile, tasks, routineCompletions, exerciseCompletions, dayCompletions, loading, refreshing, error, reload, debouncedReload, optimisticAcceptSuggestion, revertOptimisticSuggestion } = useUserDataContext()
+  const { profile, tasks, routineCompletions, exerciseCompletions, dayCompletions, favorites, loading, refreshing, error, reload, debouncedReload, optimisticAcceptSuggestion, revertOptimisticSuggestion } = useUserDataContext()
   const { suggestions: dailySuggestions }         = useDailySuggestions(tasks)
   const [acceptingIds, setAcceptingIds]            = useState(new Set())
 
@@ -381,7 +430,7 @@ export default function Dashboard() {
             tasksTodayTotal={tasksTodayTotal}
             totalXP={totalXP}
           />
-          <FavoriteModules />
+          <FavoriteModules favorites={favorites} />
           <TasksToday
             dailySuggestions={dailySuggestions}
             acceptingIds={acceptingIds}

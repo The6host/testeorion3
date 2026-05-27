@@ -34,25 +34,60 @@ const CHAR_ATTR_CONFIG = {
   hidratacao:   { Icon: Droplets,      bg: '#080d1a' },
 }
 
-const CHAR_IMG = 'https://i.imgur.com/8LFQX5M.png'
+// TODO: quando as 6 imagens do personagem estiverem prontas:
+// 1. Salvar em public/personagem/ com os nomes: rank-e.png, rank-d.png, rank-c.png, rank-b.png, rank-a.png, rank-s.png
+// 2. Trocar USE_RANK_IMAGES de false pra true
+// 3. Pronto — placeholder some, imagens aparecem automaticamente por rank
+const USE_RANK_IMAGES = false
 
-function CharacterSilhouette() {
+function CharacterImage({ rank }) {
+  const [imgFailed, setImgFailed] = useState(false)
+
+  function getRankImagePath(rankCode) {
+    return `/personagem/rank-${rankCode.toLowerCase()}.png`
+  }
+
+  const placeholder = (
+    <div style={{
+      width: '100%', height: 280, borderRadius: 16, padding: 24,
+      background: `linear-gradient(135deg, ${rank.colorBg}, transparent 80%)`,
+      border: `1px solid ${rank.color}33`,
+      display: 'flex', flexDirection: 'column',
+      alignItems: 'center', justifyContent: 'center', gap: 12,
+    }}>
+      <Swords size={64} color={rank.color} />
+      <span style={{ fontSize: 28, fontWeight: 900, color: rank.color, letterSpacing: 2 }}>
+        RANK {rank.code}
+      </span>
+      <span style={{ fontSize: 14, color: 'rgba(255,255,255,0.7)', fontWeight: 600 }}>
+        {rank.title}
+      </span>
+      <span style={{ fontSize: 10, color: MUTED, opacity: 0.5, marginTop: 8 }}>
+        Imagem em breve
+      </span>
+    </div>
+  )
+
+  if (!USE_RANK_IMAGES || imgFailed) return placeholder
+
   return (
-    <svg width="160" height="300" viewBox="0 0 160 300" fill="none">
-      <ellipse cx="80" cy="44" rx="30" ry="34" fill="#2a2a2a" />
-      <rect x="68" y="75" width="24" height="16" rx="4" fill="#2a2a2a" />
-      <path d="M36 100 Q80 88 124 100 L128 218 Q80 230 32 218 Z" fill="#2a2a2a" />
-      <path d="M36 108 Q16 155 20 200" stroke="#2a2a2a" strokeWidth="22" strokeLinecap="round" />
-      <path d="M124 108 Q144 155 140 200" stroke="#2a2a2a" strokeWidth="22" strokeLinecap="round" />
-      <path d="M58 216 Q54 256 52 295" stroke="#2a2a2a" strokeWidth="24" strokeLinecap="round" />
-      <path d="M102 216 Q106 256 108 295" stroke="#2a2a2a" strokeWidth="24" strokeLinecap="round" />
-    </svg>
+    <motion.img
+      src={getRankImagePath(rank.code)}
+      alt={`Personagem Rank ${rank.code}`}
+      onError={() => setImgFailed(true)}
+      initial={{ opacity: 0, scale: 0.92, y: 12 }}
+      animate={{ opacity: 1, scale: 1, y: 0 }}
+      transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1] }}
+      style={{
+        width: '100%', height: 280, objectFit: 'contain', borderRadius: 16,
+        filter: 'drop-shadow(0 0 36px rgba(124,58,237,0.55))',
+      }}
+    />
   )
 }
 
 export default function Character() {
   const navigate  = useNavigate()
-  const [imgError, setImgError] = useState(false)
 
   const { profile, stats } = useUserDataContext()
   const totalXP   = profile?.total_xp  || 0
@@ -108,33 +143,8 @@ export default function Character() {
         </div>
 
         {/* Character image */}
-        <div style={{
-          display: 'flex', justifyContent: 'center', alignItems: 'flex-end',
-          minHeight: 300, marginTop: 12, position: 'relative', zIndex: 2,
-        }}>
-          {!imgError ? (
-            <motion.img
-              src={CHAR_IMG}
-              alt="Personagem"
-              onError={() => setImgError(true)}
-              initial={{ opacity: 0, scale: 0.92, y: 12 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1] }}
-              style={{
-                height: 300, objectFit: 'contain',
-                filter: 'drop-shadow(0 0 36px rgba(124,58,237,0.55))',
-              }}
-            />
-          ) : (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.5 }}
-              style={{ filter: 'drop-shadow(0 0 24px rgba(124,58,237,0.35))' }}
-            >
-              <CharacterSilhouette />
-            </motion.div>
-          )}
+        <div style={{ marginTop: 12, padding: '0 16px', position: 'relative', zIndex: 2 }}>
+          <CharacterImage rank={rank} />
         </div>
 
         {/* Username + rank + XP */}
