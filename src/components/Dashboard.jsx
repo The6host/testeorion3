@@ -9,6 +9,7 @@ import {
 } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import BottomNav from './BottomNav'
+import InstallModal from './InstallModal'
 import RankBadge from './RankBadge'
 import { useUserDataContext } from '../context/UserDataContext'
 import { useDailySuggestions } from '../hooks/useDailySuggestions'
@@ -439,6 +440,7 @@ export default function Dashboard() {
         </div>
       </div>
       <BottomNav />
+      <InstallModal />
     </motion.div>
   )
 }

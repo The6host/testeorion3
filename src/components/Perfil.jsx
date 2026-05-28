@@ -2,11 +2,13 @@ import { useState, useRef } from 'react'
 import { motion } from 'framer-motion'
 import {
   Share2, Settings, Camera, Pencil, RefreshCw,
-  ChevronRight, BarChart2, Calendar, Check,
+  ChevronRight, BarChart2, Calendar,
   Flame, Trophy, MapPin, Shield,
   Heart, Droplets, Dumbbell, Brain, Target, Zap, Eye, Users,
-  Lightbulb, Palette, Medal, Loader2,
+  Lightbulb, Palette, Medal, Loader2, Download,
 } from 'lucide-react'
+import { isStandalone, isIOS } from '../lib/pwa'
+import { useInstallPrompt } from '../context/InstallPromptContext'
 import BottomNav from './BottomNav'
 import Avatar from './Avatar'
 import { getInitials } from '../lib/utils'
@@ -45,15 +47,6 @@ const PERFIL_ATTR_ICONS = {
   hidratacao:   Droplets,
 }
 
-const THEMES = [
-  { name: 'Padrão',     color: '#7C3AED' },
-  { name: 'Oceano',     color: '#3B82F6' },
-  { name: 'Pôr do Sol', color: '#F97316' },
-  { name: 'Floresta',   color: '#10B981' },
-  { name: 'Royal',      color: '#EC4899' },
-  { name: 'Ouro',       color: '#F59E0B' },
-]
-
 const STATS = [
   { Icon: Flame,  label: 'Dias de Streak', value: '0'   },
   { Icon: Trophy, label: 'Pontos Totais',  value: '0'   },
@@ -77,7 +70,6 @@ const fadeUp = (delay = 0) => ({
 })
 
 export default function Perfil() {
-  const [activeTheme,    setActiveTheme]    = useState('Padrão')
   const [editingName,    setEditingName]    = useState(false)
   const [nameValue,      setNameValue]      = useState('')
   const [nameError,      setNameError]      = useState('')
@@ -93,6 +85,7 @@ export default function Perfil() {
     optimisticUpdateAvatar, revertOptimisticAvatar,
     debouncedReload,
   } = useUserDataContext()
+  const { canInstall, triggerInstall } = useInstallPrompt()
   const level    = profile?.level        || 1
   const totalXP  = profile?.total_xp     || 0
   const xpAtual  = totalXP % 500
@@ -451,40 +444,64 @@ export default function Perfil() {
           </div>
         </motion.div>
 
+        {/* Instalar Orion */}
+        {!isStandalone() && (
+          <motion.div {...fadeUp(0.22)} style={{ ...CARD, marginBottom: 10 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14 }}>
+              <div style={{
+                width: 40, height: 40, borderRadius: 11, flexShrink: 0,
+                background: 'linear-gradient(135deg, #7C3AED, #5B21B6)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+              }}>
+                <Download size={18} color="#fff" />
+              </div>
+              <div>
+                <div style={{ fontSize: 14, fontWeight: 800, color: '#fff' }}>Instalar Orion</div>
+                <div style={{ fontSize: 12, color: MUTED, marginTop: 2 }}>Acesso rápido, funciona offline</div>
+              </div>
+            </div>
+
+            {isIOS() ? (
+              <div style={{ fontSize: 12, color: MUTED, lineHeight: 1.6 }}>
+                No Safari, toque em <strong style={{ color: '#fff' }}>Compartilhar</strong> e depois{' '}
+                <strong style={{ color: '#fff' }}>Adicionar à Tela de Início</strong>.
+              </div>
+            ) : canInstall ? (
+              <button
+                onClick={triggerInstall}
+                style={{
+                  width: '100%', padding: '12px 0',
+                  background: PUR, border: 'none', borderRadius: 10,
+                  color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer',
+                }}
+              >
+                Instalar agora
+              </button>
+            ) : (
+              <div style={{ fontSize: 12, color: MUTED, lineHeight: 1.6 }}>
+                Abra este app no Chrome ou Safari e siga as instruções para instalar na tela inicial.
+              </div>
+            )}
+          </motion.div>
+        )}
+
         {/* Theme selector */}
-        <motion.div {...fadeUp(0.17)} style={{ ...CARD, marginBottom: 10 }}>
+        <motion.div {...fadeUp(0.27)} style={{ ...CARD, marginBottom: 10 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
             <Palette size={16} color={PUR} />
             <span style={{ fontSize: 14, fontWeight: 800, color: '#fff' }}>Tema de Cores</span>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
-            {THEMES.map(theme => {
-              const active = activeTheme === theme.name
-              return (
-                <button
-                  key={theme.name}
-                  onClick={() => setActiveTheme(theme.name)}
-                  style={{
-                    padding: '12px 8px', borderRadius: 10, cursor: 'pointer', border: 'none',
-                    background: active ? `${theme.color}18` : '#1a1a1a',
-                    outline: active ? `1px solid ${theme.color}55` : '1px solid #222222',
-                    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6,
-                    transition: 'all 0.18s',
-                  }}
-                >
-                  <div style={{
-                    width: 26, height: 26, borderRadius: '50%',
-                    background: theme.color,
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  }}>
-                    {active && <Check size={13} color="#fff" strokeWidth={3} />}
-                  </div>
-                  <span style={{ fontSize: 10, fontWeight: 700, color: active ? theme.color : MUTED }}>
-                    {theme.name}
-                  </span>
-                </button>
-              )
-            })}
+          <div style={{ textAlign: 'center', padding: '8px 0' }}>
+            <span style={{
+              display: 'inline-block',
+              fontSize: 11, color: MUTED,
+              background: '#1a1a1a', borderRadius: 6, padding: '4px 12px',
+            }}>
+              Em breve
+            </span>
+            <p style={{ fontSize: 12, color: DIM, marginTop: 8, marginBottom: 0 }}>
+              Personalização de cores estará disponível em breve
+            </p>
           </div>
         </motion.div>
 

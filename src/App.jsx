@@ -1,6 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
 import { Routes, Route, Outlet, useNavigate } from 'react-router-dom'
 import { UserDataProvider } from './context/UserDataProvider'
+import { InstallPromptProvider } from './context/InstallPromptContext'
 import { motion, AnimatePresence } from 'framer-motion'
 import { playClick } from './utils/clickSFX'
 import './index.css'
@@ -196,9 +197,11 @@ function AppShell({ children }) {
 function AuthLayout() {
   return (
     <UserDataProvider>
-      <AppShell>
-        <Outlet />
-      </AppShell>
+      <InstallPromptProvider>
+        <AppShell>
+          <Outlet />
+        </AppShell>
+      </InstallPromptProvider>
     </UserDataProvider>
   )
 }
