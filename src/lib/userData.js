@@ -2,6 +2,7 @@ import { supabase } from './supabase'
 import { getTodayKey, getLocalDateKey } from './dailySuggestions'
 import { CATEGORY_ATTRIBUTES, MAX_ATTRIBUTE_VALUE, MIN_ATTRIBUTE_VALUE } from './categories'
 import { getAchievementById, formatAchievementTitle } from './achievements'
+import { checkAchievements, checkLevelAndRankUp } from './achievementChecker'
 
 // ───────── LEITURA ─────────
 
@@ -213,7 +214,7 @@ export async function acceptSuggestion(suggestion) {
 
 async function addXP(amount) {
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return
+  if (!user) return { xpAntes: 0, xpDepois: 0 }
 
   const { data: profile, error: profileError } = await supabase
     .from('profiles')
@@ -221,17 +222,23 @@ async function addXP(amount) {
     .eq('id', user.id)
     .single()
 
-  if (profileError || !profile) return
+  if (profileError || !profile) return { xpAntes: 0, xpDepois: 0 }
 
-  const newTotalXP = Math.max(0, profile.total_xp + amount)
-  const newLevel   = Math.floor(newTotalXP / 500) + 1
+  const xpAntes  = profile.total_xp
+  const xpDepois = Math.max(0, xpAntes + amount)
+  const newLevel = Math.floor(xpDepois / 500) + 1
 
   const { error: updateError } = await supabase
     .from('profiles')
-    .update({ total_xp: newTotalXP, level: newLevel, updated_at: new Date().toISOString() })
+    .update({ total_xp: xpDepois, level: newLevel, updated_at: new Date().toISOString() })
     .eq('id', user.id)
 
-  if (updateError) console.error('Erro ao atualizar XP:', updateError)
+  if (updateError) {
+    console.error('Erro ao atualizar XP:', updateError)
+    return { xpAntes: 0, xpDepois: 0 }
+  }
+
+  return { xpAntes, xpDepois }
 }
 
 async function adjustAttributesByCategory(category, amount) {
@@ -374,9 +381,17 @@ export async function completeTask(taskId) {
 
   if (updateError) { console.error('Erro ao completar task:', updateError); return null }
 
-  await addXP(task.xp_value)
+  const { xpAntes, xpDepois } = await addXP(task.xp_value) || { xpAntes: 0, xpDepois: 0 }
   await adjustAttributesByCategory(task.category, +1)
   await updateStreakAfterCompletion()
+
+  checkAchievements({
+    triggeredBy:      'task',
+    completedAtLocal: new Date(updatedTask.completed_at),
+    taskCategory:     task.category,
+  }).catch(err => console.error('[checker] task:', err))
+  checkLevelAndRankUp(xpAntes, xpDepois).catch(err => console.error('[level/rank] task:', err))
+
   return updatedTask
 }
 
@@ -505,9 +520,15 @@ export async function completeRoutine(routine) {
 
   if (completionError) { console.error('Erro ao registrar completion:', completionError); return null }
 
-  await addXP(routine.xp_value)
+  const { xpAntes, xpDepois } = await addXP(routine.xp_value) || { xpAntes: 0, xpDepois: 0 }
   await adjustAttributesByRoutine(routine.attributes)
   await updateStreakAfterCompletion()
+
+  checkAchievements({
+    triggeredBy:      'routine',
+    completedAtLocal: new Date(),
+  }).catch(err => console.error('[checker] routine:', err))
+  checkLevelAndRankUp(xpAntes, xpDepois).catch(err => console.error('[level/rank] routine:', err))
 
   return completion
 }
@@ -586,7 +607,14 @@ export async function completeExercise(exercise, planXpPerExercise) {
 
   if (error) { console.error('Erro ao registrar exercise_completion:', error); return null }
 
-  await addXP(planXpPerExercise)
+  const { xpAntes, xpDepois } = await addXP(planXpPerExercise) || { xpAntes: 0, xpDepois: 0 }
+
+  checkAchievements({
+    triggeredBy:      'exercise',
+    completedAtLocal: new Date(),
+  }).catch(err => console.error('[checker] exercise:', err))
+  checkLevelAndRankUp(xpAntes, xpDepois).catch(err => console.error('[level/rank] exercise:', err))
+
   return data
 }
 
@@ -680,13 +708,20 @@ export async function completeWorkoutDay(dayId, planBonusXp, planModule = 'acade
 
   if (error) { console.error('Erro ao registrar workout_day_completion:', error); return null }
 
-  await addXP(planBonusXp)
+  const { xpAntes, xpDepois } = await addXP(planBonusXp) || { xpAntes: 0, xpDepois: 0 }
   if (planModule === 'calistenia') {
     await adjustCalisthenicsAttributes(+1)
   } else {
     await adjustFitnessAttributes(+1)
   }
   await updateStreakAfterCompletion()
+
+  checkAchievements({
+    triggeredBy:      'workoutDay',
+    completedAtLocal: new Date(),
+  }).catch(err => console.error('[checker] workoutDay:', err))
+  checkLevelAndRankUp(xpAntes, xpDepois).catch(err => console.error('[level/rank] workoutDay:', err))
+
   return data
 }
 
