@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import {
-  Bell, LogOut, ChevronRight,
+  LogOut, ChevronRight,
   Target, Trophy, Activity, Clock,
   Flame, Star, Sparkles,
   MapPin, Dumbbell, Plus,
@@ -10,6 +10,7 @@ import {
 import { supabase } from '../lib/supabase'
 import BottomNav from './BottomNav'
 import InstallModal from './InstallModal'
+import NotificationsBell from './NotificationsBell'
 import RankBadge from './RankBadge'
 import { useUserDataContext } from '../context/UserDataContext'
 import { useDailySuggestions } from '../hooks/useDailySuggestions'
@@ -71,7 +72,7 @@ function AppHeader({ displayName, avatarUrl, totalXP, level, xpAtual, onLogout, 
               style={{ width: 6, height: 6, borderRadius: '50%', background: PUR }}
             />
           )}
-          <button style={ICON_BTN}><Bell size={15} color={MUTED} /></button>
+          <NotificationsBell />
           <button style={ICON_BTN} onClick={onLogout}><LogOut size={15} color={MUTED} /></button>
         </div>
       </div>
