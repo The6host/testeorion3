@@ -1,6 +1,7 @@
 import { supabase } from './supabase'
 import { getTodayKey, getLocalDateKey } from './dailySuggestions'
 import { CATEGORY_ATTRIBUTES, MAX_ATTRIBUTE_VALUE, MIN_ATTRIBUTE_VALUE } from './categories'
+import { getAchievementById, formatAchievementTitle } from './achievements'
 
 // ───────── LEITURA ─────────
 
@@ -137,6 +138,7 @@ export async function fetchAllUserData() {
     profileRaw, stats, tasks, routineCompletions,
     exerciseCompletions, dayCompletions, favorites,
     monthlyTraining, monthlyAppearance,
+    notifications, unreadCount, userAchievements,
   ] = await Promise.all([
     fetchProfile(),
     fetchUserStats(),
@@ -147,11 +149,14 @@ export async function fetchAllUserData() {
     fetchFavorites(),
     fetchMonthlyTrainingStats(),
     fetchMonthlyAppearanceStats(),
+    fetchNotifications(),
+    fetchUnreadCount(),
+    fetchUserAchievements(),
   ])
 
   const profile = await checkAndDecayStreak(profileRaw)
   const monthlyStats = { training: monthlyTraining, appearance: monthlyAppearance }
-  return { profile, stats, tasks, routineCompletions, exerciseCompletions, dayCompletions, favorites, monthlyStats }
+  return { profile, stats, tasks, routineCompletions, exerciseCompletions, dayCompletions, favorites, monthlyStats, notifications, unreadCount, userAchievements }
 }
 
 // ───────── SUGESTÕES ─────────
@@ -1034,6 +1039,131 @@ export async function removeFavorite(moduleId) {
     .eq('entity_id', slug)
 
   if (error) { console.error('Erro ao remover favorito:', error); return false }
+  return true
+}
+
+// ───────── NOTIFICAÇÕES / CONQUISTAS ─────────
+
+function getNotificationCutoff() {
+  return new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()
+}
+
+export async function fetchNotifications(limit = 30) {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return []
+
+  const { data, error } = await supabase
+    .from('notifications')
+    .select('*')
+    .eq('user_id', user.id)
+    .gte('created_at', getNotificationCutoff())
+    .order('created_at', { ascending: false })
+    .limit(limit)
+
+  if (error) { console.error('Erro ao buscar notificações:', error); return [] }
+  return data || []
+}
+
+export async function fetchUnreadCount() {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return 0
+
+  const { count, error } = await supabase
+    .from('notifications')
+    .select('id', { count: 'exact', head: true })
+    .eq('user_id', user.id)
+    .eq('read', false)
+    .gte('created_at', getNotificationCutoff())
+
+  if (error) { console.error('Erro ao buscar unread count:', error); return 0 }
+  return count || 0
+}
+
+export async function markNotificationAsRead(notificationId) {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return false
+
+  const { error } = await supabase
+    .from('notifications')
+    .update({ read: true })
+    .eq('id', notificationId)
+    .eq('user_id', user.id)
+
+  if (error) { console.error('Erro ao marcar notificação como lida:', error); return false }
+  return true
+}
+
+export async function markAllNotificationsAsRead() {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return false
+
+  const { error } = await supabase
+    .from('notifications')
+    .update({ read: true })
+    .eq('user_id', user.id)
+    .eq('read', false)
+
+  if (error) { console.error('Erro ao marcar todas notificações como lidas:', error); return false }
+  return true
+}
+
+export async function createNotification({ type, title, message, icon, metadata }) {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return null
+
+  const { data, error } = await supabase
+    .from('notifications')
+    .insert({ user_id: user.id, type, title, message, icon, metadata })
+    .select()
+    .single()
+
+  if (error) { console.error('Erro ao criar notificação:', error); return null }
+  return data
+}
+
+export async function fetchUserAchievements() {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return []
+
+  const { data, error } = await supabase
+    .from('user_achievements')
+    .select('*')
+    .eq('user_id', user.id)
+    .order('unlocked_at', { ascending: false })
+
+  if (error) { console.error('Erro ao buscar conquistas:', error); return [] }
+  return data || []
+}
+
+export async function unlockAchievement(achievementId, metadata = null) {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return false
+
+  const { error: insertError } = await supabase
+    .from('user_achievements')
+    .insert({ user_id: user.id, achievement_id: achievementId, metadata })
+
+  if (insertError) {
+    if (insertError.code === '23505') return false
+    console.error('Erro ao desbloquear conquista:', insertError)
+    return false
+  }
+
+  try {
+    const achievement = getAchievementById(achievementId)
+    if (achievement) {
+      await createNotification({
+        type:     'achievement',
+        title:    formatAchievementTitle(achievement, metadata),
+        message:  achievement.description,
+        icon:     achievement.icon,
+        metadata: { achievementId, ...metadata },
+      })
+    }
+  } catch (notifError) {
+    console.error('Conquista desbloqueada mas notificação falhou:', notifError)
+  }
+
   return true
 }
 

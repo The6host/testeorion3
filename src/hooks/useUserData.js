@@ -1,9 +1,9 @@
 import { useState, useEffect, useRef } from 'react'
-import { fetchAllUserData } from '../lib/userData'
+import { fetchAllUserData, markNotificationAsRead, markAllNotificationsAsRead } from '../lib/userData'
 import { supabase } from '../lib/supabase'
 
 export function useUserData() {
-  const [data,       setData]       = useState({ profile: null, stats: null, tasks: [], routineCompletions: [], exerciseCompletions: [], dayCompletions: [], favorites: [], monthlyStats: { training: null, appearance: null } })
+  const [data,       setData]       = useState({ profile: null, stats: null, tasks: [], routineCompletions: [], exerciseCompletions: [], dayCompletions: [], favorites: [], monthlyStats: { training: null, appearance: null }, notifications: [], unreadCount: 0, userAchievements: [] })
   const [loading,    setLoading]    = useState(true)
   const [refreshing, setRefreshing] = useState(false)
   const [error,      setError]      = useState(null)
@@ -286,6 +286,40 @@ export function useUserData() {
     }))
   }
 
+  function optimisticMarkAsRead(notifId) {
+    fetchGenRef.current += 1
+    setData(prev => ({
+      ...prev,
+      notifications: prev.notifications.map(n => n.id === notifId ? { ...n, read: true } : n),
+      unreadCount:   Math.max(0, prev.unreadCount - 1),
+    }))
+  }
+
+  function revertOptimisticMarkAsRead(notifId) {
+    setData(prev => ({
+      ...prev,
+      notifications: prev.notifications.map(n => n.id === notifId ? { ...n, read: false } : n),
+      unreadCount:   prev.unreadCount + 1,
+    }))
+  }
+
+  function optimisticMarkAllAsRead() {
+    fetchGenRef.current += 1
+    setData(prev => ({
+      ...prev,
+      notifications: prev.notifications.map(n => ({ ...n, read: true })),
+      unreadCount:   0,
+    }))
+  }
+
+  function revertOptimisticMarkAllAsRead(previousNotifications, previousUnreadCount) {
+    setData(prev => ({
+      ...prev,
+      notifications: previousNotifications,
+      unreadCount:   previousUnreadCount,
+    }))
+  }
+
   return {
     profile:                    data.profile,
     stats:                      data.stats,
@@ -320,5 +354,14 @@ export function useUserData() {
     revertOptimisticAddFavorite,
     optimisticRemoveFavorite,
     revertOptimisticRemoveFavorite,
+    notifications:                 data.notifications,
+    unreadCount:                   data.unreadCount,
+    userAchievements:              data.userAchievements,
+    markNotificationAsRead,
+    markAllNotificationsAsRead,
+    optimisticMarkAsRead,
+    revertOptimisticMarkAsRead,
+    optimisticMarkAllAsRead,
+    revertOptimisticMarkAllAsRead,
   }
 }
