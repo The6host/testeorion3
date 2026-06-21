@@ -19,7 +19,7 @@ export default defineConfig({
         display: 'standalone',
         orientation: 'portrait',
         scope: '/',
-        start_url: '/',
+        start_url: '/dashboard',
         lang: 'pt-BR',
         icons: [
           { src: '/icons/icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any maskable' },
