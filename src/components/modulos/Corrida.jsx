@@ -194,7 +194,10 @@ export default function Corrida() {
         })
       })
     } catch (err) {
-      if (err.code === 1) {
+      // Alguns browsers entregam PERMISSION_DENIED como constante do objeto (err.PERMISSION_DENIED === 1)
+      // em vez de número literal — checamos os dois para garantir compatibilidade
+      const isDenied = err.code === 1 || err.code === err.PERMISSION_DENIED
+      if (isDenied) {
         setGpsStatus('denied')
         return
       }
@@ -451,7 +454,7 @@ export default function Corrida() {
                 <AlertCircle size={18} color={RED} style={{ flexShrink: 0, marginTop: 1 }} />
                 <span style={{ fontSize: 11, color: '#fff', lineHeight: 1.55 }}>
                   {gpsStatus === 'denied'
-                    ? 'Pra usar a corrida, ative a localização nas configurações do seu navegador/dispositivo. No iPhone: Ajustes > Safari > Localização. No Android: nas configurações do site.'
+                    ? 'Pra usar a corrida, ative o acesso à localização nas configurações do navegador. No Chrome, clique no cadeado da URL > Localização > Permitir.'
                     : 'Erro ao acessar GPS. Verifique se está em um local com sinal e tente novamente.'}
                 </span>
               </div>
