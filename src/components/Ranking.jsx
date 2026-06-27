@@ -22,16 +22,56 @@ const CARD = {
 }
 
 const PLAYERS = [
-  { name: 'TanjiroKamado',   pts: 85987, up: false },
-  { name: 'OrochimaSannin',  pts: 79958, up: true  },
-  { name: 'JetBlack',        pts: 68277, up: true  },
-  { name: 'NarutoUzumaki',   pts: 64053, up: false },
-  { name: 'FayeValentine',   pts: 49115, up: true  },
-  { name: 'SpikeSpiegel',    pts: 41230, up: true  },
-  { name: 'EdwardElric',     pts: 38540, up: false },
-  { name: 'MikasaAckerman',  pts: 32100, up: true  },
-  { name: 'LeviAckerman',    pts: 28750, up: false },
-  { name: 'GokuSuperSaiyan', pts: 21300, up: true  },
+  { name: 'miguel_prime',     pts: 87450, up: true  },
+  { name: 'lucas.takeda',     pts: 82180, up: false },
+  { name: 'arthur_x',         pts: 76330, up: true  },
+  { name: 'silent_pedro',     pts: 71890, up: false },
+  { name: 'davi.hunter',      pts: 66220, up: true  },
+  { name: 'raf_solo',         pts: 56480, up: false },
+  { name: 'heitor.k',         pts: 54120, up: true  },
+  { name: 'felipe_x9',        pts: 52790, up: false },
+  { name: 'gabriel_void',     pts: 51340, up: true  },
+  { name: 'matheus.r',        pts: 50080, up: false },
+  { name: 'rian_silva',       pts: 47620, up: true  },
+  { name: 'caio.prime',       pts: 44830, up: false },
+  { name: 'enzo_nocturnal',   pts: 42150, up: true  },
+  { name: 'theo.cs',          pts: 40270, up: false },
+  { name: 'bernardo_x',       pts: 38540, up: true  },
+  { name: 'lorenzo.r',        pts: 36820, up: false },
+  { name: 'henrique_grind',   pts: 35100, up: true  },
+  { name: 'samuel.k',         pts: 33680, up: false },
+  { name: 'yuri_sombra',      pts: 32390, up: true  },
+  { name: 'nicolas.x',        pts: 31040, up: false },
+  { name: 'josé.prime',       pts: 29470, up: true  },
+  { name: 'eric_silent',      pts: 27830, up: false },
+  { name: 'murilo.k',         pts: 26240, up: true  },
+  { name: 'tiago_void',       pts: 24690, up: false },
+  { name: 'pedro.alves',      pts: 23100, up: true  },
+  { name: 'anthony.r',        pts: 21570, up: false },
+  { name: 'vitor_solo',       pts: 20180, up: true  },
+  { name: 'rafael.x',         pts: 19340, up: false },
+  { name: 'caue_hunter',      pts: 18520, up: true  },
+  { name: 'iago.k',           pts: 17780, up: false },
+  { name: 'leo_sombra',       pts: 15920, up: true  },
+  { name: 'daniel.x',         pts: 14680, up: false },
+  { name: 'erik.prime',       pts: 13540, up: true  },
+  { name: 'brian_grind',      pts: 12790, up: false },
+  { name: 'otavio.k',         pts: 12110, up: true  },
+  { name: 'nathan_silent',    pts: 10840, up: false },
+  { name: 'cauã.r',           pts:  9920, up: true  },
+  { name: 'juan_void',        pts:  9230, up: false },
+  { name: 'bruno.x',          pts:  8670, up: true  },
+  { name: 'yan_solo',         pts:  8120, up: false },
+  { name: 'dyego.k',          pts:  7480, up: true  },
+  { name: 'ravi_x',           pts:  7020, up: false },
+  { name: 'arthur.prime',     pts:  6580, up: true  },
+  { name: 'mateus_hunter',    pts:  6230, up: false },
+  { name: 'levi.k',           pts:  5910, up: true  },
+  { name: 'ryan_grind',       pts:  5640, up: false },
+  { name: 'icaro_silent',     pts:  5430, up: true  },
+  { name: 'saulo.r',          pts:  5280, up: false },
+  { name: 'kauan_x',          pts:  5170, up: true  },
+  { name: 'erick.void',       pts:  5100, up: false },
 ]
 
 const AVATAR_GRADIENTS = [
@@ -47,15 +87,22 @@ const AVATAR_GRADIENTS = [
   'linear-gradient(135deg,#F97316,#EA580C)',
 ]
 
-function getInitials(name) {
-  const words = name.match(/[A-Z][a-z]*/g) || [name]
-  return words.length >= 2
-    ? (words[0][0] + words[1][0]).toUpperCase()
-    : name.slice(0, 2).toUpperCase()
+function getMockInitials(name) {
+  const parts = name.split(/[._]/).filter(Boolean)
+  if (parts.length >= 2) {
+    return (parts[0][0] + parts[1][0]).toUpperCase()
+  }
+  return name.substring(0, 2).toUpperCase()
 }
 
 function getFirstName(name) {
-  return (name.match(/[A-Z][a-z]*/g) || [name])[0]
+  // CamelCase (legado / compatibilidade futura)
+  const camelMatch = name.match(/[A-Z][a-z]*/g)
+  if (camelMatch) return camelMatch[0]
+  // Separador _ ou . → pega só a primeira parte
+  const parts = name.split(/[._]/)
+  if (parts.length > 1) return parts[0]
+  return name
 }
 
 function fmtPts(n) {
@@ -89,13 +136,13 @@ function PodiumColumn({ player, rank, avatarIndex, platHeight }) {
 
       <div style={{
         width: avatarSize, height: avatarSize, borderRadius: '50%',
-        background: AVATAR_GRADIENTS[avatarIndex],
+        background: AVATAR_GRADIENTS[avatarIndex % AVATAR_GRADIENTS.length],
         border: `3px solid ${medalColor}`,
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         fontSize: rank === 1 ? 18 : 14, fontWeight: 900, color: '#fff',
         marginBottom: 8,
       }}>
-        {getInitials(player.name)}
+        {getMockInitials(player.name)}
       </div>
 
       <div style={{
@@ -110,7 +157,7 @@ function PodiumColumn({ player, rank, avatarIndex, platHeight }) {
         fontSize: 10, color: MUTED, marginBottom: 4,
         maxWidth: 90, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
       }}>
-        @{player.name.toLowerCase()}
+        @{player.name}
       </div>
 
       <div style={{ fontSize: 12, fontWeight: 900, color: GREEN, marginBottom: 0 }}>
@@ -207,11 +254,11 @@ function PlayerRow({ player, pos, avatarIndex, delay }) {
 
       <div style={{
         width: 36, height: 36, borderRadius: '50%', flexShrink: 0,
-        background: AVATAR_GRADIENTS[avatarIndex],
+        background: AVATAR_GRADIENTS[avatarIndex % AVATAR_GRADIENTS.length],
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         fontSize: 12, fontWeight: 900, color: '#fff',
       }}>
-        {getInitials(player.name)}
+        {getMockInitials(player.name)}
       </div>
 
       <div style={{ flex: 1, minWidth: 0 }}>
@@ -258,6 +305,9 @@ export default function Ranking() {
   const userRank = getRankByXP(USER_XP)
   const nextRank = getNextRank(USER_XP)
   const rankPct  = Math.round(getRankProgress(USER_XP))
+
+  const userPosition    = PLAYERS.filter(r => r.pts > USER_XP).length + 1
+  const isOutsideTop50  = userPosition > 50
 
   return (
     <div style={{ minHeight: '100dvh', background: '#080808', color: '#fff' }}>
@@ -417,16 +467,18 @@ export default function Ranking() {
                   borderRadius: 9, padding: '6px 12px',
                   fontSize: 14, fontWeight: 900, color: GREEN, flexShrink: 0,
                 }}>
-                  —
+                  {isOutsideTop50 ? '—' : userPosition}
                 </div>
                 <div style={{ flex: 1 }}>
                   <div style={{ fontSize: 14, fontWeight: 800, color: '#fff' }}>Sua Posição</div>
                   <div style={{ fontSize: 11, color: MUTED, marginTop: 2 }}>
-                    Sincronize para aparecer
+                    {isOutsideTop50 ? 'Top 50+' : `${USER_XP.toLocaleString('pt-BR')} pts`}
                   </div>
                 </div>
                 <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                  <div style={{ fontSize: 16, fontWeight: 900, color: GREEN }}>0</div>
+                  <div style={{ fontSize: 16, fontWeight: 900, color: GREEN }}>
+                    {fmtPts(USER_XP)}
+                  </div>
                   <div style={{ fontSize: 10, color: MUTED }}>pontos</div>
                 </div>
               </motion.div>
@@ -443,8 +495,8 @@ export default function Ranking() {
                   key={i}
                   player={player}
                   pos={i + 1}
-                  avatarIndex={i}
-                  delay={0.25 + i * 0.05}
+                  avatarIndex={i % AVATAR_GRADIENTS.length}
+                  delay={0.25 + i * 0.03}
                 />
               ))}
             </motion.div>
