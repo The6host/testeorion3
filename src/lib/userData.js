@@ -140,7 +140,7 @@ export async function fetchAllUserData() {
     exerciseCompletions, dayCompletions, favorites,
     monthlyTraining, monthlyAppearance,
     notifications, unreadCount, userAchievements,
-    lifetimeCounts, runs,
+    lifetimeCounts, runs, monthlyRunning,
   ] = await Promise.all([
     fetchProfile(),
     fetchUserStats(),
@@ -156,10 +156,11 @@ export async function fetchAllUserData() {
     fetchUserAchievements(),
     fetchLifetimeCounts(),
     fetchUserRuns(),
+    fetchMonthlyRunStats(),
   ])
 
   const profile = await checkAndDecayStreak(profileRaw)
-  const monthlyStats = { training: monthlyTraining, appearance: monthlyAppearance }
+  const monthlyStats = { training: monthlyTraining, appearance: monthlyAppearance, running: monthlyRunning }
   return { profile, stats, tasks, routineCompletions, exerciseCompletions, dayCompletions, favorites, monthlyStats, notifications, unreadCount, userAchievements, lifetimeCounts, runs }
 }
 

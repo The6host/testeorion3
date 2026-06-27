@@ -50,6 +50,8 @@ const MODULES = [
   },
 ]
 
+const MODULE_ROUTES = { 1: '/modulos/corrida', 2: '/modulos/treino', 3: '/modulos/aparencia' }
+
 function pct(current, total) {
   return Math.round((current / total) * 100)
 }
@@ -121,7 +123,16 @@ export default function Modulos() {
 
           // Métricas reais por módulo
           let metricCurrent, metricTotal, metricUnit, metricPct, metricXP, metricSessions
-          if (mod.id === 2) {
+          if (mod.id === 1) {
+            const r      = monthlyStats?.running || { totalDistanceMeters: 0, totalXP: 0, sessionsCount: 0 }
+            const totalKm = r.totalDistanceMeters / 1000
+            metricCurrent  = totalKm
+            metricTotal    = 30
+            metricUnit     = 'km'
+            metricPct      = Math.min(100, Math.round((totalKm / 30) * 100))
+            metricXP       = r.totalXP
+            metricSessions = r.sessionsCount
+          } else if (mod.id === 2) {
             const t = monthlyStats?.training || { xpTotal: 0, sessionsCount: 0, exercisesCount: 0 }
             metricCurrent  = t.exercisesCount
             metricTotal    = 80
@@ -178,48 +189,36 @@ export default function Modulos() {
                 </div>
               </div>
 
-              {/* Progress + stats: condicional por módulo */}
-              {mod.id === 1 ? (
-                <div style={{ textAlign: 'center', marginBottom: 12 }}>
-                  <span style={{
-                    display: 'inline-block',
-                    fontSize: 11, color: MUTED,
-                    background: '#1a1a1a', borderRadius: 6, padding: '4px 10px',
-                  }}>
-                    Em breve
-                  </span>
+              {/* Progress + stats */}
+              <>
+                {/* Progress row */}
+                <div style={{ marginBottom: 8 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                    <span style={{ fontSize: 12, color: MUTED, fontWeight: 600 }}>
+                      {fmtValue(metricCurrent, metricUnit)}/{metricTotal} {metricUnit}
+                    </span>
+                    <span style={{ fontSize: 12, fontWeight: 800, color: GREEN }}>
+                      {metricPct}%
+                    </span>
+                  </div>
+                  <div style={{ height: 4, background: '#1e1e1e', borderRadius: 99, overflow: 'hidden' }}>
+                    <motion.div
+                      initial={{ width: 0 }}
+                      animate={{ width: `${metricPct}%` }}
+                      transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1], delay: 0.2 + i * 0.06 }}
+                      style={{
+                        height: '100%', borderRadius: 99, background: GREEN,
+                        minWidth: metricPct > 0 ? 4 : 0,
+                      }}
+                    />
+                  </div>
                 </div>
-              ) : (
-                <>
-                  {/* Progress row */}
-                  <div style={{ marginBottom: 8 }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-                      <span style={{ fontSize: 12, color: MUTED, fontWeight: 600 }}>
-                        {metricCurrent}/{metricTotal} {metricUnit}
-                      </span>
-                      <span style={{ fontSize: 12, fontWeight: 800, color: GREEN }}>
-                        {metricPct}%
-                      </span>
-                    </div>
-                    <div style={{ height: 4, background: '#1e1e1e', borderRadius: 99, overflow: 'hidden' }}>
-                      <motion.div
-                        initial={{ width: 0 }}
-                        animate={{ width: `${metricPct}%` }}
-                        transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1], delay: 0.2 + i * 0.06 }}
-                        style={{
-                          height: '100%', borderRadius: 99, background: GREEN,
-                          minWidth: metricPct > 0 ? 4 : 0,
-                        }}
-                      />
-                    </div>
-                  </div>
 
-                  {/* Points row */}
-                  <div style={{ fontSize: 11, color: MUTED, marginBottom: 12 }}>
-                    {metricXP} pts este mês • {metricSessions} {metricSessions === 1 ? 'sessão' : 'sessões'}
-                  </div>
-                </>
-              )}
+                {/* Points row */}
+                <div style={{ fontSize: 11, color: MUTED, marginBottom: 12 }}>
+                  {metricXP} pts este mês • {metricSessions} {metricSessions === 1 ? 'sessão' : 'sessões'}
+                </div>
+              </>
 
               {/* Divider + action buttons */}
               <div style={{ borderTop: '1px solid #1e1e1e', paddingTop: 12, display: 'flex', gap: 8 }}>
@@ -243,38 +242,19 @@ export default function Modulos() {
                   {isFav ? 'Favoritado' : 'Favoritar'}
                 </button>
 
-                {mod.id === 1 ? (
-                  <button
-                    disabled
-                    style={{
-                      flex: 1, padding: '8px 0', borderRadius: 8, border: 'none',
-                      cursor: 'not-allowed',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      fontSize: 12, fontWeight: 700,
-                      background: '#0f0f0f',
-                      color: MUTED,
-                    }}
-                  >
-                    Em breve
-                  </button>
-                ) : (
-                  <button
-                    onClick={() => {
-                      if (mod.id === 2) navigate('/modulos/treino')
-                      else if (mod.id === 3) navigate('/modulos/aparencia')
-                    }}
-                    style={{
-                      flex: 1, padding: '8px 0', borderRadius: 8, border: 'none',
-                      cursor: 'pointer',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4,
-                      fontSize: 12, fontWeight: 700,
-                      background: '#1a1a2e',
-                      color: '#fff',
-                    }}
-                  >
-                    Abrir <ChevronRight size={14} />
-                  </button>
-                )}
+                <button
+                  onClick={() => navigate(MODULE_ROUTES[mod.id])}
+                  style={{
+                    flex: 1, padding: '8px 0', borderRadius: 8, border: 'none',
+                    cursor: 'pointer',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4,
+                    fontSize: 12, fontWeight: 700,
+                    background: '#1a1a2e',
+                    color: '#fff',
+                  }}
+                >
+                  Abrir <ChevronRight size={14} />
+                </button>
               </div>
             </motion.div>
           )
