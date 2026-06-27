@@ -23,37 +23,42 @@ const CARD_GLASS = {
 const INITIAL_TESTIMONIALS = [
   {
     id: 1,
-    text: 'O ORION mudou completamente minha vida. Finalmente consegui ter disciplina e foco para conquistar meus objetivos!',
-    bold: 'completamente minha vida',
-    name: 'Lucas R.',
-    role: 'Empreendedor',
-    avatar: 'https://i.pravatar.cc/150?u=1',
+    text: 'Trabalho **10h+ no código** e sempre esqueci de comer e treinar. As tasks chegam de manhã e eu só sigo. Tô em **rank C com 3 meses**, perdi 6kg sem nem perceber.',
+    name: 'Pedro S.',
+    role: 'Programador',
+    avatar: 'https://i.ibb.co/ksj42C28/Whats-App-Image-2026-06-27-at-10-08-25.jpg',
   },
   {
     id: 2,
-    text: 'Em 30 dias usando o ORION eu construí hábitos que nunca consegui manter antes. A gamificação faz toda a diferença.',
-    bold: 'hábitos que nunca consegui manter antes',
-    name: 'Fernanda S.',
-    role: 'Designer',
-    avatar: 'https://i.pravatar.cc/150?u=2',
+    text: 'Fiz vestibular usando o Orion como cronograma. Acordava, abria o app, sabia o que estudar e quando descansar. **Passei em Direito na federal**.',
+    name: 'Vitória M.',
+    role: 'Estudante',
+    avatar: 'https://i.ibb.co/cSSgXPRV/Whats-App-Image-2026-06-27-at-10-08-25-1.jpg',
   },
   {
     id: 3,
-    text: 'Minha produtividade triplicou. O sistema de missões me mantém focado e motivado todos os dias sem exceção.',
-    bold: 'produtividade triplicou',
-    name: 'Rafael M.',
-    role: 'Desenvolvedor',
-    avatar: 'https://i.pravatar.cc/150?u=3',
+    text: 'Trabalho com criativo o dia todo e minha cabeça vivia bagunçada. **O sistema de XP é viciante**. Hoje treino 5x na semana e durmo melhor desde que comecei.',
+    name: 'Luiz K.',
+    role: 'Marketing',
+    avatar: 'https://i.ibb.co/fzCqRNvm/Whats-App-Image-2026-06-27-at-10-08-25-2.jpg',
   },
   {
     id: 4,
-    text: 'Nunca achei que um app pudesse mudar minha mentalidade assim. Hoje acordo com propósito e vou dormir realizado.',
-    bold: 'mudar minha mentalidade',
-    name: 'Juliana T.',
-    role: 'Estudante',
-    avatar: 'https://i.pravatar.cc/150?u=4',
+    text: 'Sou CEO de duas empresas, não tenho tempo pra app que não entrega. Esse aqui me forçou a **criar rotina sem terapia, sem coach**. Já indiquei pra 12 sócios meus.',
+    name: 'Fernando V.',
+    role: 'Empreendedor',
+    avatar: 'https://i.ibb.co/4ZNzxk7B/Whats-App-Image-2026-06-27-at-10-08-26.jpg',
   },
 ]
+
+function renderBold(text) {
+  const parts = text.split(/\*\*(.*?)\*\*/g)
+  return parts.map((part, i) =>
+    i % 2 === 1
+      ? <span key={i} className="font-bold text-white">{part}</span>
+      : <span key={i}>{part}</span>
+  )
+}
 
 // Posição visual de cada card na pilha
 const STACK_POS = [
@@ -140,11 +145,7 @@ function TestimonialCard({ t, index, exitDir, onExitComplete, onDragEnd }) {
       <QuoteIcon />
 
       <p className="text-white/80 text-sm md:text-base leading-relaxed">
-        {t.text.split(t.bold).map((part, i) =>
-          i === 0
-            ? <span key={i}>{part}<span className="font-bold text-white">{t.bold}</span></span>
-            : <span key={i}>{part}</span>
-        )}
+        {renderBold(t.text)}
       </p>
 
       <Stars />
