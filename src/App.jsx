@@ -27,6 +27,7 @@ import Arena            from './components/Arena'
 import Ranking          from './components/Ranking'
 import Perfil           from './components/Perfil'
 import Character        from './components/Character'
+import Conquistas       from './components/Conquistas'
 import Modulos          from './components/Modulos'
 import Corrida          from './components/modulos/Corrida'
 import Treino           from './components/modulos/Treino'
@@ -234,7 +235,8 @@ export default function App() {
           <Route path="/arena"     element={<Arena />} />
           <Route path="/ranking"   element={<Ranking />} />
           <Route path="/perfil"    element={<Perfil />} />
-          <Route path="/character" element={<Character />} />
+          <Route path="/character"   element={<Character />} />
+          <Route path="/conquistas" element={<Conquistas />} />
           <Route path="/modulos"                              element={<Modulos />} />
           <Route path="/modulos/corrida"                      element={<Corrida />} />
           <Route path="/modulos/treino"                       element={<Treino />} />

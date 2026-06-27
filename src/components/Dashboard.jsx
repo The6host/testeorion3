@@ -323,10 +323,39 @@ function TasksToday({ dailySuggestions, acceptingIds, onAccept }) {
   )
 }
 
+/* ══ CONQUISTAS ══ */
+function ConquistasCard({ userAchievements }) {
+  const navigate = useNavigate()
+  const conquistasDesbloqueadas = new Set(userAchievements.map(ua => ua.achievement_id)).size
+  const subtitulo = conquistasDesbloqueadas === 0
+    ? 'Comece sua jornada'
+    : conquistasDesbloqueadas >= 15
+      ? 'Todas desbloqueadas ⭐'
+      : `${conquistasDesbloqueadas}/15 desbloqueadas`
+  return (
+    <motion.div {...fadeUp(0.23)} style={{ ...CARD, cursor: 'pointer' }} onClick={() => navigate('/conquistas')}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+        <div style={{
+          width: 44, height: 44, borderRadius: 12, flexShrink: 0,
+          background: `${PUR}22`,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+        }}>
+          <Trophy size={20} color={PUR} />
+        </div>
+        <div style={{ flex: 1 }}>
+          <div style={{ fontSize: 13, fontWeight: 800, color: '#fff' }}>Conquistas</div>
+          <div style={{ fontSize: 11, color: MUTED, marginTop: 2 }}>{subtitulo}</div>
+        </div>
+        <ChevronRight size={18} color={MUTED} />
+      </div>
+    </motion.div>
+  )
+}
+
 /* ══ ROOT ══ */
 export default function Dashboard() {
   const navigate = useNavigate()
-  const { profile, tasks, routineCompletions, exerciseCompletions, dayCompletions, favorites, loading, refreshing, error, reload, debouncedReload, optimisticAcceptSuggestion, revertOptimisticSuggestion } = useUserDataContext()
+  const { profile, tasks, routineCompletions, exerciseCompletions, dayCompletions, favorites, userAchievements, loading, refreshing, error, reload, debouncedReload, optimisticAcceptSuggestion, revertOptimisticSuggestion } = useUserDataContext()
   const { suggestions: dailySuggestions }         = useDailySuggestions(tasks)
   const [acceptingIds, setAcceptingIds]            = useState(new Set())
 
@@ -432,6 +461,7 @@ export default function Dashboard() {
             tasksTodayTotal={tasksTodayTotal}
             totalXP={totalXP}
           />
+          <ConquistasCard userAchievements={userAchievements} />
           <FavoriteModules favorites={favorites} />
           <TasksToday
             dailySuggestions={dailySuggestions}

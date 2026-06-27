@@ -140,6 +140,7 @@ export async function fetchAllUserData() {
     exerciseCompletions, dayCompletions, favorites,
     monthlyTraining, monthlyAppearance,
     notifications, unreadCount, userAchievements,
+    lifetimeCounts,
   ] = await Promise.all([
     fetchProfile(),
     fetchUserStats(),
@@ -153,11 +154,12 @@ export async function fetchAllUserData() {
     fetchNotifications(),
     fetchUnreadCount(),
     fetchUserAchievements(),
+    fetchLifetimeCounts(),
   ])
 
   const profile = await checkAndDecayStreak(profileRaw)
   const monthlyStats = { training: monthlyTraining, appearance: monthlyAppearance }
-  return { profile, stats, tasks, routineCompletions, exerciseCompletions, dayCompletions, favorites, monthlyStats, notifications, unreadCount, userAchievements }
+  return { profile, stats, tasks, routineCompletions, exerciseCompletions, dayCompletions, favorites, monthlyStats, notifications, unreadCount, userAchievements, lifetimeCounts }
 }
 
 // ───────── SUGESTÕES ─────────
@@ -1200,6 +1202,25 @@ export async function unlockAchievement(achievementId, metadata = null) {
   }
 
   return true
+}
+
+// ───────── CONTAGENS LIFETIME ─────────
+
+export async function fetchLifetimeCounts() {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { tasksCompleted: 0, routines: 0, exercises: 0 }
+
+  const [
+    { count: tasksCompleted },
+    { count: routines },
+    { count: exercises },
+  ] = await Promise.all([
+    supabase.from('tasks').select('id', { count: 'exact', head: true }).eq('user_id', user.id).eq('completed', true),
+    supabase.from('routine_completions').select('id', { count: 'exact', head: true }).eq('user_id', user.id),
+    supabase.from('exercise_completions').select('id', { count: 'exact', head: true }).eq('user_id', user.id),
+  ])
+
+  return { tasksCompleted: tasksCompleted || 0, routines: routines || 0, exercises: exercises || 0 }
 }
 
 // ───────── CRIAR ─────────

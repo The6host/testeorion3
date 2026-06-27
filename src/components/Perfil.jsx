@@ -1,17 +1,19 @@
 import { useState, useRef } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import {
   Share2, Settings, Camera, Pencil, RefreshCw,
   ChevronRight, BarChart2, Calendar,
   Flame, Trophy, MapPin, Shield,
   Heart, Droplets, Dumbbell, Brain, Target, Zap, Eye, Users,
-  Lightbulb, Palette, Medal, Loader2, Download,
+  Lightbulb, Palette, Loader2, Download,
 } from 'lucide-react'
 import { isStandalone, isIOS } from '../lib/pwa'
 import { useInstallPrompt } from '../context/InstallPromptContext'
 import BottomNav from './BottomNav'
 import Avatar from './Avatar'
-import { getInitials } from '../lib/utils'
+import { getInitials, formatRelativeTime } from '../lib/utils'
+import { getAchievementById, formatAchievementTitle } from '../lib/achievements'
 import RankBadge from './RankBadge'
 import {
   ATTRIBUTE_KEYS, ATTRIBUTE_META, MAX_ATTRIBUTE_VALUE,
@@ -54,14 +56,17 @@ const STATS = [
   { Icon: Shield, label: 'Vitórias Arena', value: '0'   },
 ]
 
-const ACHIEVEMENTS = [
-  { name: 'Primeiro Passo',  emoji: '✅', unlocked: false, desc: 'Primeira task concluída'    },
-  { name: 'Organizador',     emoji: '📋', unlocked: false, desc: 'Criou 5 tasks em um dia'    },
-  { name: 'Guerreiro',       emoji: '⚔️', unlocked: false, desc: 'Vença 10 batalhas na Arena' },
-  { name: 'Maratonista',     emoji: '🏃', unlocked: false, desc: 'Corra 50km no total'        },
-  { name: 'Mestre da Mente', emoji: '🧠', unlocked: false, desc: 'Complete 30 tasks de foco'  },
-  { name: 'Lendário',        emoji: '🏆', unlocked: false, desc: 'Alcance o rank S'            },
-]
+function formatHa(isoString) {
+  const t = formatRelativeTime(isoString)
+  if (t === 'agora') return 'Agora'
+  if (t === 'ontem') return 'Há 1 dia'
+  if (/^\d{2}\/\d{2}$/.test(t)) return t
+  if (t.endsWith('d')) {
+    const n = parseInt(t)
+    return `Há ${n} dia${n !== 1 ? 's' : ''}`
+  }
+  return `Há ${t}`
+}
 
 const fadeUp = (delay = 0) => ({
   initial:    { opacity: 0, y: 16 },
@@ -79,8 +84,9 @@ export default function Perfil() {
   const fileInputRef = useRef(null)
   const savingRef    = useRef(false)
 
+  const navigate = useNavigate()
   const {
-    profile, stats,
+    profile, stats, userAchievements,
     optimisticUpdateDisplayName, revertOptimisticDisplayName,
     optimisticUpdateAvatar, revertOptimisticAvatar,
     debouncedReload,
@@ -523,46 +529,71 @@ export default function Perfil() {
           ))}
         </motion.div>
 
-        {/* Achievements */}
+        {/* Conquistas */}
         <motion.div {...fadeUp(0.27)} style={{ ...CARD, marginBottom: 10 }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <Medal size={16} color={PUR} />
-              <span style={{ fontSize: 14, fontWeight: 800, color: '#fff' }}>Conquistas</span>
-            </div>
-            <button style={{
-              display: 'flex', alignItems: 'center', gap: 4,
-              background: 'none', border: 'none', cursor: 'pointer',
-              fontSize: 12, color: PUR, fontWeight: 600, padding: 0,
-            }}>
-              Ver todas (0/54) <ChevronRight size={13} />
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: userAchievements.length > 0 ? 10 : 14 }}>
+            <span style={{ fontSize: 14, fontWeight: 800, color: '#fff' }}>Conquistas</span>
+            <button
+              onClick={() => navigate('/conquistas')}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+            >
+              <span style={{ fontSize: 11, color: PUR, fontWeight: 700 }}>
+                {new Set(userAchievements.map(ua => ua.achievement_id)).size}/15 · Ver todas
+              </span>
             </button>
           </div>
 
-          <div style={{ display: 'flex', gap: 10, overflowX: 'auto', paddingBottom: 4, scrollbarWidth: 'none' }}>
-            {ACHIEVEMENTS.map((a, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.35, delay: 0.28 + i * 0.06 }}
-                style={{
-                  flexShrink: 0, width: 86, textAlign: 'center',
-                  background: a.unlocked ? '#0d1a14' : '#111111',
-                  border: `1px solid ${a.unlocked ? '#1a3325' : '#1e1e1e'}`,
-                  borderRadius: 12, padding: '12px 8px',
-                  opacity: a.unlocked ? 1 : 0.5,
-                }}
-              >
-                <div style={{ fontSize: 24, marginBottom: 6, filter: a.unlocked ? 'none' : 'grayscale(1)' }}>
-                  {a.unlocked ? a.emoji : '🔒'}
+          {userAchievements.length === 0 ? (
+            <div style={{
+              padding: '20px 0', textAlign: 'center',
+              display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8,
+            }}>
+              <Trophy size={28} color={MUTED} />
+              <div style={{ fontSize: 12, color: MUTED }}>Nenhuma conquista ainda</div>
+              <div style={{ fontSize: 10, color: MUTED, opacity: 0.6, lineHeight: 1.5 }}>
+                Complete tasks e suba de rank pra desbloquear
+              </div>
+            </div>
+          ) : (
+            <>
+              {userAchievements.slice(0, 3).map((ua, i) => {
+                const achievement = getAchievementById(ua.achievement_id)
+                if (!achievement) return null
+                return (
+                  <div key={ua.id || i} style={{
+                    display: 'flex', gap: 10, alignItems: 'center',
+                    padding: 8, borderRadius: 10, background: '#1a1a1a',
+                    marginTop: i === 0 ? 0 : 8,
+                  }}>
+                    <div style={{
+                      width: 32, height: 32, flexShrink: 0, borderRadius: 8,
+                      background: `${PUR}22`,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      fontSize: 18,
+                    }}>
+                      {achievement.icon}
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 11, fontWeight: 700, color: '#fff', lineHeight: 1.2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {formatAchievementTitle(achievement, ua.metadata)}
+                      </div>
+                      <div style={{ fontSize: 9, color: MUTED, marginTop: 2 }}>
+                        {formatHa(ua.unlocked_at)}
+                      </div>
+                    </div>
+                  </div>
+                )
+              })}
+              {userAchievements.length > 3 && (
+                <div
+                  onClick={() => navigate('/conquistas')}
+                  style={{ fontSize: 10, color: MUTED, marginTop: 8, textAlign: 'center', cursor: 'pointer' }}
+                >
+                  +{userAchievements.length - 3} mais
                 </div>
-                <div style={{ fontSize: 10, fontWeight: 700, color: a.unlocked ? '#fff' : MUTED, lineHeight: 1.3 }}>
-                  {a.name}
-                </div>
-              </motion.div>
-            ))}
-          </div>
+              )}
+            </>
+          )}
         </motion.div>
 
         {/* Character Status */}
