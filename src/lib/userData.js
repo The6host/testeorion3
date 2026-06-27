@@ -140,7 +140,7 @@ export async function fetchAllUserData() {
     exerciseCompletions, dayCompletions, favorites,
     monthlyTraining, monthlyAppearance,
     notifications, unreadCount, userAchievements,
-    lifetimeCounts,
+    lifetimeCounts, runs,
   ] = await Promise.all([
     fetchProfile(),
     fetchUserStats(),
@@ -155,11 +155,12 @@ export async function fetchAllUserData() {
     fetchUnreadCount(),
     fetchUserAchievements(),
     fetchLifetimeCounts(),
+    fetchUserRuns(),
   ])
 
   const profile = await checkAndDecayStreak(profileRaw)
   const monthlyStats = { training: monthlyTraining, appearance: monthlyAppearance }
-  return { profile, stats, tasks, routineCompletions, exerciseCompletions, dayCompletions, favorites, monthlyStats, notifications, unreadCount, userAchievements, lifetimeCounts }
+  return { profile, stats, tasks, routineCompletions, exerciseCompletions, dayCompletions, favorites, monthlyStats, notifications, unreadCount, userAchievements, lifetimeCounts, runs }
 }
 
 // ───────── SUGESTÕES ─────────
@@ -1023,6 +1024,160 @@ export async function fetchMonthlyAppearanceStats() {
   const xpTotal       = (data || []).reduce((s, r) => s + (r.routine?.xp_value || 0), 0)
 
   return { xpTotal, routinesCount }
+}
+
+// ───────── CORRIDA ─────────
+
+async function adjustRunningAttributes(distanceKm) {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return
+
+  const vitalidadeBoost = Math.round(distanceKm)
+  const agilidadeBoost  = Math.round(distanceKm)
+  const focoBoost       = Math.floor(distanceKm / 3)
+
+  if (vitalidadeBoost === 0 && focoBoost === 0) return
+
+  const { data: currentStats, error: fetchError } = await supabase
+    .from('user_stats')
+    .select('vitalidade, agilidade, foco')
+    .eq('user_id', user.id)
+    .single()
+
+  if (fetchError || !currentStats) return
+
+  const updates = { updated_at: new Date().toISOString() }
+
+  if (vitalidadeBoost > 0) {
+    updates.vitalidade = Math.max(MIN_ATTRIBUTE_VALUE, Math.min(MAX_ATTRIBUTE_VALUE, (currentStats.vitalidade || 0) + vitalidadeBoost))
+    updates.agilidade  = Math.max(MIN_ATTRIBUTE_VALUE, Math.min(MAX_ATTRIBUTE_VALUE, (currentStats.agilidade  || 0) + agilidadeBoost))
+  }
+  if (focoBoost > 0) {
+    updates.foco = Math.max(MIN_ATTRIBUTE_VALUE, Math.min(MAX_ATTRIBUTE_VALUE, (currentStats.foco || 0) + focoBoost))
+  }
+
+  const { error } = await supabase
+    .from('user_stats')
+    .update(updates)
+    .eq('user_id', user.id)
+
+  if (error) console.error('Erro ao ajustar atributos corrida:', error)
+}
+
+/**
+ * Salva uma corrida finalizada.
+ * IMPORTANTE: a validação de critério mínimo (>= 60s E >= 100m) é responsabilidade da UI
+ * que chama esta função. saveRun não rejeita corridas curtas — apenas persiste o que recebeu.
+ * Isso será implementado na Onda 2.
+ */
+export async function saveRun(runData) {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return null
+
+  const {
+    distanceMeters,
+    durationSeconds,
+    paceSecondsPerKm,
+    averageSpeedKmh,
+    steps,
+    calories,
+    startedAt,
+    endedAt,
+  } = runData
+
+  const distanceKm = distanceMeters / 1000
+  const baseXp     = Math.floor(distanceKm * 50)
+  const fastBonus  = (paceSecondsPerKm != null && paceSecondsPerKm < 360) ? Math.floor(distanceKm * 20) : 0
+  const longBonus  = distanceMeters >= 5000 ? 100 : 0
+  const xpEarned   = baseXp + fastBonus + longBonus
+
+  const { data: run, error } = await supabase
+    .from('runs')
+    .insert({
+      user_id:             user.id,
+      distance_meters:     distanceMeters,
+      duration_seconds:    durationSeconds,
+      pace_seconds_per_km: paceSecondsPerKm ?? null,
+      average_speed_kmh:   averageSpeedKmh  ?? null,
+      steps:               steps            ?? null,
+      calories:            calories         ?? null,
+      xp_earned:           xpEarned,
+      started_at:          startedAt,
+      ended_at:            endedAt,
+    })
+    .select()
+    .single()
+
+  if (error) { console.error('Erro ao salvar corrida:', error); return null }
+
+  const { xpAntes, xpDepois } = await addXP(xpEarned) || { xpAntes: 0, xpDepois: 0 }
+  await adjustRunningAttributes(distanceKm)
+  await updateStreakAfterCompletion()
+
+  checkAchievements({
+    triggeredBy:      'run',
+    completedAtLocal: new Date(),
+  }).catch(err => console.error('[checker] run:', err))
+  checkLevelAndRankUp(xpAntes, xpDepois).catch(err => console.error('[level/rank] run:', err))
+
+  return { ...run, xp_earned: xpEarned }
+}
+
+export async function fetchUserRuns(limit = 30) {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return []
+
+  const { data, error } = await supabase
+    .from('runs')
+    .select('*')
+    .eq('user_id', user.id)
+    .order('started_at', { ascending: false })
+    .limit(limit)
+
+  if (error) { console.error('Erro ao buscar corridas:', error); return [] }
+  return data || []
+}
+
+export async function fetchMonthlyRunStats() {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { totalDistanceMeters: 0, totalDurationSeconds: 0, sessionsCount: 0, totalXP: 0, bestPaceSecondsPerKm: null }
+
+  const monthStart = getMonthStartISO()
+
+  const { data, error } = await supabase
+    .from('runs')
+    .select('distance_meters, duration_seconds, xp_earned, pace_seconds_per_km')
+    .eq('user_id', user.id)
+    .gte('started_at', monthStart)
+
+  if (error) {
+    console.error('Erro ao buscar stats mensais de corrida:', error)
+    return { totalDistanceMeters: 0, totalDurationSeconds: 0, sessionsCount: 0, totalXP: 0, bestPaceSecondsPerKm: null }
+  }
+
+  const rows                = data || []
+  const totalDistanceMeters = rows.reduce((s, r) => s + (r.distance_meters  || 0), 0)
+  const totalDurationSeconds = rows.reduce((s, r) => s + (r.duration_seconds || 0), 0)
+  const sessionsCount        = rows.length
+  const totalXP              = rows.reduce((s, r) => s + (r.xp_earned        || 0), 0)
+  const paces                = rows.map(r => r.pace_seconds_per_km).filter(p => p != null)
+  const bestPaceSecondsPerKm = paces.length > 0 ? Math.min(...paces) : null
+
+  return { totalDistanceMeters, totalDurationSeconds, sessionsCount, totalXP, bestPaceSecondsPerKm }
+}
+
+export async function deleteRun(runId) {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return false
+
+  const { error } = await supabase
+    .from('runs')
+    .delete()
+    .eq('id', runId)
+    .eq('user_id', user.id)
+
+  if (error) { console.error('Erro ao deletar corrida:', error); return false }
+  return true
 }
 
 // ───────── FAVORITOS ─────────

@@ -3,7 +3,7 @@ import { fetchAllUserData, markNotificationAsRead, markAllNotificationsAsRead } 
 import { supabase } from '../lib/supabase'
 
 export function useUserData() {
-  const [data,       setData]       = useState({ profile: null, stats: null, tasks: [], routineCompletions: [], exerciseCompletions: [], dayCompletions: [], favorites: [], monthlyStats: { training: null, appearance: null }, notifications: [], unreadCount: 0, userAchievements: [], lifetimeCounts: { tasksCompleted: 0, routines: 0, exercises: 0 } })
+  const [data,       setData]       = useState({ profile: null, stats: null, tasks: [], routineCompletions: [], exerciseCompletions: [], dayCompletions: [], favorites: [], monthlyStats: { training: null, appearance: null }, notifications: [], unreadCount: 0, userAchievements: [], lifetimeCounts: { tasksCompleted: 0, routines: 0, exercises: 0 }, runs: [] })
   const [loading,    setLoading]    = useState(true)
   const [refreshing, setRefreshing] = useState(false)
   const [error,      setError]      = useState(null)
@@ -320,6 +320,21 @@ export function useUserData() {
     }))
   }
 
+  function optimisticAddRun(newRun) {
+    fetchGenRef.current += 1
+    setData(prev => ({
+      ...prev,
+      runs: [newRun, ...prev.runs],
+    }))
+  }
+
+  function revertOptimisticAddRun(previousRuns) {
+    setData(prev => ({
+      ...prev,
+      runs: previousRuns,
+    }))
+  }
+
   return {
     profile:                    data.profile,
     stats:                      data.stats,
@@ -364,5 +379,8 @@ export function useUserData() {
     revertOptimisticMarkAsRead,
     optimisticMarkAllAsRead,
     revertOptimisticMarkAllAsRead,
+    runs:                          data.runs,
+    optimisticAddRun,
+    revertOptimisticAddRun,
   }
 }
