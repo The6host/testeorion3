@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
-import { Routes, Route, Outlet, useNavigate } from 'react-router-dom'
+import { Routes, Route, Outlet, useNavigate, useLocation } from 'react-router-dom'
 import { UserDataProvider } from './context/UserDataProvider'
 import { InstallPromptProvider } from './context/InstallPromptContext'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -196,6 +196,12 @@ function AppShell({ children }) {
 
 /* ── Layout das rotas autenticadas — Provider instanciado uma única vez ── */
 function AuthLayout() {
+  useEffect(() => {
+    document.documentElement.classList.add('app-mode')
+    document.querySelectorAll('audio').forEach(a => { a.pause(); a.currentTime = 0 })
+    return () => document.documentElement.classList.remove('app-mode')
+  }, [])
+
   return (
     <UserDataProvider>
       <InstallPromptProvider>
@@ -210,6 +216,17 @@ function AuthLayout() {
 /* ── Root ── */
 export default function App() {
   const { start, toggle, muted, started, audioRef } = useAudio()
+  const location = useLocation()
+  const isAppRoute = (
+    location.pathname.startsWith('/dashboard') ||
+    location.pathname.startsWith('/perfil')    ||
+    location.pathname.startsWith('/tasks')     ||
+    location.pathname.startsWith('/ranking')   ||
+    location.pathname.startsWith('/conquistas')||
+    location.pathname.startsWith('/character') ||
+    location.pathname.startsWith('/arena')     ||
+    location.pathname.startsWith('/modulos')
+  )
 
   /* Listener global de clique — dispara em fase de captura (mais cedo possível) */
   useEffect(() => {
@@ -262,7 +279,7 @@ export default function App() {
         </Route>
       </Routes>
 
-      <MuteButton muted={muted} onToggle={toggle} visible={started} />
+      <MuteButton muted={muted} onToggle={toggle} visible={started && !isAppRoute} />
     </>
   )
 }

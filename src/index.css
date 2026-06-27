@@ -33,6 +33,19 @@
     background: #d9ff33;
     box-shadow: 0 0 8px rgba(204, 255, 0, 0.7);
   }
+
+  /* Scrollbar roxa no app autenticado (classe adicionada pelo AuthLayout) */
+  html.app-mode {
+    scrollbar-color: #7C3AED #010208;
+  }
+  html.app-mode ::-webkit-scrollbar-thumb {
+    background: #7C3AED;
+    border: 2px solid #010208;
+  }
+  html.app-mode ::-webkit-scrollbar-thumb:hover {
+    background: #9B5EF0;
+    box-shadow: 0 0 8px rgba(124, 58, 237, 0.7);
+  }
 }
 
 @keyframes heroFloat {
