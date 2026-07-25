@@ -1,6 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
 import { Routes, Route, Outlet, useNavigate, useLocation } from 'react-router-dom'
 import { UserDataProvider } from './context/UserDataProvider'
+import { useUserDataContext } from './context/UserDataContext'
 import { InstallPromptProvider } from './context/InstallPromptContext'
 import { motion, AnimatePresence } from 'framer-motion'
 import { playClick } from './utils/clickSFX'
@@ -50,7 +51,8 @@ import TratamentoAntiIdade  from './components/modulos/rotinas/TratamentoAntiIda
 import HidratacaoCorporal   from './components/modulos/rotinas/HidratacaoCorporal'
 import EsfoliacaoCorporal   from './components/modulos/rotinas/EsfoliacaoCorporal'
 import CuidadoCapilar       from './components/modulos/rotinas/CuidadoCapilar'
-import Obrigado            from './components/Obrigado'
+import Obrigado               from './components/Obrigado'
+import AccountNotActivated    from './components/AccountNotActivated'
 
 const AUDIO_URL = 'https://res.cloudinary.com/dctzllsly/video/upload/v1778378449/music-bg-orion_j3uur9.mp3'
 const NEON = '#ccff00'
@@ -195,6 +197,17 @@ function AppShell({ children }) {
   )
 }
 
+/* ── Guard de acesso — renderizado DENTRO do UserDataProvider ── */
+function AuthGuard() {
+  const { loading, hasLoadedOnce, hasActiveAccess } = useUserDataContext()
+
+  if (loading || !hasLoadedOnce) return null
+
+  if (!hasActiveAccess) return <AccountNotActivated />
+
+  return <Outlet />
+}
+
 /* ── Layout das rotas autenticadas — Provider instanciado uma única vez ── */
 function AuthLayout() {
   useEffect(() => {
@@ -207,7 +220,7 @@ function AuthLayout() {
     <UserDataProvider>
       <InstallPromptProvider>
         <AppShell>
-          <Outlet />
+          <AuthGuard />
         </AppShell>
       </InstallPromptProvider>
     </UserDataProvider>

@@ -131,6 +131,30 @@ export async function checkAndDecayStreak(profile) {
   return { ...profile, streak_count: 0 }
 }
 
+// ───────── ACESSO ─────────
+
+async function fetchHasActiveAccess() {
+  const { data, error } = await supabase
+    .from('purchases')
+    .select('id')
+    .in('status', ['paid', 'grandfathered'])
+    .is('refunded_at', null)
+    .limit(1)
+    .maybeSingle()
+
+  if (error) {
+    console.error('Erro ao verificar acesso:', error)
+    return false
+  }
+
+  return data !== null
+}
+
+async function fetchUserEmail() {
+  const { data: { user } } = await supabase.auth.getUser()
+  return user?.email || null
+}
+
 export async function fetchAllUserData() {
   await expireOverdueTasks()
   await expireOverdueExerciseCompletions()
@@ -141,6 +165,7 @@ export async function fetchAllUserData() {
     monthlyTraining, monthlyAppearance,
     notifications, unreadCount, userAchievements,
     lifetimeCounts, runs, monthlyRunning,
+    hasActiveAccess, userEmail,
   ] = await Promise.all([
     fetchProfile(),
     fetchUserStats(),
@@ -157,11 +182,13 @@ export async function fetchAllUserData() {
     fetchLifetimeCounts(),
     fetchUserRuns(),
     fetchMonthlyRunStats(),
+    fetchHasActiveAccess(),
+    fetchUserEmail(),
   ])
 
   const profile = await checkAndDecayStreak(profileRaw)
   const monthlyStats = { training: monthlyTraining, appearance: monthlyAppearance, running: monthlyRunning }
-  return { profile, stats, tasks, routineCompletions, exerciseCompletions, dayCompletions, favorites, monthlyStats, notifications, unreadCount, userAchievements, lifetimeCounts, runs }
+  return { profile, stats, tasks, routineCompletions, exerciseCompletions, dayCompletions, favorites, monthlyStats, notifications, unreadCount, userAchievements, lifetimeCounts, runs, hasActiveAccess, userEmail }
 }
 
 // ───────── SUGESTÕES ─────────

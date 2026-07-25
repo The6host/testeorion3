@@ -3,7 +3,7 @@ import { fetchAllUserData, markNotificationAsRead, markAllNotificationsAsRead } 
 import { supabase } from '../lib/supabase'
 
 export function useUserData() {
-  const [data,       setData]       = useState({ profile: null, stats: null, tasks: [], routineCompletions: [], exerciseCompletions: [], dayCompletions: [], favorites: [], monthlyStats: { training: null, appearance: null, running: null }, notifications: [], unreadCount: 0, userAchievements: [], lifetimeCounts: { tasksCompleted: 0, routines: 0, exercises: 0 }, runs: [] })
+  const [data,       setData]       = useState({ profile: null, stats: null, tasks: [], routineCompletions: [], exerciseCompletions: [], dayCompletions: [], favorites: [], monthlyStats: { training: null, appearance: null, running: null }, notifications: [], unreadCount: 0, userAchievements: [], lifetimeCounts: { tasksCompleted: 0, routines: 0, exercises: 0 }, runs: [], hasActiveAccess: false, userEmail: null })
   const [loading,    setLoading]    = useState(true)
   const [refreshing, setRefreshing] = useState(false)
   const [error,      setError]      = useState(null)
@@ -382,5 +382,8 @@ export function useUserData() {
     runs:                          data.runs,
     optimisticAddRun,
     revertOptimisticAddRun,
+    hasActiveAccess:               data.hasActiveAccess,
+    userEmail:                     data.userEmail,
+    hasLoadedOnce:                 hasLoadedOnce.current,
   }
 }
