@@ -50,6 +50,7 @@ import TratamentoAntiIdade  from './components/modulos/rotinas/TratamentoAntiIda
 import HidratacaoCorporal   from './components/modulos/rotinas/HidratacaoCorporal'
 import EsfoliacaoCorporal   from './components/modulos/rotinas/EsfoliacaoCorporal'
 import CuidadoCapilar       from './components/modulos/rotinas/CuidadoCapilar'
+import Obrigado            from './components/Obrigado'
 
 const AUDIO_URL = 'https://res.cloudinary.com/dctzllsly/video/upload/v1778378449/music-bg-orion_j3uur9.mp3'
 const NEON = '#ccff00'
@@ -245,7 +246,8 @@ export default function App() {
         <Route path="/analyzing" element={<AnalyzingPage />} />
         <Route path="/voice"     element={<VoicePage bgAudioRef={audioRef} />} />
         <Route path="/pricing"   element={<PricingPage />} />
-        <Route path="/login" element={<AppShell><Login /></AppShell>} />
+        <Route path="/login"     element={<AppShell><Login /></AppShell>} />
+        <Route path="/obrigado" element={<Obrigado />} />
         <Route element={<AuthLayout />}>
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/tasks"     element={<Tasks />} />
