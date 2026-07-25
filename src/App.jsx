@@ -201,8 +201,6 @@ function AppShell({ children }) {
 function AuthGuard() {
   const { loading, hasLoadedOnce, hasActiveAccess, userEmail } = useUserDataContext()
 
-  console.log('[DEBUG] AuthGuard state:', { loading, hasLoadedOnce, hasActiveAccess, userEmail })
-
   if (loading || !hasLoadedOnce) return null
 
   if (!hasActiveAccess) return <AccountNotActivated />

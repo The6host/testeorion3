@@ -144,11 +144,9 @@ async function fetchHasActiveAccess() {
 
   if (error) {
     console.error('Erro ao verificar acesso:', error)
-    console.log('[DEBUG] fetchHasActiveAccess resultado:', false, 'data:', data, 'error:', error)
     return false
   }
 
-  console.log('[DEBUG] fetchHasActiveAccess resultado:', data !== null, 'data:', data, 'error:', error)
   return data !== null
 }
 
