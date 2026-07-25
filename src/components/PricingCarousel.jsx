@@ -49,9 +49,10 @@ const AVATARS = [
 /* ── Plans data ── */
 const PLANS = [
   {
-    id:      'primary',
-    icon:    Zap,
-    name:    'ORION Primary',
+    id:          'primary',
+    checkoutUrl: 'https://checkout.wiven.com.br/checkout/cms0fpwad012201n2wjolrbux?offer=SS1RCNN',
+    icon:        Zap,
+    name:        'ORION Primary',
     tagline: 'O primeiro passo',
     desc:    'Pra quem quer sair do zero',
     color:   '#2563EB',
@@ -67,10 +68,11 @@ const PLANS = [
     cta:      'Começar agora',
   },
   {
-    id:      'focuz',
-    icon:    Target,
-    badge:   '✦ 94% ESCOLHEM ESSE',
-    name:    'ORION Focuz',
+    id:          'focuz',
+    checkoutUrl: 'https://checkout.wiven.com.br/checkout/cms0fpwad012201n2wjolrbux?offer=YPIFALM',
+    icon:        Target,
+    badge:       '✦ 94% ESCOLHEM ESSE',
+    name:        'ORION Focuz',
     tagline: 'Escolha de 94% dos usuários',
     desc:    'O plano que transforma de verdade',
     color:   '#A855F7',
@@ -87,9 +89,10 @@ const PLANS = [
     cta:      'Desbloquear meu acesso',
   },
   {
-    id:      'intensive',
-    icon:    Crown,
-    name:    'ORION Intensive',
+    id:          'intensive',
+    checkoutUrl: 'https://checkout.wiven.com.br/checkout/cms0fpwad012201n2wjolrbux?offer=4SH93YL',
+    icon:        Crown,
+    name:        'ORION Intensive',
     tagline: 'Sem limites',
     desc:    'Pra quem quer resultado MÁXIMO',
     color:   NEON,
@@ -134,7 +137,7 @@ function BarGroup({ count, color, label }) {
 
 /* ── Individual plan card ── */
 function PlanCard({ plan, isActive }) {
-  const { color, icon: Icon, badge, name, tagline, desc, features, bars, original, price, cta } = plan
+  const { color, icon: Icon, badge, name, tagline, desc, features, bars, original, price, cta, checkoutUrl } = plan
 
   return (
     <div
@@ -222,6 +225,7 @@ function PlanCard({ plan, isActive }) {
 
       {/* CTA — espaço sempre reservado, visibilidade instantânea */}
       <button
+        onClick={() => { window.location.href = checkoutUrl }}
         style={{
           width: '100%', padding: '15px 0',
           background: color,
