@@ -199,7 +199,9 @@ function AppShell({ children }) {
 
 /* ── Guard de acesso — renderizado DENTRO do UserDataProvider ── */
 function AuthGuard() {
-  const { loading, hasLoadedOnce, hasActiveAccess } = useUserDataContext()
+  const { loading, hasLoadedOnce, hasActiveAccess, userEmail } = useUserDataContext()
+
+  console.log('[DEBUG] AuthGuard state:', { loading, hasLoadedOnce, hasActiveAccess, userEmail })
 
   if (loading || !hasLoadedOnce) return null
 
