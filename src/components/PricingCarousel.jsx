@@ -51,6 +51,7 @@ const PLANS = [
   {
     id:          'primary',
     checkoutUrl: 'https://checkout.wiven.com.br/checkout/cms0fpwad012201n2wjolrbux?offer=SS1RCNN',
+    pixelValue:  19.90,
     icon:        Zap,
     name:        'ORION Primary',
     tagline: 'O primeiro passo',
@@ -70,6 +71,7 @@ const PLANS = [
   {
     id:          'focuz',
     checkoutUrl: 'https://checkout.wiven.com.br/checkout/cms0fpwad012201n2wjolrbux?offer=YPIFALM',
+    pixelValue:  29.90,
     icon:        Target,
     badge:       '✦ 94% ESCOLHEM ESSE',
     name:        'ORION Focuz',
@@ -91,6 +93,7 @@ const PLANS = [
   {
     id:          'intensive',
     checkoutUrl: 'https://checkout.wiven.com.br/checkout/cms0fpwad012201n2wjolrbux?offer=4SH93YL',
+    pixelValue:  39.90,
     icon:        Crown,
     name:        'ORION Intensive',
     tagline: 'Sem limites',
@@ -137,7 +140,7 @@ function BarGroup({ count, color, label }) {
 
 /* ── Individual plan card ── */
 function PlanCard({ plan, isActive }) {
-  const { color, icon: Icon, badge, name, tagline, desc, features, bars, original, price, cta, checkoutUrl } = plan
+  const { color, icon: Icon, badge, name, tagline, desc, features, bars, original, price, cta, checkoutUrl, pixelValue } = plan
 
   return (
     <div
@@ -225,7 +228,10 @@ function PlanCard({ plan, isActive }) {
 
       {/* CTA — espaço sempre reservado, visibilidade instantânea */}
       <button
-        onClick={() => { window.location.href = checkoutUrl }}
+        onClick={() => {
+          if (window.fbq) window.fbq('track', 'InitiateCheckout', { content_name: name, value: pixelValue, currency: 'BRL' })
+          window.location.href = checkoutUrl
+        }}
         style={{
           width: '100%', padding: '15px 0',
           background: color,

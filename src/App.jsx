@@ -242,6 +242,11 @@ export default function App() {
     location.pathname.startsWith('/modulos')
   )
 
+  /* Meta Pixel — PageView a cada troca de rota */
+  useEffect(() => {
+    if (window.fbq) window.fbq('track', 'PageView')
+  }, [location.pathname])
+
   /* Listener global de clique — dispara em fase de captura (mais cedo possível) */
   useEffect(() => {
     function onGlobalClick(e) {
