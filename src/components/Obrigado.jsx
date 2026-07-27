@@ -205,10 +205,10 @@ export default function Obrigado() {
           <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.35)', lineHeight: 1.6 }}>
             Precisa de ajuda?{' '}
             <a
-              href="mailto:suporteorion@gmail.com"
+              href="mailto:suporteorionapp@gmail.com"
               style={{ color: 'rgba(255,255,255,0.5)', textDecoration: 'underline' }}
             >
-              suporteorion@gmail.com
+              suporteorionapp@gmail.com
             </a>
           </p>
 

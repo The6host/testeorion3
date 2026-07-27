@@ -140,10 +140,10 @@ export default function AccountNotActivated() {
           Dúvidas?
         </p>
         <a
-          href="mailto:suporteorion@gmail.com"
+          href="mailto:suporteorionapp@gmail.com"
           style={{ fontSize: 12, color: PUR, textAlign: 'center', textDecoration: 'none' }}
         >
-          suporteorion@gmail.com
+          suporteorionapp@gmail.com
         </a>
 
       </div>
