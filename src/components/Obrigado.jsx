@@ -1,19 +1,12 @@
-import { useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { CheckCircle2 } from 'lucide-react'
-import { useNavigate, useSearchParams } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 
 const NEON = '#ccff00'
 const BG   = '#010208'
 
 export default function Obrigado() {
   const navigate = useNavigate()
-  const [searchParams] = useSearchParams()
-
-  useEffect(() => {
-    const value = parseFloat(searchParams.get('value')) || 0
-    if (window.fbq) window.fbq('track', 'Purchase', { value, currency: 'BRL' })
-  }, [])
 
   return (
     <div style={{
